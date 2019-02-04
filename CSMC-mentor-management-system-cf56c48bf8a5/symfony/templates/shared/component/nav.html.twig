@@ -1,0 +1,141 @@
+<div class="col-md-3 left_col">
+    <div class="left_col scroll-view">
+        <div class="navbar nav_title" style="border: 0;">
+            <a class="site_title">{#<i class="fa fa-paw"></i>#} <span>CSMC</span></a>
+        </div>
+
+        <div class="clearfix"></div>
+
+        <!-- sidebar menu -->
+        <div id="sidebar-menu" class="main_menu_side hidden-print main_menu">
+            <div class="menu_section">
+                <h3>General</h3>
+                <ul class="nav side-menu">
+                    <li>
+                        <a href="{{ path('home') }}"><i class="fa fa-home"></i> Home</a>
+                    </li>
+                    {% if is_granted('instructor') %}
+                        <li><a href="{{ path('section') }}">Courses</a></li>
+                        <li><a>Reports</a></li>
+                        <li><a href="{{ path('session_schedule') }}">Session Schedule</a></li>
+                        <li><a href="{{ path('session_request') }}">Request a Session</a></li>
+                        <li><a href="{{ path('session_history') }}">Session Grades</a></li>
+                    {% elseif is_granted('mentor') %}
+                        <li><a href="#{#{ path('session_schedule') }#}"><i class="fa fa-calendar"></i> Calendar</a></li>
+                        <li><a href="#{#{ path('session_history') }#}"><i class="fa fa-check"></i> Grades</a></li>
+                        <li><a href="#{#{ path('schedule') }#}"><i class="fa fa-users"></i> Staff Schedule</a></li>
+                        <li><a href="#{#{ path('schedule_timesheet') }#}"><i class="fa fa-clock"></i> Time Sheet Report</a></li>
+                        <li><a href="#{#{ path('absence') }#}"><i class="fa fa-exclamation-circle"></i> Absences</a></li>
+                        <li><a href="{{ path('behavior_occurrence_submission') }}"><i class="fa fa-comment"></i>Submit Occurrence</a></li>
+                        <li><a href="{{ path('swipe_walk_in') }}"><i class="fa fa-credit-card"></i> Swipe Screen</a></li>
+                    {% elseif is_granted('student') %}
+                        {#<li><a href="{{ path('section') }}">Courses</a></li>#}
+                        {#<li><a href="{{ path('session_schedule') }}">Register</a></li>#}
+                        {#<li><a href="{{ path('session_history') }}">Grades</a></li>#}
+                    {% endif %}
+                    {#<li><a><i class="fa fa-edit"></i> System Set Up <span class="fa fa-chevron-down"></span></a>#}
+                    {#<ul class="nav child_menu">#}
+                    {#<li><a href="addressShowAll">IP</a></li>#}
+                    {#<li><a href='roomShowAll'>Rooms</a></li>#}
+                    {#<li><a href="semesterShowAll">Semesters</a></li>#}
+                    {#<li><a href="list_departments">Departments</a></li>#}
+                    {#<li><a href="listCourses">Courses</a></li>#}
+                    {#<li><a href="listSections">Sections</a></li>#}
+                    {#<li><a href="list_operation_hours">Operation Hours</a></li>#}
+                    {#<li><a href="list_schedule_time">Schedule time</a></li>#}
+                    {#</ul>#}
+                    {#</li>#}
+
+                    {#<li><a><i class="fa fa-edit"></i> Users <span class="fa fa-chevron-down"></span></a>#}
+                    {#<ul class="nav child_menu">#}
+                    {#<li><a href="userShowAll">User</a></li>#}
+                    {#<li><a href="userGroupShowAll">User Groups</a></li>#}
+                    {#<li><a href="roleShowAll">Roles</a></li>#}
+                    {#</ul>#}
+                    {#</li>#}
+
+                    {#<li><a href="listAnnouncements"><i class="fa fa-edit"></i> Announcements</a>#}
+                    {#</li>#}
+
+                    {#<li><a><i class="fa fa-edit"></i> Session Schedule <span class="badge bg-green">6</span><span#}
+                    {#class="fa fa-chevron-down"></span></a>#}
+                    {#<ul class="nav child_menu">#}
+                    {#<li><a href="list_holidays">Holidays</a></li>#}
+
+                    {#</ul>#}
+                    {#</li>#}
+                </ul>
+            </div>
+        </div>
+        <!-- /sidebar menu -->
+
+        <!-- /menu footer buttons -->
+        <div class="sidebar-footer hidden-small">
+            {#<a data-toggle="tooltip" data-placement="top" title="Settings">#}
+            {#<span class="glyphicon glyphicon-cog" aria-hidden="true"></span>#}
+            {#</a>#}
+            {#<a data-toggle="tooltip" data-placement="top" title="FullScreen">#}
+            {#<span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>#}
+            {#</a>#}
+            {#<a data-toggle="tooltip" data-placement="top" title="Lock">#}
+            {#<span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>#}
+            {#</a>#}
+            {#<a data-toggle="tooltip" data-placement="top" title="Logout" href="login.html">#}
+            {#<span class="glyphicon glyphicon-off" aria-hidden="true"></span>#}
+            {#</a>#}
+        </div>
+        <!-- /menu footer buttons -->
+    </div>
+</div>
+
+<!-- top navigation -->
+<div class="top_nav">
+    <div class="nav_menu">
+        <nav>
+            <div class="nav toggle">
+                <a id="menu_toggle"><i class="fa fa-bars"></i></a>
+            </div>
+
+            <ul class="nav navbar-nav navbar-right">
+                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                    <li class="">
+                        <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown"
+                           aria-expanded="false">
+                            {% if is_granted('ROLE_PREVIOUS_ADMIN') %}
+                                <span class="fa fa-user-secret"></span>
+                            {% endif %}
+                            <img src="{{ path('profile_image', {'username': app.user.username}) }}" alt="">{{ app.user.preferredName }}
+                            <span class=" fa fa-angle-down"></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-usermenu pull-right">
+                            {% if is_granted('ROLE_PREVIOUS_ADMIN') %}
+                                <li><a href="{{ path('home', {'_switch_user':'_exit'}) }}">Exit Impersonation</a></li>
+                            {% endif %}
+                            {% if is_granted('developer') %}
+                                <li><a {#href="{{ path('home', {'_switch_user':'username'}) }}"#}>(NYI) Impersonate User: <input type="text"></a></li> {# TODO #}
+                            {% endif %}
+                            {% if is_granted('mentor') %}
+                                <li><a href="{{ path('profile', {'username': app.user.username}) }}">Profile</a></li>
+                            {% endif %}
+                            {#<li><a href="javascript:;"> Profile</a></li>#}
+                            {#<li>#}
+                            {#<a href="javascript:;">#}
+                            {#<span class="badge bg-red pull-right">50%</span>#}
+                            {#<span>Settings</span>#}
+                            {#</a>#}
+                            {#</li>#}
+                            <li><a href="javascript:;">Help</a></li>
+                            <li><a href="{{ path('user_logout') }}"><i class="fa fa-sign-out pull-right"></i> Log
+                                    Out</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="">
+                        <a href="{{ path('login') }}">Log In</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+<!-- /top navigation -->

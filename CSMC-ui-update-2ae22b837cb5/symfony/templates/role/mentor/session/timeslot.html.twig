@@ -1,0 +1,63 @@
+{% extends 'shared/base.html.twig' %}
+{% block body %}
+    <h2>{{ timeslot.session.topic }}</h2>
+    <dl class="dl-horizontal">
+        <dt>Description</dt>
+        <dd>{{ timeslot.session.description }}</dd>
+        <dt>Student Instructions</dt>
+        <dd>{{ timeslot.session.studentInstructions }}</dd>
+        <dt>Mentor Instructions</dt>
+        <dd>{{ timeslot.session.mentorInstructions }}</dd>
+        <dt>Graded</dt>
+        <dd>{{ timeslot.session.graded ? 'yes' : 'no' }}</dd>
+        {% if timeslot.session.graded %}
+            <dt>Grading Scheme</dt>
+            <dd>{{ timeslot.session.numericGrade ? 'numeric' : 'pass/fail' }}</dd>
+        {% endif %}
+        <dt>Materials</dt>
+        {% for file in timeslot.session.files %}
+            {% if not loop.first %}
+                <dt></dt>
+            {% endif %}
+            <dd>
+                <a href="{{ path('download', {'id': file.id}) }}">{{ file.name }}</a>
+            </dd>
+        {% else %}
+            <dd></dd>
+        {% endfor %}
+        <dt>Date and Time</dt>
+        <dd>
+            {{ timeslot.startTime|date('m/d/Y g:i A') }} - {{ timeslot.endTime|date('g:i A') }}
+        </dd>
+        <dt>Room</dt>
+        <dd>{{ timeslot.location }}</dd>
+        <dt>Mentors</dt>
+        {% for assignment in timeslot.assignments %}
+            {% if not loop.first %}
+                <dt></dt>
+            {% endif %}
+            <dd>{{ assignment.mentor }}</dd>
+        {% else %}
+            <dd></dd>
+        {% endfor %}
+        <dt>Registrations</dt>
+        <dd>{{ timeslot.registeredStudents|length }}/{{ timeslot.capacity }}</dd>
+        <dt>Download Roster</dt>
+        <dd>
+            NYI{#<a href="{{ path('session_timeslot_roster', {'tid': timeslot.id}) }}">Download</a>#}
+        </dd>
+    </dl>
+    {% if timeslot.started and timeslot.ended %}
+        <div class="btn btn-default">
+            Ended
+        </div>
+    {% else %}
+        <a class="btn btn-success" href="{{ path('swipe_session', {'id': timeslot.id}) }}">
+            {% if not timeslot.started %}
+                Start
+            {% else %}
+                Continue
+            {% endif %}
+        </a>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends 'shared/base.html.twig' %}
+{% block body %}
+    <div class="jumbotron">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-3">
+                    <div class="thumbnail">
+                        <img id="profile_image" style="display: none;"
+                             src="{{ path('profile_image', {'username': user.username}) }}">
+                        <img id="temp_image" src="{{ asset('build/images/user.png') }}">
+                    </div>
+                </div>
+                <div class="col-sm-7">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h2>{{ user }}<br>
+                                <small>{{ user.username }}</small>
+                            </h2>
+                            <h2></h2>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p>
+                                <span class="glyphicon glyphicon-envelope"></span>
+                                <span class="sr-only">Email:</span>
+                                {#{{ user.contact.email }}#}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p>
+                                <span class="glyphicon glyphicon-earphone"></span>
+                                <span class="sr-only">Phone:</span>
+                                {#{{ user.contact.phone }}#}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    {% if user == app.user %}
+                        <button class="btn btn-info" data-toggle="modal" data-target="#specialty-modal">Edit Profile
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active">
+                <a href="#home" aria-controls="home" role="tab" data-toggle="tab">Home</a>
+            </li>
+            <li role="presentation">
+                <a href="#contact" aria-controls="contact" role="tab" data-toggle="tab">Contact</a>
+            </li>
+            <li role="presentation">
+                <a href="#specialties" aria-controls="specialties" role="tab" data-toggle="tab">Specialties</a>
+            </li>
+            <li role="presentation">
+                <a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">Settings</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="home">
+                <div class="row">
+                    <div class="col-xs-12 col-md-6">
+                        <h3>Information</h3>
+                        <p>
+                            <strong>Major</strong><br>
+                            {#Computer Science#}
+                            {#{% for major in user.info.majors %}#}
+                            {#{{ major }}#}
+                            {#{% endfor %}#}
+                        </p>
+                    </div>
+                    <div class="col-xs-12 col-md-6">
+
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="contact">
+                <div class="row">
+                    <div class="col-xs-12 col-md-6">
+                        <address>
+                            <strong>Email</strong><br>
+                            {{ user.username }}@utdallas.edu
+                            {#{{ user.contact.email }}#}
+                        </address>
+                        <p>
+                            <strong>Phone Number</strong><br>
+                            {#(123) 456-7890#}
+                            {#{{ user.contact.phone }}#}
+                        </p>
+                        <p>
+                            <strong>Phone Carrier</strong><br>
+                            {#AT&T#}
+                            {#{{ user.contact.carrier }}#}
+                        </p>
+                    </div>
+                    <div class="col-xs-12 col-md-6">
+
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="specialties">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <ul class="list-unstyled">
+                            {% for subject in subjects %}
+                                <li>{{ subject.name }}
+                                    {% set rating = 0 %}
+                                    {% for specialty in user.info.specialties %}
+                                        {% if specialty.subject == subject %}
+                                            {% set rating = specialty.rating %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% for i in 1 .. 5 %}
+                                        {% if rating >= i %}
+                                            <span class="fas fa-star" style="color: gold"></span>
+                                        {% else %}
+                                            <span class="fas fa-star" style="color: grey"></span>
+                                        {% endif %}
+                                    {% endfor %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div role="tabpanel" class="tab-pane" id="settings">
+                <div class="row">
+                    <div class="col-xs-12 col-md-6">
+                        <h3>Notification Settings</h3>
+                        <p>
+                            Coming soon
+                        </p>
+                        {#<p>#}
+                        {#<strong>Email</strong><br>#}
+                        {#</p>#}
+                        {#<p>#}
+                        {#<strong>Text</strong><br>#}
+                        {#</p>#}
+                    </div>
+                    <div class="col-xs-12 col-md-6">
+                        <h3>Other Settings</h3>
+                        <p>
+                            Coming soon
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if app.user == user %}
+        <div class="modal fade" id="specialty-modal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                    aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Specialties</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Choose your comfort/knowledge level in the following topics. 1 the least
+                            comfortable/knowledgeable and 5 the most comfortable/knowledgeable</p>
+                        <form name="specialties" method="post">
+                            {% for subject in subjects %}
+                                <label>{{ subject.name }}</label>
+                                {% for i in 1..5 %}
+                                    <label class="radio-inline">
+                                        <input type="radio" name="specialties[{{ subject.id }}]" value="{{ i }}"> {{ i }}
+                                    </label>
+                                {% endfor %}
+                                <br>
+                            {% endfor %}
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button id="specialties-submit" type="button" class="btn btn-primary">Save changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('.nav-tabs a').on('click', function (e) {
+                e.preventDefault()
+                $(this).tab('show')
+            });
+
+            $('#profile_image').off().on('load', function () {
+                $('#profile_image').css("display", "block");
+                $('#temp_image').css("display", "none");
+            });
+
+            $('#specialties-submit').on('click', function() {
+               $('[name="specialties"]').submit();
+            });
+        });
+    </script>
+{% endblock %}

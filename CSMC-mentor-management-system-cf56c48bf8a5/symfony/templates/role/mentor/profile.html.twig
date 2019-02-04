@@ -1,0 +1,384 @@
+{% extends 'shared/base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css" href="{{ asset('build/css/global.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('build/css/mentor_profile.css') }}"/>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.css">
+
+{% endblock %}
+
+{% block body %}
+    <!--
+Render example :
+    <small>{{ user.username }}</small>
+-->
+
+    <div class="">
+        <div class="container">
+            <div class="row pt">
+                <br>
+                <br>
+                <div class="col-md-6">
+
+                    <div class="row">
+                        <div class="col-md-12 info-board">
+                            <div class="main-name">
+                                <div class="row">
+                                    <div class="col-md-9 align-middle  ">
+                                        <!--
+                                            ***
+                                            Todo: Render your user."property" here
+                                            ***
+                                        -->
+                                        <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+
+                                    </div>
+                                    <div class="col-md-3 main-btn">
+                                        <a href="{{ path("edit_profile", {"username" : user.username}) }}"
+                                           class="btn btn-info btn-block btn-edit" aria-label="Left Align">
+                                            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
+                                            Profile
+                                        </a>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <br>
+                            <div class="attr-field">
+                                <p>Preferred Name:</p>
+                                <p>{{ user.preferredName }}</p>
+                            </div>
+
+                            {#Change requested alert for preferred name#}
+                            {% set prefNameReq = user.profile.preferredNameModificationRequest %}
+                            {% if prefNameReq %}
+                                <div class="panel panel-default change-req-panel">
+                                    <p class="change-req-label">Pending Approval:</p>
+                                    <div class="attr-field change-req-field">
+                                        <p>Preferred Name:</p>
+                                        <p>{{ user.profile.preferredNameModificationRequest.value }}</p>
+                                    </div>
+                                    {% if isAdmin %}
+                                        <div class="change-req-btn-row">
+                                            <a href="{{ path('admin_reject_mod_request', {'id': prefNameReq.id}) }}"
+                                               class="btn btn-default btn-reject">
+                                                <span class="glyphicon glyphicon-remove "></span> Reject
+                                            </a>
+                                            <a href="{{ path('admin_approve_mod_request', {'id': prefNameReq.id}) }}"
+                                               class="btn btn-approve">
+                                                <span class="glyphicon glyphicon-ok"></span> Approve
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            <div class="attr-field">
+                                <p>Birth date:</p>
+                                <p>{{ user.profile.birthDate is empty ? "" : user.profile.birthDate | date("m/d/Y") }}</p>
+                            </div>
+                            <div class="attr-field">
+                                <p>Expected graduation date: </p>
+                                <p>{{ user.profile.expectedGraduationSemester }}</p>
+                            </div>
+                            <div class="attr-field">
+                                <p>Phone number: </p>
+                                <p>{{ user.profile.phoneNumber | phone }}</p>
+                            </div>
+                            <div class="attr-field">
+                                <p>Course Expertise Levels: </p>
+                                <br>
+
+                                <div class="level-list">
+                                    {% for specialty in user.profile.specialties %}
+                                        <div class="row">
+                                            <p class="progress-desc">{{ specialty.subject.name }}</p>
+                                            <br>
+                                            <div class="col-md-11 progress-container">
+                                                <div class="progress">
+                                                    <div class="progress-bar" role="progressbar"
+                                                         style="width: {{ specialty.rating * 20 }}%"
+                                                         aria-valuenow="{{ specialty.rating * 20 }}"
+                                                         aria-valuemin="0" aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <p>{{ specialty.rating }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            {% if user.profile.dietaryRestrictions %}
+                                <div class="attr-field">
+                                    <p>Dietary Restrictions: </p>
+                                    <br>
+                                    <p class="dietary">{{ user.profile.dietaryRestrictions }}</p>
+                                </div>
+                            {% endif %}
+
+                            {% if isAdmin %}
+                                <div class="attr-field">
+
+                                    <p>Admin Notes: </p>
+                                    <br>
+                                    <p class="dietary">{{ user.profile.adminNotes }}</p>
+
+                                </div>
+                            {% endif %}
+
+                            <h2>Notification Preferences:</h2>
+                            {% set prefs = user.notificationPreferences %}
+
+                            {% if prefs.hasNotifications %}
+                                <div class="attr-field">
+                                    <p>Preferred Delivery Method: </p> <br>
+
+                                    {% if prefs.useEmail %}
+                                        <p>Email: {{ prefs.preferredEmail }}</p> <br>
+                                    {% endif %}
+
+                                    {% if prefs.usePhoneNumber %}
+                                        <p>Text: {{ prefs.preferredPhoneNumber | phone }},
+                                            {{ prefs.preferredPhoneNumberCarrier }}</p>
+                                    {% endif %}
+                                </div>
+
+                                <div class="attr-field">
+                                    <p>I would like to receive notifications:</p> <br>
+
+                                    {% if prefs.notifyWhenAssigned %}
+                                        <p>When I am assigned to a session</p> <br>
+                                    {% endif %}
+
+                                    {% if prefs.notifyBeforeSession %}
+                                        {% set days = prefs.sessionReminderAdvanceDays %}
+                                        {% set daysString = 'day|days' %}
+                                        <p>{{ days }} {{ daysString | transchoice(days) }} before an upcoming
+                                            session</p>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <p>Notifications are disabled</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-6">
+                    <div class="profile-picture-frame text-center">
+                        {% if user.profilePicture is not null %}
+                            <img class="profile-picture" src="{{ path('profile_image', {'username': user.username}) }}">
+                        {% else %}
+                            {#Use the placeholder image#}
+                            <img class="profile-picture" src="{{ asset('build/images/user.png') }}">
+                        {% endif %}
+                    </div>
+
+                    {#Change requested alert for profile picture#}
+                    {% set pictureRequest = user.profile.profilePictureModificationRequest %}
+                    {% if pictureRequest is not null %}
+                        <div class="panel panel-default change-req-panel">
+                            <p class="change-req-label">Pending Approval:</p>
+                            <img class="profile-picture"
+                                 src="{{ path('profile_requested_image', {'username': user.username}) }}">
+                            {% if isAdmin %}
+                                <div class="change-req-btn-row">
+                                    <a href="{{ path('admin_reject_mod_request', {'id': pictureRequest.id}) }}"
+                                       class="btn btn-default btn-reject">
+                                        <span class="glyphicon glyphicon-remove "></span> Reject
+                                    </a>
+                                    <div id="crop_current_profile_picture" class="btn btn-default btn-crop">
+                                        <span class="glyphicon glyphicon-scissors"></span> Crop
+                                    </div>
+                                    <a href="{{ path('admin_approve_mod_request', {'id': pictureRequest.id}) }}"
+                                       class="btn btn-approve">
+                                        <span class="glyphicon glyphicon-ok"></span> Approve
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if isAdmin %}
+        <div class="panel panel-default pic-upload-panel" style="display: none;">
+            <div class="panel-heading">
+            </div>
+            <div class="panel-body">
+                <div id="{{ user.id }}" class="dropzone"
+                     style="width: 100%; height: 0; min-height: 0; padding-bottom: calc(100% - 24px)"
+                     data-crop
+                     data-canvas data-image data-user="{{ user.id }}" data-username="{{ user.username }}"
+                     data-has-image="{{ user.profile.image is not null }}">
+                </div>
+            </div>
+            <div class="panel-footer">
+                <div class="row">
+                    <div class="col-xs-4">
+                        <button class="btn btn-default" style="width: 100%;" data-dropzone="{{ user.id }}">
+                            <span class="glyphicon glyphicon-open"></span>
+                            <span class="sr-only">Upload</span>
+                        </button>
+                    </div>
+                    <div class="col-xs-4">
+                        <button class="btn btn-default" style="width: 100%;" data-dropzone="{{ user.id }}">
+                            <span class="glyphicon glyphicon-trash"></span>
+                            <span class="sr-only">Trash</span>
+                        </button>
+                    </div>
+                    <div class="col-xs-4">
+                        <button class="btn btn-default" style="width: 100%;" data-dropzone="{{ user.id }}">
+                            <span class="fas fa-compress"></span>
+                            <span class="sr-only">Crop</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="template-container" hidden>
+            {# TODO add progress bar and indication if uploaded or not #}
+            <div class="dz-preview dz-file-preview"
+                 style="width: calc(100% - 32px); height: 0; min-height: 0; padding-bottom: calc(100% - 32px);">
+                <div class="dz-image" style="width: 100%; height: 0; min-height: 0; padding-bottom: 100%;">
+                    <img data-dz-thumbnail style="width: 100%; border: 2px solid red; border-radius: 20px"/>
+                </div>
+                <div class="dz-details">
+                    <div class="dz-size">
+                        <span data-dz-size></span>
+                    </div>
+                    {#<div class="dz-filename">#}
+                    {#<span data-dz-name></span>#}
+                    {#</div>#}
+                </div>
+                <div class="dz-error-message">
+                    <span data-dz-errormessage></span>
+                </div>
+            </div>
+        </div>
+        <div id="admin-modal" class="modal fade" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <img id="admin-modal-image" data-active>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <button class="btn btn-success">Accept</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+
+    {% if isAdmin %}
+        <script type="text/javascript"
+                src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.js"></script>
+        <script type="text/javascript"
+                src="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.js"></script>
+        <script>
+            $('#crop_current_profile_picture').on('click', function () {
+                var dropzone = $('.dropzone').get(0).dropzone;
+                let originalPictureURL = '{{ path('origin_requested_image', {'username': user.username}) }}';
+                var file = {name: "file", dataURL: originalPictureURL};
+
+                if (dropzone.previewsContainer) {
+                    file.previewElement = Dropzone.createElement(dropzone.options.previewTemplate.trim());
+
+                    dropzone.previewsContainer.appendChild(file.previewElement);
+
+                    if (dropzone.options.addRemoveLinks) {
+                        file._removeLink = Dropzone.createElement("<a class=\"dz-remove\" href=\"javascript:undefined;\" data-dz-remove>" + dropzone.options.dictRemoveFile + "</a>");
+                        file.previewElement.appendChild(file._removeLink);
+                    }
+                }
+                $('#admin-modal-image').data('active', dropzone.element.id);
+                $('#admin-modal-image').cropper('replace', file.dataURL);
+                $('#admin-modal').modal('show');
+            });
+
+            var minWidth = window.innerWidth < 500 ? window.innerWidth * 0.8 : window.innerWidth * 0.6;
+            var minHeight = window.innerHeight < 500 ? window.innerHeight * 0.8 : window.innerHeight * 0.6;
+
+            $('#admin-modal-image').cropper({
+                aspectRatio: 1,
+                viewMode: 2,
+                minContainerWidth: minWidth,
+                minContainerHeight: minHeight,
+                responsive: true,
+                ready: function () {
+                    $('.cropper-container').css('margin', 'auto');
+                    $('.modal-content').css('width', minWidth + 30);
+                    $('#admin-modal .btn-success').off('click').on('click', function (event) {
+                        var active = $('#admin-modal-image').data('active');
+
+                        var crop = JSON.stringify($('#admin-modal-image').cropper('getCropBoxData'));
+                        var canvas = JSON.stringify($('#admin-modal-image').cropper('getCanvasData'));
+                        var image = JSON.stringify($('#admin-modal-image').cropper('getImageData'));
+                        $('#' + active).data('crop', crop);
+                        $('#' + active).data('canvas', canvas);
+                        $('#' + active).data('image', image);
+
+                        $('#admin-modal').modal('hide');
+
+                        $.ajax({
+                            type: 'POST',
+                            url: "{{ path('update_profile_image', {'username': user.username}) }}",
+                            data: {
+                                'user': active,
+                                'crop': crop,
+                                'canvas': canvas,
+                                'image': image
+                            },
+                            complete: function (response) {
+                                if (response.responseText) {
+                                    location.reload();
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+
+            $('#admin-modal').on('show.bs.modal', function (event) {
+                var active = $('#admin-modal-image').data('active');
+
+                var crop = $('#' + active).data('crop');
+                var canvas = $('#' + active).data('canvas');
+                var image = $('#' + active).data('image');
+                if (crop && canvas && image) {
+                    $('#admin-modal-image').cropper('setCropBoxData', JSON.parse(crop));
+                    $('#admin-modal-image').cropper('setCanvasData', JSON.parse(canvas));
+                    $('#admin-modal-image').cropper('setImageData', JSON.parse(image));
+                }
+            });
+            $('#admin-modal').on('hidden.bs.modal', function (event) {
+                $('#admin-modal').data('bs.modal', null);
+            });
+        </script>
+    {% endif %}
+{% endblock %}

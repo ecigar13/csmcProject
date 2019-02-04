@@ -1,0 +1,7 @@
+{% extends 'shared/base.html.twig' %}
+{% block body %}
+    {{ include('shared/component/flash_messages.html.twig') }}
+    {{ form_start(form) }}
+    {{ form_widget(form) }}
+    {{ form_end(form) }}
+{% endblock %}

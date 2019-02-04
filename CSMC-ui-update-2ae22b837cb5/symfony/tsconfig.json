@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+
+  },
+  "exclude": [
+    "vendor",
+    "node_modules"
+  ]
+}

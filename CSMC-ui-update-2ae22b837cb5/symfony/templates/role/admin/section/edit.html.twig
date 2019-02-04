@@ -1,0 +1,209 @@
+{% extends "role/admin/base.html.twig" %}
+{% block body %}
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="myModalEdit">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background: rgba(38,185,154,.88);height:45px">
+                    <h5 class="modal-title"
+                        style="color:white; font-size: large;font-family: Helvetica, Arial, sans-serif;"><b>Save</b>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"/>
+                        <span aria-hidden="true">&times;</span></h5>
+                    </button>
+                </div>
+                <div class="modal-body" style="height: 50px">
+                    <p>Are you sure you want to save the changes?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Discard</button>
+                    <button type="button" class="btn btn-success" id="saveChanges">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" tabindex="-1" role="dialog" id="myModalDelete">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background: #C82829;height:45px">
+                    <h5 class="modal-title"
+                        style="color:white; font-size: large;font-family: Helvetica, Arial, sans-serif;"><b>Delete</b>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"/>
+                        <span aria-hidden="true">&times;</span></h5>
+                    </button>
+                </div>
+                <div class="modal-body" style="height: 50px">
+                    <p>Are you sure you want to delete the Section?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Discard</button>
+                    {# Change the delete URL #}
+                    <button type="button" class="btn btn-danger" id="deleteItem"
+                            onclick="location.href='/deleteSection?id={{ deleteId }}'">Delete
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="center_col" role="main">
+
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2> Edit Section ({{ sectionNumber }}) </h2>
+                        <span class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3" align="right">
+                        <button type="button" id="deleteBtn" class="btn btn-danger" data-toggle="modal"
+                                data-target="#myModalDelete" style="float: right">Delete</button>
+                    </span>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        {# Displaying Flash message for foreign key constraint violation#}
+                        {% for label, messages in app.flashes %}
+                            <div class="alert alert-danger" id="errorDiv">
+                                {% for message in messages %}
+                                    <div class="flash-{{ label }}">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+
+                        {# Checking for form errors and displaying them#}
+                        {% if not form.vars.valid %}
+                            <div class="alert alert-danger" id="errorDiv">
+                                {{ form_errors(form) }}
+                            </div>
+                        {% endif %}
+                        <br/>
+
+                        {{ form_start(form, {'attr': {'class': 'form-horizontal form-label-left'}}) }}
+                        {{ form_errors(form) }}
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.course) }}
+                            </div>
+                            {{ form_errors(form.course) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.course, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.number) }}
+                            </div>
+                            {{ form_errors(form.number) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.number, {'attr': {'class': 'form-control col-md-7 col-xs-12', 'required': 'required'}}) }}
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.semester, null, {'label_attr': {'style': 'font-weight:200'}}) }}
+                            </div>
+                            {{ form_errors(form.semester) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.semester, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+
+
+                        <!-- SHOULD be selected from selection box -->
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.instructors, null, { 'label_attr': {'style': 'font-weight:200'}}) }}
+                            </div>
+                            {{ form_errors(form.instructors) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.instructors, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.teaching_assistants, null, { 'label_attr': {'style': 'font-weight:200'}}) }}
+                            </div>
+                            {{ form_errors(form.teaching_assistants) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.teaching_assistants, {'attr': {'class': 'form-control col-md-7 col-xs-12', 'size': '7' }}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.description, null, { 'label_attr': {'style': 'font-weight:200'}}) }}
+                            </div>
+                            {{ form_errors(form.description) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.description, {'attr': {'class': 'form-control col-md-7 col-xs-12', 'rows': '7' }}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                Upload Roster
+                            </div>
+
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                <b>[[File Upload Control ...]]</b>
+                            </div>
+                        </div>
+
+
+                        <div class="ln_solid"></div>
+
+                        <div class="form-group">
+                            <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                                <a class="btn btn-secondary" href="{{ path('admin_section_list') }}">
+                                    Cancel
+                                </a>
+                                {{ form_widget(form.save, {'attr': {'class': 'btn btn-success', 'data-toggle':'modal','data-target':'#myModalEdit' }}) }}
+                            </div>
+                        </div>
+
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {% block javascripts %}
+        {{ parent() }}
+        <script type="text/javascript">
+            $('#form_submit').on('click', function (event) {
+                event.preventDefault();
+
+
+            });
+            $('#saveChanges').on('click', function () {
+                $('form').submit();
+            });
+            $('#deleteBtn').on('click', function (event) {
+                event.preventDefault();
+
+
+            });
+
+
+        </script>
+
+
+    {% endblock %}
+
+
+
+{% endblock %}

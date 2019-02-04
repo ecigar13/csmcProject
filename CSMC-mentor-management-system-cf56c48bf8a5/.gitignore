@@ -1,0 +1,31 @@
+### IDE Specific files/folders ###
+.idea/
+*.iml
+*~
+
+### Docker ###
+/docker/*
+!/docker/db
+/docker/db/*
+!/docker/db/Dockerfile
+/docker/db/data/*
+!/docker/php
+!/docker/web
+
+### Symfony ###
+/symfony/.env
+/symfony/var/cache/
+/symfony/var/log/
+/symfony/var/sessions/
+/symfony/vendor/
+/symfony/node_modules/
+/symfony/public/build/
+/symfony/public/uploads/
+
+### Other ###
+!*.gitignore
+.DS_Store
+
+#ignore the files ending in ~ (backups from editors)
+# can be a security issue
+*~.DS_Store

@@ -1,0 +1,39 @@
+security:
+    # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
+    providers:
+#        in_memory: { memory: ~ }
+        user_provider:
+            id: app.ldap_entity_user_provider
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            anonymous: ~
+
+            switch_user: { role: ROLE_DEVELOPER }
+            # activate different ways to authenticate
+
+            # http_basic: ~
+            # https://symfony.com/doc/current/security.html#a-configuring-how-your-users-will-authenticate
+
+            # form_login: ~
+            # https://symfony.com/doc/current/security/form_login_setup.html
+            form_login_ldap_search:
+                login_path: login
+                check_path: login
+                service:    Symfony\Component\Ldap\Ldap
+                dn_string:  'ou=people,dc=utdallas,dc=edu'
+                query_string: '(uid={username})'
+                always_use_default_target_path: true
+                default_target_path: /
+                provider: user_provider
+#            form_login:
+#                login_path: login
+#                check_path: login
+#                provider: user_provider
+            logout:
+                path: /logout
+                target: /
+    access_control:
+        - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_DEVELOPER] }
