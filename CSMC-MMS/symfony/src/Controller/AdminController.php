@@ -64,8 +64,7 @@ class AdminController extends Controller
      *
      * @return Response
      */
-    public function cropperAction()
-    {
+    public function cropperAction() {
         $mentors = $this->getDoctrine()
             ->getRepository(User::class)
             ->findByRole('mentor');
@@ -81,13 +80,12 @@ class AdminController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function mentorFileUpload(Request $request)
-    {
+    public function mentorFileUpload(Request $request) {
         if (!$request->isXmlHttpRequest()) {
             throw new MethodNotAllowedException(array('JSON'));
         }
-        $file = new
-        FileData();
+
+        $file = new FileData();
         $file->file = $request->files->get('file');
         $crop = $request->request->get('crop');
         $canvas = $request->request->get('canvas');
