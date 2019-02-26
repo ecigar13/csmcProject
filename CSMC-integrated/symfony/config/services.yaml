@@ -47,12 +47,26 @@ services:
       arguments:
         $uploadDirectory: '%dir.uploads%'
 
+    app.email_service:
+      class: App\Utils\EmailNotificationsService
+      arguments:
+        $smtpUsername: '%env(SMTP_USERNAME)%'
+        $smtpPassword: '%env(SMTP_PASSWORD)%'
+        $fromEmail: '%env(FROM_EMAIL)%'
+
     app.image_editor:
       class: App\Utils\ImageEditor
       arguments:
         $uploadDirectory: '%dir.uploads%'
 
     App\Utils\ImageEditor: '@app.image_editor'
+    App\Utils\EmailNotificationsService: '@app.email_service'
+
+    app.session_reminders_notifier:
+      class: App\Utils\SessionRemindersNotifier
+
+    app.session_assignments_notifier:
+      class: App\Utils\SessionAssignmentsNotifier
 
 #    app.user_service:
 #            class: AppBundle\Twig\Globals\UserService
