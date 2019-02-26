@@ -3,7 +3,11 @@
 
 namespace App\Entity\Occurrence;
 
-
+use App\Entity\Occurrence\AbsenceOccurrence;
+use App\Entity\Occurrence\BehaviorOccurrence;
+use App\Entity\Occurrence\CumulativeTardinessOccurrence;
+use App\Entity\Occurrence\Occurrence;
+use App\Entity\Occurrence\OccurrenceType;
 use App\Entity\User\User;
 use App\Utils\DateTimeService;
 use Doctrine\ORM\Mapping as ORM;

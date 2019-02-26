@@ -2,6 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Occurrence\AbsenceOccurrence;
+use App\Entity\Occurrence\BehaviorOccurrence;
+use App\Entity\Occurrence\CumulativeTardinessOccurrence;
+use App\Entity\Occurrence\Occurrence;
+use App\Entity\Occurrence\OccurrenceType;
 use App\DataTransferObject\FileData;
 use App\Entity\Misc\Subject;
 use App\Entity\File\File;
@@ -76,25 +81,81 @@ class ProfileController extends Controller
 
     /**
      * @Route("/profile/{username}/showDetailedScore", name="show_detailed_score")
-     * 
-     * @var $mentor a user.username
+     * Query the db for a mentor with matching username. Return all occurences of that user.
+     * @param Request $request
+     * @param User $mentor a user.username
+     * @return Response
      */
     public function showScoreDetails(Request $request, User $mentor)
     {
-        // Protect against non-admin user trying to edit someone else's profile
-        $isAdmin = $this->isGranted('admin');
-        if ($this->getUser() != $mentor && !$isAdmin) {
-            // Redirect to home instead of displaying a forbidden message
-            return $this->redirectToRoute('home');
-        }
+      $pendingOccurrences = null;
+      $closedOccurrences = null;
 
-        $mentorIdsWithOccurrence = $this->getDoctrine()->getRepository(User::class)->findMentorIdsWithPendingOccurrences();
-        
+      $requestedUser = $mentor->getUsername();
 
-        return $this->render('role/mentor/detailed_score.html.twig', array(
-            'user' => $mentor,
-            'occurrencesArray' => $mentorIdsWithOccurrence
-        ));
+      $userId = $mentor->getUsername();
+      $foundMentor = false;
+      //query for the mentor in Occurrence Entity
+      $user = $this->getDoctrine()->getRepository(User::class)->findOneBy(array('username' => $userId));
+
+      //find all pending occurrences and closed occurrences.
+      $pendingOccurrences = $this->getDoctrine()->getRepository(Occurrence::class)
+          ->findPendingOccurrencesForDisplaying($mentor);
+      $closedOccurrences = $this->getDoctrine()->getRepository(Occurrence::class)
+          ->findClosedOccurrencesForDisplaying($mentor);
+
+
+      //get  occurrenceTypes table and map them to show points.
+      $occurrenceTypes = $this->getEntityManager()->getRepository(OccurrenceType::class)->findAll();
+      $occurrenceTypes = array_map(function ($occurrenceType) {
+          return array(
+              'description' => $occurrenceType->getDescription(),
+              'defaultPoints' => $occurrenceType->getDefaultPoints()
+          );
+      }, $occurrenceTypes);
+
+      $penaltyManager = AttendancePenaltyPersistenceManager::loadModel($this->getDoctrine()->getManager());
+      $unjustifiedAbsencePenalties = $penaltyManager->getUnjustifiedAbsenceWithNoticePenalties();
+      $justifiedAbsencePenalties = $penaltyManager->getJustifiedAbsenceWithNoticePenalties();
+
+      $unjustifiedAbsencePenalties = array_map(function ($penalty) {
+          return array(
+              'hoursBefore' => $penalty->getHoursBefore(),
+              'penaltyAmount' => $penalty->getPenaltyAmount()
+          );
+      }, $unjustifiedAbsencePenalties);
+
+      $justifiedAbsencePenalties = array_map(function ($penalty) {
+          return array(
+              'hoursBefore' => $penalty->getHoursBefore(),
+              'penaltyAmount' => $penalty->getPenaltyAmount()
+          );
+      }, $justifiedAbsencePenalties);
+
+      $noNoticePenaltyAmount = $penaltyManager->getAbsenceWithoutNoticePenalty();
+      if ($noNoticePenaltyAmount) {
+          $noNoticePenaltyAmount = $noNoticePenaltyAmount->getPenaltyAmount();
+      }
+
+      $noticeAmounts = [];
+
+      /** @var AbsenceOccurrence[] $absenceOccurrences */
+      $absenceOccurrences = $this->getDoctrine()->getRepository(AbsenceOccurrence::class)->findAll();
+
+      foreach ($absenceOccurrences as $absenceOccurrence) {
+          $noticeAmounts[$absenceOccurrence->getId()] = $absenceOccurrence->getHoursNotice();
+      }
+
+      return $this->render('role/admin/show_detailed_score.html.twig', array(
+          'pendingOccurrences' => $pendingOccurrences,
+          'closedOccurrences' => $closedOccurrences,
+          'occurrenceTypes' => json_encode($occurrenceTypes),
+          'unjustifiedPenalties' => json_encode($unjustifiedAbsencePenalties),
+          'justifiedPenalties' => json_encode($justifiedAbsencePenalties),
+          'noNoticePenaltyAmount' => $noNoticePenaltyAmount,
+          'noticeAmounts' => json_encode($noticeAmounts),
+          'requestedUser' => $requestedUser
+      ));
     }
 
     /**

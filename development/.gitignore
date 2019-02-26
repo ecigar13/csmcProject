@@ -2,7 +2,6 @@
 .idea/
 *.iml
 *~
-.vscode
 
 ### Docker ###
 /docker/*
@@ -18,8 +17,8 @@
 /symfony/var/cache/
 /symfony/var/log/
 /symfony/var/sessions/
-**/symfony/vendor/
-**/symfony/node_modules/
+/symfony/vendor/
+/symfony/node_modules/
 /symfony/public/build/
 /symfony/public/uploads/
 
@@ -30,4 +29,3 @@
 #ignore the files ending in ~ (backups from editors)
 # can be a security issue
 *~.DS_Store
-node_modules/
