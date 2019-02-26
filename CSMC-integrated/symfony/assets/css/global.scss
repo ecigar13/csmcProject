@@ -1,3 +1,5 @@
+@import '~font-awesome/css/font-awesome.css';
+@import '~nprogress/nprogress.css';
 @import '~@fortawesome/fontawesome-free/css/all.css';
 
 @import "table";
@@ -72,6 +74,13 @@ img {
   width: 100%;
   padding: 0
 }
+
+a.paginate_button.current {
+  font-weight: 900;
+  color: #04c;
+  border: 2px solid;
+}
+
 
 /*.bt-form__wrapper {*/
 /*margin: 30px auto;*/
