@@ -1,0 +1,10 @@
+<h3>Announcements</h3>
+<dl class="dl-horizontal">
+    {% for announcement in announcements %}
+        <dt>{{ announcement.postDate|date('m/d/Y') }}</dt>
+        <dd>{{ announcement.message }}</dd>
+    {% else %}
+        <dt>{{ date()|date('m/d/Y') }}</dt>
+        <dd>No recent announcements</dd>
+    {% endfor %}
+</dl>

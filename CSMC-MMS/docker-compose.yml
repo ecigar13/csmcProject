@@ -1,0 +1,35 @@
+version: '3.1'
+services:
+    web:
+        container_name: web_mms
+        build: docker/web
+        ports:
+            - "8090:80"
+        volumes:
+            - ./symfony/:/code
+        links:
+            - php
+            
+    php:
+        container_name: php_mms
+        build: docker/php
+        volumes:
+            - ./symfony/:/code
+        links:
+            - db
+            
+    db:
+        container_name: db_mms
+        build: docker/db
+        ports:
+            - "3307:3307"
+        environment:
+            MYSQL_ROOT_PASSWORD: "password"
+        volumes:
+            - ./docker/db/data:/var/lib/mysql
+
+    phpmyadmin:
+        container_name: phpmyadmin_mms
+        image: phpmyadmin/phpmyadmin
+        ports:
+            - "8091:80"

@@ -1,0 +1,88 @@
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+    locale: 'en'
+    dir.uploads: '%kernel.project_dir%/public/uploads'
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        public: false       # Allows optimizing the container by removing unused services; this also means
+                            # fetching services directly from the container via $container->get() won't work.
+                            # The best practice is to be explicit about your dependencies anyway.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/*'
+        exclude: '../src/{Entity,Migrations,Tests,DoctrineEventSubscriber,DataTransferObject}'
+
+    # controllers are imported separately to make sure services can be injected
+    # as action arguments even if you don't extend any base controller class
+    App\Controller\:
+        resource: '../src/Controller'
+        tags: ['controller.service_arguments']
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    App\DoctrineEventSubscriber\ModifiableSubscriber:
+      tags:
+        - { name: doctrine.event_subscriber, connection: default }
+
+    App\DoctrineEventSubscriber\TimestampableSubscriber:
+      arguments: ['@annotation_reader', '@logger']
+      tags:
+        - { name: doctrine.event_subscriber, connection: default }
+
+    App\DoctrineEventSubscriber\FileSubscriber:
+      arguments: ['@annotation_reader', '@app.file_uploader', '@logger']
+      tags:
+        - { name: doctrine.event_subscriber, connection: default }
+
+    app.file_uploader:
+      class: App\Utils\FileUploader
+      arguments:
+        $uploadDirectory: '%dir.uploads%'
+
+    app.image_editor:
+      class: App\Utils\ImageEditor
+      arguments:
+        $uploadDirectory: '%dir.uploads%'
+
+    App\Utils\ImageEditor: '@app.image_editor'
+
+#    app.user_service:
+#            class: AppBundle\Twig\Globals\UserService
+#            public: false
+#            arguments: ['@security.token_storage', '@security.authorization_checker']
+
+    # security
+    app.ldap_entity_user_provider:
+        class: 'App\Security\User\LdapEntityUserProvider'
+        arguments:
+            - '@doctrine'
+            - 'App\Entity\User\User'
+            - 'username'
+
+    app.security.authentication.provider.ldap_search:
+        class: 'App\Security\Authentication\LdapAuthenticationProvider'
+        arguments:
+            - '@app.ldap_entity_user_provider'
+            - '@security.user_checker.default'
+            - 'idkwhatthisis'
+            - Symfony\Component\Ldap\Ldap
+            - '{username}'
+        public: false
+
+    Symfony\Component\Ldap\Ldap:
+        arguments: ['@Symfony\Component\Ldap\Adapter\ExtLdap\Adapter']
+
+    Symfony\Component\Ldap\Adapter\ExtLdap\Adapter:
+        arguments:
+            - host: nsldap.utdallas.edu   # host
+              port: 389                   # port
+              version: 3                  # version
+              referrals: false

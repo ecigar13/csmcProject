@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{% block page_title %}Computer Science Mentor Center{% endblock %}</title>
+
+    {% block stylesheets %}
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+              integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+              crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+              integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+              crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/dataTables.bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.2.1/css/responsive.bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.5.3/css/buttons.bootstrap.min.css">
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/multi-select/0.9.12/css/multi-select.min.css">
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker.min.css">
+        {#<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css"#}
+        {#integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU"#}
+        {#crossorigin="anonymous">#}
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <link rel="stylesheet" type="text/css" href="{{ asset('build/css/admin.css') }}"/>
+    {% endblock %}
+</head>
+
+<body class="nav-md">
+    <div class="container body">
+        <div class="main_container">
+            {% block nav %}
+                {{ include('shared/component/nav.html.twig') }}
+            {% endblock %}
+            <!-- page content -->
+            <div class="right_col" role="main">
+                {#<div class="">#}
+                {% block body %}
+
+                {% endblock %}
+                {#</div>#}
+            </div>
+            <!-- /page content -->
+            {% block footer %}
+                {{ include('shared/component/footer.html.twig') }}
+            {% endblock %}
+        </div>
+    </div>
+
+    {% block javascripts %}
+        <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+                integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+                crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+                integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+                crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+                integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+                crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/multi-select/0.9.12/js/jquery.multi-select.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.quicksearch/2.4.0/jquery.quicksearch.min.js"></script>
+        <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.10.16/js/dataTables.bootstrap.min.js"></script>
+        <script src="https://cdn.datatables.net/responsive/2.2.1/js/dataTables.responsive.min.js"></script>
+        <script src="https://cdn.datatables.net/responsive/2.2.1/js/responsive.bootstrap.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/1.5.3/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/1.5.3/js/buttons.bootstrap.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/1.5.3/js/buttons.html5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/1.5.3/js/buttons.print.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/1.5.3/js/buttons.colVis.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.min.js"></script>
+        <script src="{{ asset('build/js/fastclick.js') }}"></script>
+        <script src="{{ asset('build/js/nprogress.js') }}"></script>
+    {% endblock %}
+    <script>
+        /**
+         * Resize function without multiple trigger
+         *
+         * Usage:
+         * $(window).smartresize(function(){
+         *     // code here
+         * });
+         */
+        (function ($, sr) {
+            // debouncing function from John Hann
+            // http://unscriptable.com/index.php/2009/03/20/debouncing-javascript-methods/
+            var debounce = function (func, threshold, execAsap) {
+                var timeout;
+
+                return function debounced() {
+                    var obj = this, args = arguments;
+
+                    function delayed() {
+                        if (!execAsap)
+                            func.apply(obj, args);
+                        timeout = null;
+                    }
+
+                    if (timeout)
+                        clearTimeout(timeout);
+                    else if (execAsap)
+                        func.apply(obj, args);
+
+                    timeout = setTimeout(delayed, threshold || 100);
+                };
+            };
+
+            // smartresize
+            jQuery.fn[sr] = function (fn) {
+                return fn ? this.bind('resize', debounce(fn)) : this.trigger(sr);
+            };
+
+        })(jQuery, 'smartresize');
+
+        // Sidebar
+        $(function () {
+            var CURRENT_URL = window.location.href.split('#')[0].split('?')[0],
+                $BODY = $('body'),
+                $MENU_TOGGLE = $('#menu_toggle'),
+                $SIDEBAR_MENU = $('#sidebar-menu'),
+                $SIDEBAR_FOOTER = $('.sidebar-footer'),
+                $LEFT_COL = $('.left_col'),
+                $RIGHT_COL = $('.right_col'),
+                $NAV_MENU = $('.nav_menu'),
+                $FOOTER = $('footer');
+
+            // TODO: This is some kind of easy fix, maybe we can improve this
+            var setContentHeight = function () {
+                // reset height
+                $RIGHT_COL.css('min-height', $(window).height());
+
+                var bodyHeight = $BODY.outerHeight(),
+                    footerHeight = $BODY.hasClass('footer_fixed') ? -10 : $FOOTER.height(),
+                    leftColHeight = $LEFT_COL.eq(1).height() + $SIDEBAR_FOOTER.height(),
+                    contentHeight = bodyHeight < leftColHeight ? leftColHeight : bodyHeight;
+
+                // normalize content
+                contentHeight -= $NAV_MENU.height() + footerHeight;
+
+                $RIGHT_COL.css('min-height', contentHeight);
+            };
+
+            $SIDEBAR_MENU.find('a').on('click', function (ev) {
+                console.log('clicked - sidebar_menu');
+                var $li = $(this).parent();
+
+                if ($li.is('.active')) {
+                    $li.removeClass('active active-sm');
+                    $('ul:first', $li).slideUp(function () {
+                        setContentHeight();
+                    });
+                } else {
+                    // prevent closing menu if we are on child menu
+                    if (!$li.parent().is('.child_menu')) {
+                        $SIDEBAR_MENU.find('li').removeClass('active active-sm');
+                        $SIDEBAR_MENU.find('li ul').slideUp();
+                    } else {
+                        if ($BODY.is(".nav-sm")) {
+                            $SIDEBAR_MENU.find("li").removeClass("active active-sm");
+                            $SIDEBAR_MENU.find("li ul").slideUp();
+                        }
+                    }
+                    $li.addClass('active');
+
+                    $('ul:first', $li).slideDown(function () {
+                        setContentHeight();
+                    });
+                }
+            });
+
+            // toggle small or large menu
+            $MENU_TOGGLE.on('click', function () {
+                console.log('clicked - menu toggle');
+
+                if ($BODY.hasClass('nav-md')) {
+                    $SIDEBAR_MENU.find('li.active ul').hide();
+                    $SIDEBAR_MENU.find('li.active').addClass('active-sm').removeClass('active');
+                } else {
+                    $SIDEBAR_MENU.find('li.active-sm ul').show();
+                    $SIDEBAR_MENU.find('li.active-sm').addClass('active').removeClass('active-sm');
+                }
+
+                $BODY.toggleClass('nav-md nav-sm');
+
+                setContentHeight();
+
+                $('.dataTable').each(function () {
+                    $(this).dataTable().fnDraw();
+                });
+            });
+
+            // check active menu
+            $SIDEBAR_MENU.find('a[href="' + CURRENT_URL + '"]').parent('li').addClass('current-page');
+
+            $SIDEBAR_MENU.find('a').filter(function () {
+                return this.href == CURRENT_URL;
+            }).parent('li').addClass('current-page').parents('ul').slideDown(function () {
+                setContentHeight();
+            }).parent().addClass('active');
+
+            // recompute content when resizing
+            $(window).smartresize(function () {
+                setContentHeight();
+            });
+
+            setContentHeight();
+
+            // fixed sidebar
+            if ($.fn.mCustomScrollbar) {
+                $('.menu_fixed').mCustomScrollbar({
+                    autoHideScrollbar: true,
+                    theme: 'minimal',
+                    mouseWheel: {preventDefault: true}
+                });
+            }
+        });
+
+
+        // Panel toolbox
+        $(function () {
+            $('.collapse-link').on('click', function () {
+                var $BOX_PANEL = $(this).closest('.x_panel'),
+                    $ICON = $(this).find('i'),
+                    $BOX_CONTENT = $BOX_PANEL.find('.x_content');
+
+                // fix for some div with hardcoded fix class
+                if ($BOX_PANEL.attr('style')) {
+                    $BOX_CONTENT.slideToggle(200, function () {
+                        $BOX_PANEL.removeAttr('style');
+                    });
+                } else {
+                    $BOX_CONTENT.slideToggle(200);
+                    $BOX_PANEL.css('height', 'auto');
+                }
+
+                $ICON.toggleClass('fa-chevron-up fa-chevron-down');
+            });
+
+            $('.close-link').click(function () {
+                var $BOX_PANEL = $(this).closest('.x_panel');
+
+                $BOX_PANEL.remove();
+            });
+        });
+
+        // Accordion
+        $(function () {
+            $(".expand").on("click", function () {
+                $(this).next().slideToggle(200);
+                $expand = $(this).find(">:first-child");
+
+                if ($expand.text() == "+") {
+                    $expand.text("-");
+                } else {
+                    $expand.text("+");
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+<h3>Locations</h3>
+<dl class="dl-horizontal">
+    {% for room in rooms %}
+        <dt>
+            <a class="room_link" target="_blank"
+               href="http://www.utdallas.edu/locator/{{ room.building ~ '_' ~ room.floor ~ '.' ~ room.number }}">
+                {{ room.building ~ ' ' ~ room.floor ~ '.' ~ room.number }}
+            </a>
+        </dt>
+        <dd>{{ room.description }}</dd>
+    {% endfor %}
+</dl>
