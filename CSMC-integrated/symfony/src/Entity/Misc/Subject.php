@@ -52,7 +52,7 @@ class Subject {
     }
 
     public function __toString() {
-        return $this->name;
+        return strval($this->name);
     }
 
     /**

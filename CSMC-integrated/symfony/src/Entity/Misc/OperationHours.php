@@ -10,7 +10,8 @@ use Doctrine\ORM\Mapping as ORM;
  * @ORM\Entity
  * @ORM\Table(name="operation_hours")
  */
-class OperationHours {
+class OperationHours implements ModifiableInterface {
+    use ModifiableTrait;
 
     /**
      * @ORM\Id
@@ -41,7 +42,11 @@ class OperationHours {
         $this->endTime = $end;
     }
 
-    public function getDayName() {
+     public function getDayNumber() {
+        return date("w", strtotime($this->day));
+    }
+
+     public function getDayName() {
         return date('l', strtotime('Sunday + ' . $this->day . ' days'));
     }
 
