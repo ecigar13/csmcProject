@@ -3,6 +3,7 @@
 namespace App\Entity\Schedule;
 
 use App\Entity\User\User;
+use App\Utils\DateTimeService;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -34,11 +35,20 @@ class Timesheet {
     private $timeOut;
 
     /**
-     * Constructor
+     * The @see DateTimeService parameter exists so that we can easily mock the current time in tests.
+     *
+     * @param User $user
+     * @param DateTimeService|null $time
      */
-    public function __construct(User $user) {
+    public function __construct(User $user, DateTimeService $time = null)
+    {
         $this->user = $user;
-        $this->timeIn = new \DateTime();
+
+        if ($time != null) {
+            $this->timeIn = $time->now();
+        } else {
+            $this->timeIn = new \DateTime();
+        }
     }
 
     public function signOut() {

@@ -3,15 +3,17 @@
 namespace App\Entity\Schedule;
 
 use App\Entity\Misc\Subject;
-use Doctrine\ORM\Mapping as ORM;
-use App\Entity\User\User;
+use App\Entity\Occurrence\AbsenceOccurrence;
 use App\Entity\Session\SessionTimeSlot;
+use App\Entity\User\User;
+use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\Schedule\ShiftAssignmentRepository")
  * @ORM\Table(name="shift_assignment")
  */
 class ShiftAssignment {
+
     /**
      * @ORM\Id
      * @ORM\Column(type="guid")
@@ -49,6 +51,15 @@ class ShiftAssignment {
      */
     private $absence;
 
+    /**
+     * Stores the date when this assignment was added to a session. Used to send session assignment notifications.
+     *
+     * @ORM\Column(type="date", nullable=true)
+     *
+     * @var \DateTime
+     */
+    private $assignedOn;
+
     public function __construct(ScheduledShift $scheduledShift, Subject $subject = null, User $mentor) {
         $this->scheduledShift = $scheduledShift;
         $this->subject = $subject;
@@ -59,6 +70,12 @@ class ShiftAssignment {
         $this->subject = $subject;
 
         return $this;
+    }
+
+    public function assignToSession(SessionTimeSlot $timeSlot)
+    {
+        $this->session = $timeSlot;
+        $this->assignedOn = new \DateTime();
     }
 
     /**
@@ -136,6 +153,23 @@ class ShiftAssignment {
         return $this->absence;
     }
 
+    public function getAbsenceNoticeAmountInHours() {
+        $absenceNotice = $this->getAbsence();
+        if ($absenceNotice == null) {
+            return AbsenceOccurrence::NO_NOTICE;
+        } else {
+            $noticeTime = $absenceNotice->getCreatedOn();
+            $assignmentDateTime = $this->getAssignmentDateTime();
+            // Shouldn't ever happen, but just in case
+            if ($noticeTime >= $assignmentDateTime) {
+                return AbsenceOccurrence::NO_NOTICE;
+            }
+            $noticeAmount = $assignmentDateTime->diff($noticeTime);
+            $hoursNotice = $noticeAmount->days * 24 + $noticeAmount->h;
+            return $hoursNotice;
+        }
+    }
+
     /**
      * Set scheduledShift
      *
@@ -143,7 +177,7 @@ class ShiftAssignment {
      *
      * @return ShiftAssignment
      */
-    public function setScheduledShift(\App\Entity\Schedule\ScheduledShift $scheduledShift = null) {
+    public function setScheduledShift(ScheduledShift $scheduledShift = null) {
         $this->scheduledShift = $scheduledShift;
 
         return $this;
@@ -178,5 +212,19 @@ class ShiftAssignment {
      */
     public function getSubject() {
         return $this->subject;
+    }
+
+    /**
+     * Combines Shift date and ShiftAssignment time attributes to get one DateTime
+     *
+     * @return \DateTime
+     */
+    public function getAssignmentDateTime()
+    {
+        $assignmentDate = $this->getScheduledShift()->getDate();
+        $assignmentTime = $this->getScheduledShift()->getShift()->getStartTime();
+        $assignmentDateTime = new \DateTime($assignmentDate->format('m/d/Y') . ' ' . $assignmentTime->format('H:i:s'));
+
+        return $assignmentDateTime;
     }
 }

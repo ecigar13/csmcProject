@@ -118,16 +118,16 @@ class ScheduledShift {
         foreach ($this->assignments as $assignment) {
             $found = false;
             foreach ($mentors as $mentor) {
-                if ($assignment->getMentor()->getId() == $mentor['mentor']->getId()) {
-                    $assignment->updateSubject($mentor['subject']);
+                if ($assignment->getMentor() == $mentors['mentor']) {
+                    $assignment->updateSubject($mentors['subject']);
 
                     $found = true;
-                    $mentors[$mentor['mentor']->getId()]['assigned'] = true;
+                    $mentor['assigned'] = true;
                 }
             }
 
             if(!$found) {
-                $need_deleted[] = $assignment;
+                $this->removeAssignment($assignment);
             }
         }
 
