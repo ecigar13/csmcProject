@@ -6,18 +6,13 @@ use App\Entity\File\File;
 use App\Entity\File\VirtualFile;
 use App\Entity\Misc\Subject;
 use App\Entity\Misc\Visit;
-use App\Entity\Occurrence\AttendanceOccurrence;
-use App\Entity\Occurrence\BehaviorOccurrence;
-use App\Entity\Occurrence\Occurrence;
-use App\Entity\User\Info\NotificationPreferences;
 use App\Entity\User\Info\Info;
 use App\Entity\User\Info\Profile;
-use App\Form\Data\NotificationPreferencesFormData;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use JMS\Serializer\Annotation as Serializer;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -122,87 +117,20 @@ class User implements UserInterface, \Serializable {
 
     /**
      * Constructor
-     * @ORM\OneToMany(targetEntity="App\Entity\Occurrence\Occurrence", mappedBy="subject", cascade={"persist"})
-     * @var Occurrence[]
      */
-    private $occurrences;
-
-    /**
-     * @ORM\OneToOne(targetEntity="App\Entity\User\Info\NotificationPreferences",
-     *     mappedBy="user",
-     *     cascade={"persist"}
-     * )
-     *
-     * @var NotificationPreferences
-     */
-    private $notificationPreferences;
-
-    /**
-     * @param string $firstName
-     * @param string $lastName
-     * @param string $username
-     */
-    public function __construct(string $firstName, string $lastName, string $username)
-    {
+    public function __construct(string $firstName, string $lastName, string $username) {
         $this->firstName = $firstName;
         $this->lastName = $lastName;
         $this->username = $username;
 
         $this->profile = Profile::createForUser($this);
-        $this->notificationPreferences = new NotificationPreferences($this);
+
         $this->info = Info::createForUser($this);
 
         $this->roles = new ArrayCollection();
-        $this->occurrences = new ArrayCollection();
     }
 
-    public function addOccurrence(Occurrence $occurrence)
-    {
-        $this->occurrences->add($occurrence);
-    }
-
-    /**
-     * @param NotificationPreferencesFormData $formData
-     */
-    public function updateNotificationPreferences(NotificationPreferencesFormData $formData)
-    {
-        $this->notificationPreferences->updateFromFormData($formData);
-    }
-
-    // FIXME: using this method to aggregate points is very slow, use aggregate fields instead
-    public function getBehaviorOccurrencePoints()
-    {
-        $total = 0;
-
-        foreach ($this->occurrences as $occurrence) {
-            if ($occurrence instanceof BehaviorOccurrence && $occurrence->getStatus() == Occurrence::STATUS_APPROVED) {
-                $total += $occurrence->getPoints();
-            }
-        }
-
-        return $total;
-    }
-
-    public function getAttendanceOccurrencePoints()
-    {
-        $total = 0;
-
-        foreach ($this->occurrences as $occurrence) {
-            if ($occurrence instanceof AttendanceOccurrence && $occurrence->getStatus() == Occurrence::STATUS_APPROVED) {
-                $total += $occurrence->getPoints();
-            }
-        }
-
-        return $total;
-    }
-
-    public function getTotalOccurrencePoints()
-    {
-        return $this->getBehaviorOccurrencePoints() + $this->getAttendanceOccurrencePoints();
-    }
-
-    public function getProfile()
-    {
+    public function getProfile() {
         return $this->profile;
     }
 
@@ -367,7 +295,7 @@ class User implements UserInterface, \Serializable {
     }
 
     public function getPreferredName() {
-        if ($this->profile == null || $this->profile->getPreferredName() == null) {
+        if($this->profile == null) {
             return $this->firstName;
         }
 
@@ -375,8 +303,8 @@ class User implements UserInterface, \Serializable {
     }
 
     public function getEmail() {
-        return ($this->notificationPreferences && $this->notificationPreferences->getPreferredEmail())
-            ? $this->notificationPreferences->getPreferredEmail()
+        return ($this->info && $this->info->getEmail())
+            ? $this->info->getEmail()
             : ($this->username . '@utdallas.edu');
     }
 
@@ -393,9 +321,8 @@ class User implements UserInterface, \Serializable {
         return $this->profile->getProfilePicture();
     }
 
-    public function updateProfilePicture(File $image, bool $adminOverride = false)
-    {
-        $this->profile->updateProfilePicture($image, $adminOverride);
+    public function updateProfilePicture(File $image) {
+        $this->profile->updateProfilePicture($image);
     }
 
     public function updateCardId(string $code, bool $legacy) {
@@ -452,13 +379,5 @@ class User implements UserInterface, \Serializable {
      */
     public function eraseCredentials() {
         return null;
-    }
-
-    /**
-     * @return NotificationPreferences
-     */
-    public function getNotificationPreferences(): NotificationPreferences
-    {
-        return $this->notificationPreferences;
     }
 }
