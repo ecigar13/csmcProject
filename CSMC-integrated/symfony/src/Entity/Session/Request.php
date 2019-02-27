@@ -308,6 +308,19 @@ class Request {
     }
 
     /**
+     * Set type
+     *
+     * @param \App\Entity\Session\RequestType $type
+     *
+     * @return Request
+     */
+    public function setType(\App\Entity\Session\RequestType $type = null) {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
      * Get type
      *
      * @return \App\Entity\Session\RequestType

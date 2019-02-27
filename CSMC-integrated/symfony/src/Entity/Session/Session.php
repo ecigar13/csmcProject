@@ -136,6 +136,10 @@ abstract class Session implements ModifiableInterface {
     abstract public function getAttendances();
     abstract public function getAttendance(User $user);
 
+    public static function createFromRequest(Request $request) {
+
+    }
+
     public function update(SessionType $type, string $topic, string $description = null, string $studentInstructions = null, string $mentorInstructions = null, bool $graded, bool $numericGrade) {
         $this->topic = $topic;
         $this->description = $description;
