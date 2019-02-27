@@ -31,12 +31,6 @@ class LdapEntityUserProvider extends EntityUserProvider {
                 $this->manager->flush();
             }
 
-            if($user->getInfo() == null) {
-                $user->createInfo();
-
-                $this->manager->flush();
-            }
-
             return $user;
         } catch (UsernameNotFoundException $exception) {
             $adapter = new Adapter(array(

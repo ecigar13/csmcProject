@@ -3,15 +3,18 @@
 namespace App\Entity\User\Info;
 
 use App\Entity\Misc\Subject;
+use App\Form\Data\SpecialtyFormData;
 use Doctrine\ORM\Mapping as Orm;
 
 /**
  * @ORM\Entity
  * @ORM\Table(name="user_specialty",  uniqueConstraints={
- *     @ORM\UniqueConstraint(name="UQ_specialty_user_topic", columns={"info_id", "specialty_topic_id"})
+ *     @ORM\UniqueConstraint(name="UQ_specialty_user_topic", columns={"profile_id", "specialty_topic_id"})
  * }))
  */
-class Specialty {
+class Specialty
+{
+    const DEFAULT_SUBJECT_RATING = 1;
     /**
      * @ORM\Id()
      * @ORM\Column(type="guid")
@@ -20,10 +23,10 @@ class Specialty {
     private $id;
 
     /**
-     * @ORM\ManyToOne(targetEntity="Info", inversedBy="specialties")
-     * @ORM\JoinColumn(name="info_id", referencedColumnName="user_id")
+     * @ORM\ManyToOne(targetEntity="Profile", inversedBy="specialties")
+     * @ORM\JoinColumn(name="profile_id", referencedColumnName="user_id")
      */
-    private $info;
+    private $profile;
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Misc\Subject")
@@ -36,16 +39,26 @@ class Specialty {
      */
     private $rating;
 
-    public function __construct(Info $info, Subject $subject, int $rating) {
-        $this->info = $info;
+    public function __construct(Profile $profile, Subject $subject, int $rating = Specialty::DEFAULT_SUBJECT_RATING)
+    {
+        $this->profile = $profile;
         $this->topic = $subject;
         $this->rating = $rating;
+    }
+
+    public static function createFromFormData(SpecialtyFormData $formData) {
+        return new Specialty($formData->getProfile(), $formData->getTopic(), $formData->getRating());
     }
 
     public function updateRating(int $rating) {
         $this->rating = $rating;
 
         return $this;
+    }
+
+    public function updateFromFormData(SpecialtyFormData $formData)
+    {
+        $this->rating = $formData->getRating();
     }
 
     /**
@@ -64,6 +77,14 @@ class Specialty {
      */
     public function getRating() {
         return $this->rating;
+    }
+
+    /**
+     * @param mixed $rating
+     */
+    public function setRating($rating)
+    {
+        $this->rating = $rating;
     }
 
     /**
