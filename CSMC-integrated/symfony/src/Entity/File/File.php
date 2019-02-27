@@ -69,6 +69,18 @@ class File extends VirtualFile {
     }
 
     /**
+     * @param string $key
+     * @param mixed $value
+     */
+    public function set(string $key, $value) {
+        foreach ($this->metadata as $m) {
+            if ($m->getKey() === $key) {
+                $m->setValue($value);
+            }
+        }
+    }
+
+    /**
      * @return string
      */
     public function getPhysicalName() {
