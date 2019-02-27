@@ -5,6 +5,7 @@ namespace App\Utils;
 
 
 use App\Entity\Course\Course;
+use App\Entity\Schedule\ShiftAssignment;
 use App\Entity\Course\Section;
 use App\Entity\Schedule\Timesheet;
 use App\Entity\Session\Attendance;
@@ -58,7 +59,7 @@ class SwipeManager {
         return preg_match('/603[0-9]{13}/', $scancode, $matches) == 1;
     }
 
-    public function __construct(EntityManagerInterface $entityManager, LoggerInterface $logger) {
+    public function __construct(EntityManagerInterface $entityManager, LoggerInterface $logger, DateTimeService $time) {
         $this->entityManager = $entityManager;
         $this->logger = $logger;
         $this->time = $time;
