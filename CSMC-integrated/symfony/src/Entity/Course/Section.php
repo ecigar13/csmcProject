@@ -189,7 +189,9 @@ class Section implements ModifiableInterface {
     }
 
     /**
-     * Get instructors
+     * Get instructor
+     *
+     * @return \App\Entity\User\User
      */
     public function getInstructors() {
         return $this->instructors;
