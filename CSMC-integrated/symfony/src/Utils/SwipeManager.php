@@ -44,6 +44,11 @@ class SwipeManager {
     private $logger;
 
     /**
+     * @var DateTimeService
+     */
+    private $time;
+
+    /**
      * @param string $scancode
      *
      * @return boolean
@@ -56,6 +61,7 @@ class SwipeManager {
     public function __construct(EntityManagerInterface $entityManager, LoggerInterface $logger) {
         $this->entityManager = $entityManager;
         $this->logger = $logger;
+        $this->time = $time;
     }
 
     private function success(string $success, $data = array()) {
@@ -70,6 +76,11 @@ class SwipeManager {
         return new JsonResponse($error, 400);
     }
 
+    /**
+     * @param string $swipe
+     * @return JsonResponse
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
     public function walkInSwipe(string $swipe) {
         $user = $this->entityManager
             ->getRepository(User::class)
@@ -96,7 +107,8 @@ class SwipeManager {
             }
 
             // if not
-            $timesheet = new Timesheet($user);
+            $timesheet = new Timesheet($user, $this->time);
+            $this->processTardiness($user, $timesheet->getTimeIn());
             $this->entityManager->persist($timesheet);
             $this->entityManager->flush();
 
@@ -320,5 +332,26 @@ class SwipeManager {
 
     private function getCurrentMentors() {
         return null;
+    }
+
+    /**
+     * Calculates and registers any tardiness penalties that may apply to the mentor signing in at this particular time.
+     *
+     * @param User $mentor
+     * @param \DateTime $signInTime
+     * @throws \Doctrine\ORM\NonUniqueResultException
+     */
+    private function processTardiness(User $mentor, \DateTime $signInTime)
+    {
+        // This will return the shift if this mentor is assigned to a shift that already started
+        $shiftAssignment = $this->entityManager->getRepository(ShiftAssignment::class)
+            ->findForMentorAndSignInTime($mentor, $signInTime);
+
+        $occurrence = AttendancePenaltyPersistenceManager::createOccurrenceForSignInTime($mentor, $signInTime,
+            $this->entityManager, $shiftAssignment, $this->time);
+
+        if ($occurrence != null) {
+            $this->entityManager->persist($occurrence);
+        }
     }
 }
