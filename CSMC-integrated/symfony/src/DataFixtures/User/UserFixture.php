@@ -3,27 +3,42 @@
 namespace App\DataFixtures\User;
 
 use App\DataFixtures\Misc\SubjectFixture;
+use App\Entity\User\Info\Specialty;
 use App\Entity\User\User;
 use App\DataFixtures\User\RoleFixture;
+use App\Form\Data\ProfileFormData;
+use App\Form\Data\SpecialtyFormData;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 
-class UserFixture extends Fixture implements DependentFixtureInterface {
-    const INSTRUCTOR = 'instructor_';
+class UserFixture extends Fixture implements DependentFixtureInterface
+{
+    const INSTRUCTOR_00 = 'instructor_00';
+    const INSTRUCTOR_01 = 'instructor_01';
+    const INSTRUCTOR_02 = 'instructor_02';
+    const INSTRUCTOR_03 = 'instructor_03';
+    const INSTRUCTOR_04 = 'instructor_04';
+
     const MENTOR = 'mentor_';
     const STUDENT = 'student_';
 
-    public function load(ObjectManager $manager) {
+    const ADMIN_00 = 'admin_00';
+
+    const MENTOR_AMOUNT = 30;
+
+    public function load(ObjectManager $manager)
+    {
         // create mentors
         $mentors = array();
 
         $mentor_role = $this->getReference(RoleFixture::ROLE_MENTOR);
 
-        for ($i = 0; $i < 20; $i++) {
+        for ($i = 0; $i < self::MENTOR_AMOUNT; $i++) {
             $p = str_pad($i, 6, '0', STR_PAD_LEFT);
             $u = new User('f_mentor_' . $p, 'l_mentor_' . $p, 'mxm' . $p);
             $u->addRole($mentor_role);
+            $u->updateCardId($p . ":test", false);
 
             $u->updateSpecialty($this->getReference(SubjectFixture::JAVA), rand(1, 5));
             $u->updateSpecialty($this->getReference(SubjectFixture::CPP), rand(1, 5));
@@ -63,6 +78,13 @@ class UserFixture extends Fixture implements DependentFixtureInterface {
             $students[$p] = $u;
         }
 
+        // create admin
+
+        $admin_role = $this->getReference(RoleFixture::ROLE_ADMIN);
+        $admin = new User('f_admin_000000', 'l_admin_000000', 'axa000000');
+        $admin->addRole($admin_role);
+        $manager->persist($admin);
+
         $manager->flush();
 
         foreach($instructors as $number => $instructor) {
@@ -76,6 +98,8 @@ class UserFixture extends Fixture implements DependentFixtureInterface {
         foreach ($students as $number => $student) {
             $this->addReference(self::STUDENT . $number, $student);
         }
+
+        $this->addReference(self::ADMIN_00, $admin);
     }
 
     public function getDependencies() {

@@ -34,7 +34,7 @@ class TimestampableSubscriber implements EventSubscriber {
     public function prePersist(LifecycleEventArgs $args) {
         $entity = $args->getEntity();
 
-        // $this->logger->info('Entity of type "' . get_class($entity) . '" is timestampable: ' . $this->isTimestampable($entity));
+        $this->logger->info('Entity of type "' . get_class($entity) . '" is timestampable: ' . $this->isTimestampable($entity));
 
         if (!$this->isTimestampable($entity)) {
             return;
