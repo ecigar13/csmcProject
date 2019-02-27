@@ -150,7 +150,6 @@ class User implements UserInterface, \Serializable {
 
         $this->profile = Profile::createForUser($this);
         $this->notificationPreferences = new NotificationPreferences($this);
-        $this->info = Info::createForUser($this);
 
         $this->roles = new ArrayCollection();
         $this->occurrences = new ArrayCollection();
