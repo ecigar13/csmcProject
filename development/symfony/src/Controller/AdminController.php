@@ -307,6 +307,8 @@ class AdminController extends Controller
         ));
     }
 
+
+
     /**
      * @Route("/ajax/update_occurrence", name="update_occurrence")
      * @throws \Doctrine\ORM\ORMException

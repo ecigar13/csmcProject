@@ -55,38 +55,110 @@ Render example :
                             </div>
 
                             <h2>Detailed Score Table:</h2>
-                            
+                            <div class="row"><h2>Pending</h2></div>
+
+                    <div class="row table-outer">
+                        <table class="table table-hover" id="pendingTable">
+                            <thead>
+                            <tr>
+                                <th hidden>ID</th>
+                                <th hidden>FilterType</th>
+
+                                <th>Submitted</th>
+                                <th>By</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Subject</th>
+                                <th>Date Occurred</th>
+                                <th>Points</th>
+                                <th>Notes</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for occurrence in pendingOccurrences %}
+                                <tr>
+                                    <td hidden>{{ occurrence.id }}</td>
+                                    <td hidden>{{ occurrence | occurrenceFilter }}</td>
+                                    <td>{{ occurrence.creationDate | date("m/d/Y") }}</td>
+                                    <td>{{ occurrence | occurrenceSubmitter }}</td>
+                                    <td>
+                                        <span class="occurrence-type{% if occurrence | occurrenceCanEditType %} editable-cell{% endif %}">
+                                            <span {% if occurrence | occurrenceCanEditType %} class="{{ occurrence | occurrenceEditClass }}" {% endif %}>
+                                                {{ occurrence | occurrenceType }}
+                                            </span>
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence | occurrenceDescription }}</td>
+                                    <td>{{ occurrence.subject.preferredName }}</td>
+                                    <td>{{ occurrence | occurrenceDate | date("m/d/Y") }}</td>
+                                    <td>
+                                        <span class="occurrence-points editable-cell">
+                                            <span class="points-text">{{ occurrence | occurrencePoints }}</span>
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence.adminNotes }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row"><h2>Closed</h2></div>
+                    <div class="row table-outer">
+                        <table class="table table-hover" id="closedTable">
+                            <thead>
+                            <tr>
+                                <th hidden>ID</th>
+                                <th hidden>FilterType</th>
+                                <th>Submitted</th>
+                                <th>By</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Subject</th>
+                                <th>Date Occurred</th>
+                                <th>Points</th>
+                                <th>Notes</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for occurrence in closedOccurrences %}
+                                <tr>
+                                    <td hidden>{{ occurrence.id }}</td>
+                                    <td hidden>{{ occurrence | occurrenceFilter }}</td>
+
+                                    <td>{{ occurrence.creationDate | date("m/d/Y") }}</td>
+                                    <td>{{ occurrence | occurrenceSubmitter }}</td>
+                                    <td>
+                                        <span class="occurrence-type{% if occurrence | occurrenceCanEditType %} editable-cell{% endif %}">
+                                            <span {% if occurrence | occurrenceCanEditType %} class="{{ occurrence | occurrenceEditClass }}" {% endif %}>
+                                                {{ occurrence | occurrenceType }}
+                                            </span>
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence | occurrenceDescription }}</td>
+                                    <td>{{ occurrence.subject.preferredName }}</td>
+                                    <td>{{ occurrence | occurrenceDate | date("m/d/Y") }}</td>
+                                    <td>
+                                        <span class="occurrence-points editable-cell">
+                                            <span class="points-text">{{ occurrence | occurrencePoints }}</span>
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence.adminNotes }}</td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                        </table>
+                        </div>
                         </div>
                     </div>
                 
 
                 </div>
 
-                <!--Picture of the user -->
-                <div class="col-md-6">
-                    <div class="profile-picture-frame text-center">
-                        {% if user.profilePicture is not null %}
-                            <img class="profile-picture" src="{{ path('profile_image', {'username': user.username}) }}">
-                        {% else %}
-                            {#Use the placeholder image#}
-                            <img class="profile-picture" src="{{ asset('build/images/user.png') }}">
-                        {% endif %}
-                    </div>
-
-                    {#Change requested alert for profile picture#}
-                    {% set pictureRequest = user.profile.profilePictureModificationRequest %}
-                    {% if pictureRequest is not null %}
-                        <div class="panel panel-default change-req-panel">
-                            <p class="change-req-label">Pending Approval:</p>
-                            <img class="profile-picture"
-                                 src="{{ path('profile_requested_image', {'username': user.username}) }}">
-                            
-                        </div>
-                    {% endif %}
-                </div>
+                
             </div>
         </div>
     </div>
+    {% dump user %}
 
     
 {% endblock %}

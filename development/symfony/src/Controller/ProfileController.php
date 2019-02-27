@@ -14,6 +14,7 @@ use App\Entity\User\User;
 use App\Form\Data\ProfileFormData;
 use App\Form\ProfileType;
 use App\Utils\ImageEditor;
+use App\Utils\AttendancePenaltyPersistenceManager;
 use Doctrine\ORM\EntityManager;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -42,7 +43,79 @@ class ProfileController extends Controller
             'isAdmin' => $isAdmin
         ));
     }
+    /**
+     * @Route("/profile/{username}/showDetailedScore", name="show_detailed_score")
+     * Query the db for a mentor with matching username. Return all occurences of that user.
+     */
+    public function showScoreDetails(Request $request, User $user)
+    {
+        $pendingOccurrences = null;
+        $closedOccurrences = null;
 
+        $requestedUser = null;
+
+        $userId = $request->query->get('user');
+        $foundMentor = false;
+        $user = $user;
+
+        //if look for multiple mentor, then query everything.
+        $pendingOccurrences = $this->getDoctrine()->getRepository(Occurrence::class)
+            ->findPendingOccurrencesForDisplaying($user);
+        $closedOccurrences = $this->getDoctrine()->getRepository(Occurrence::class)
+            ->findClosedOccurrencesForDisplaying($user);
+
+        $occurrenceTypes = $this->getDoctrine()->getManager()->getRepository(OccurrenceType::class)->findAll();
+        $occurrenceTypes = array_map(function ($occurrenceType) {
+            return array(
+                'description' => $occurrenceType->getDescription(),
+                'defaultPoints' => $occurrenceType->getDefaultPoints()
+            );
+        }, $occurrenceTypes);
+
+        $penaltyManager = AttendancePenaltyPersistenceManager::loadModel($this->getDoctrine()->getManager());
+        $unjustifiedAbsencePenalties = $penaltyManager->getUnjustifiedAbsenceWithNoticePenalties();
+        $justifiedAbsencePenalties = $penaltyManager->getJustifiedAbsenceWithNoticePenalties();
+
+        $unjustifiedAbsencePenalties = array_map(function ($penalty) {
+            return array(
+                'hoursBefore' => $penalty->getHoursBefore(),
+                'penaltyAmount' => $penalty->getPenaltyAmount()
+            );
+        }, $unjustifiedAbsencePenalties);
+
+        $justifiedAbsencePenalties = array_map(function ($penalty) {
+            return array(
+                'hoursBefore' => $penalty->getHoursBefore(),
+                'penaltyAmount' => $penalty->getPenaltyAmount()
+            );
+        }, $justifiedAbsencePenalties);
+
+        $noNoticePenaltyAmount = $penaltyManager->getAbsenceWithoutNoticePenalty();
+        if ($noNoticePenaltyAmount) {
+            $noNoticePenaltyAmount = $noNoticePenaltyAmount->getPenaltyAmount();
+        }
+
+        $noticeAmounts = [];
+
+        /** @var AbsenceOccurrence[] $absenceOccurrences */
+        $absenceOccurrences = $this->getDoctrine()->getRepository(AbsenceOccurrence::class)->findAll();
+
+        foreach ($absenceOccurrences as $absenceOccurrence) {
+            $noticeAmounts[$absenceOccurrence->getId()] = $absenceOccurrence->getHoursNotice();
+        }
+
+        return $this->render('role/mentor/detailed_score.html.twig', array(
+            'user' => $user,
+            'pendingOccurrences' => $pendingOccurrences,
+            'closedOccurrences' => $closedOccurrences,
+            'occurrenceTypes' => json_encode($occurrenceTypes),
+            'unjustifiedPenalties' => json_encode($unjustifiedAbsencePenalties),
+            'justifiedPenalties' => json_encode($justifiedAbsencePenalties),
+            'noNoticePenaltyAmount' => $noNoticePenaltyAmount,
+            'noticeAmounts' => json_encode($noticeAmounts),
+            'requestedUser' => $requestedUser
+        ));
+    }
     /**
      * @Route("/profile/{username}/edit", name="edit_profile")
      */
@@ -77,85 +150,6 @@ class ProfileController extends Controller
             'form' => $form->createView(),
             'isAdmin' => $isAdmin
         ));
-    }
-
-    /**
-     * @Route("/profile/{username}/showDetailedScore", name="show_detailed_score")
-     * Query the db for a mentor with matching username. Return all occurences of that user.
-     * @param Request $request
-     * @param User $mentor a user.username
-     * @return Response
-     */
-    public function showScoreDetails(Request $request, User $mentor)
-    {
-      $pendingOccurrences = null;
-      $closedOccurrences = null;
-
-      $requestedUser = $mentor->getUsername();
-
-      $userId = $mentor->getUsername();
-      $foundMentor = false;
-      //query for the mentor in Occurrence Entity
-      $user = $this->getDoctrine()->getRepository(User::class)->findOneBy(array('username' => $userId));
-
-      //find all pending occurrences and closed occurrences.
-      $pendingOccurrences = $this->getDoctrine()->getRepository(Occurrence::class)
-          ->findPendingOccurrencesForDisplaying($mentor);
-      $closedOccurrences = $this->getDoctrine()->getRepository(Occurrence::class)
-          ->findClosedOccurrencesForDisplaying($mentor);
-
-
-      //get  occurrenceTypes table and map them to show points.
-      $occurrenceTypes = $this->getEntityManager()->getRepository(OccurrenceType::class)->findAll();
-      $occurrenceTypes = array_map(function ($occurrenceType) {
-          return array(
-              'description' => $occurrenceType->getDescription(),
-              'defaultPoints' => $occurrenceType->getDefaultPoints()
-          );
-      }, $occurrenceTypes);
-
-      $penaltyManager = AttendancePenaltyPersistenceManager::loadModel($this->getDoctrine()->getManager());
-      $unjustifiedAbsencePenalties = $penaltyManager->getUnjustifiedAbsenceWithNoticePenalties();
-      $justifiedAbsencePenalties = $penaltyManager->getJustifiedAbsenceWithNoticePenalties();
-
-      $unjustifiedAbsencePenalties = array_map(function ($penalty) {
-          return array(
-              'hoursBefore' => $penalty->getHoursBefore(),
-              'penaltyAmount' => $penalty->getPenaltyAmount()
-          );
-      }, $unjustifiedAbsencePenalties);
-
-      $justifiedAbsencePenalties = array_map(function ($penalty) {
-          return array(
-              'hoursBefore' => $penalty->getHoursBefore(),
-              'penaltyAmount' => $penalty->getPenaltyAmount()
-          );
-      }, $justifiedAbsencePenalties);
-
-      $noNoticePenaltyAmount = $penaltyManager->getAbsenceWithoutNoticePenalty();
-      if ($noNoticePenaltyAmount) {
-          $noNoticePenaltyAmount = $noNoticePenaltyAmount->getPenaltyAmount();
-      }
-
-      $noticeAmounts = [];
-
-      /** @var AbsenceOccurrence[] $absenceOccurrences */
-      $absenceOccurrences = $this->getDoctrine()->getRepository(AbsenceOccurrence::class)->findAll();
-
-      foreach ($absenceOccurrences as $absenceOccurrence) {
-          $noticeAmounts[$absenceOccurrence->getId()] = $absenceOccurrence->getHoursNotice();
-      }
-
-      return $this->render('role/admin/show_detailed_score.html.twig', array(
-          'pendingOccurrences' => $pendingOccurrences,
-          'closedOccurrences' => $closedOccurrences,
-          'occurrenceTypes' => json_encode($occurrenceTypes),
-          'unjustifiedPenalties' => json_encode($unjustifiedAbsencePenalties),
-          'justifiedPenalties' => json_encode($justifiedAbsencePenalties),
-          'noNoticePenaltyAmount' => $noNoticePenaltyAmount,
-          'noticeAmounts' => json_encode($noticeAmounts),
-          'requestedUser' => $requestedUser
-      ));
     }
 
     /**
