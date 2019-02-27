@@ -14,6 +14,7 @@ class DefaultController extends Controller {
      * @Route("/", name="home")
      */
     public function index() {
+        $session = $this->get('session');
         // get announcements
 
         $hours = $this->getDoctrine()
@@ -23,6 +24,10 @@ class DefaultController extends Controller {
         // $holidays = $this->getDoctrine()
         //     ->getRepository(Holiday::class)
         //     ->findUpcoming();
+
+        if($this->isGranted('admin')) {
+            $this->redirectToRoute('admin_home');
+        }
 
         $rooms = $this->getDoctrine()
             ->getRepository(Room::class)
