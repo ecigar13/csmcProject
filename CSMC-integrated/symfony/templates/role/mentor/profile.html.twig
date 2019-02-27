@@ -1,4 +1,15 @@
 {% extends 'shared/base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css" href="{{ asset('build/css/global.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('build/css/mentor_profile.css') }}"/>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.css">
+
+{% endblock %}
+
 {% block body %}
     <div class="jumbotron">
         <div class="container">

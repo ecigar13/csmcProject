@@ -261,6 +261,15 @@
                 }
             });
         });
+
+        $(document).ready(function() {
+            $('.flash-message').fadeIn(400);
+            setTimeout(function() {
+                $('.flash-message').fadeOut(2000);
+            }, 5000);
+        });
     </script>
 </body>
+<link rel="stylesheet" type="text/css" href="https://xdsoft.net/scripts/datetimepicker/build/jquery.datetimepicker.min.css"/>
+<script src="https://xdsoft.net/scripts/datetimepicker/build/jquery.datetimepicker.full.min.js"></script>
 </html>

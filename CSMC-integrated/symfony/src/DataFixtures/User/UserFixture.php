@@ -14,6 +14,7 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class UserFixture extends Fixture implements DependentFixtureInterface
 {
+    const INSTRUCTOR    = 'instructor_';
     const INSTRUCTOR_00 = 'instructor_00';
     const INSTRUCTOR_01 = 'instructor_01';
     const INSTRUCTOR_02 = 'instructor_02';
@@ -40,10 +41,10 @@ class UserFixture extends Fixture implements DependentFixtureInterface
             $u->addRole($mentor_role);
             $u->updateCardId($p . ":test", false);
 
-            $u->updateSpecialty($this->getReference(SubjectFixture::JAVA), rand(1, 5));
-            $u->updateSpecialty($this->getReference(SubjectFixture::CPP), rand(1, 5));
-            $u->updateSpecialty($this->getReference(SubjectFixture::DISCRETE_MATH), rand(1, 5));
-            $u->updateSpecialty($this->getReference(SubjectFixture::COMPUTER_ARCHITECTURE), rand(1, 5));
+//            $u->updateSpecialty($this->getReference(SubjectFixture::JAVA), rand(1, 5));
+//            $u->updateSpecialty($this->getReference(SubjectFixture::CPP), rand(1, 5));
+//            $u->updateSpecialty($this->getReference(SubjectFixture::DISCRETE_MATH), rand(1, 5));
+//            $u->updateSpecialty($this->getReference(SubjectFixture::COMPUTER_ARCHITECTURE), rand(1, 5));
 
             $manager->persist($u);
 
@@ -60,7 +61,8 @@ class UserFixture extends Fixture implements DependentFixtureInterface
             $u = new User('f_inst_' . $p, 'l_inst_' . $p, 'ixi' . $p);
             $u->addRole($instructor_role);
             $manager->persist($u);
-
+            
+            $instructors_add[] = $u;
             $instructors[$p] = $u;
         }
 
@@ -87,7 +89,13 @@ class UserFixture extends Fixture implements DependentFixtureInterface
 
         $manager->flush();
 
-        foreach($instructors as $number => $instructor) {
+        $this->addReference(self::INSTRUCTOR_00, $instructors_add[0]);
+        $this->addReference(self::INSTRUCTOR_01, $instructors_add[1]);
+        $this->addReference(self::INSTRUCTOR_02, $instructors_add[2]);
+        $this->addReference(self::INSTRUCTOR_03, $instructors_add[3]);
+        $this->addReference(self::INSTRUCTOR_04, $instructors_add[4]);        
+	
+	foreach($instructors as $number => $instructor) {
             $this->addReference(self::INSTRUCTOR . $number, $instructor);
         }
 

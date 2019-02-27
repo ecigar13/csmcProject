@@ -18,12 +18,12 @@ class CourseFixture extends Fixture implements DependentFixtureInterface {
     const CS = 'cs';
     const SE = 'se';
 
-    const CS_1336 = '1336';
-    const CS_1337 = '1337';
-    const CS_2305 = '2305';
-    const CS_2336 = '2336';
-    const CS_3305 = '3305';
-    const CS_3340 = '3340';
+    const CS_1336 = 'cs-1336';
+    const CS_1337 = 'cs-1337';
+    const CS_2305 = 'cs-2305';
+    const CS_2336 = 'cs-2336';
+    const CS_3305 = 'cs-3305';
+    const CS_3340 = 'cs-3340';
 
     public function load(ObjectManager $manager) {
         // load departments
@@ -82,8 +82,8 @@ class CourseFixture extends Fixture implements DependentFixtureInterface {
 
         $manager->flush();
 
-        $this->addReference(self::CS, $cs);
-        $this->addReference(self::SE, $se);
+        // $this->addReference(self::CS, $cs); redundant creation from the DepartmentFixture
+        // $this->addReference(self::SE, $se); redundant creation from the DepartmentFixture
         $this->addReference(self::CS_1336, $pf);
         $this->addReference(self::CS_1337, $cs1);
         $this->addReference(self::CS_2305, $dm1);
