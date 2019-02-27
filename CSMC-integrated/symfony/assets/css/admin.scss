@@ -1,29 +1,3 @@
 @import "global";
-//@import "~gentelella/build/css/custom.css";
+
 @import "custom";
-
-.notification-badge {
-  background: #1abb9c;
-  padding: 2px 8px;
-  border-radius: 15px;
-  margin-left: 8px;
-  font-weight: bolder;
-  color: #e5e5e5;
-}
-
-.error-notification-badge {
-  background: #999999;
-}
-
-.flash-message {
-  display: none;
-  position: absolute;
-  top: 80px;
-  margin-left: auto;
-  margin-right: auto;
-  width: 40%;
-  left: 35%;
-  right: 25%;
-  font-size: 16px;
-  z-index: 1;
-}
