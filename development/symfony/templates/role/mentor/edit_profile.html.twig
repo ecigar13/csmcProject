@@ -279,27 +279,33 @@
             $('#upload_new_profile_picture').get(0).style.display = 'none';
         });
 
-        $(window).load(function(){
+        $(window).on('load', function(){
+          var id = $('.dropzone').attr('id');
+
           $("#profile_preferredName").blur(function(){
-              //make ajax query.
-              console.log($('#profile_preferredName').val());
+              //alert($('#profile_preferredName').val());
               var path = 'ajaxDuplicatePrefName';
-              console.log(path);
+              var payload = {"id": id, "preferredName" : $('#profile_preferredName').val()};
+
               $.ajax({
                   type: "POST",
                   url: path,
-                  data: $('#profile_preferredName').val(),
+                  data: payload,
                   dataType: "text"
-              }).fail(function(xhr, status, error){
-                  console.log(xhr.responseText);
-              }).done(function(response){
-                console.log(response);
-                if(response === 'NODUP'){
-                  $("<p id='duplicatePrefName'>Good. Preferred name is unique.</p>").insertAfter('#profile_preferredName');
+
+              }).done(function(xhr){
+                console.log(xhr);
+
+                if(xhr === "NODUP"){
+                  $("<p id='duplicatePrefName'>Good. Preferred name is unique.</p>").insertAfter("#profile_preferredName");
                 } else{
-                  $("<p id='duplicatePrefName'>Preferred Name is already selected.</p>").insertAfter('#profile_preferredName');
-                  $('#profile_preferredName').val('');
+                  $("<p id='duplicatePrefName'>Preferred Name is already chosen.</p>").insertAfter('#profile_preferredName');
                 }
+
+              }).fail(function(xhr, status, err){
+                  console.log(status);
+                  console.log(err)
+                  console.log(payload);
               });
             });
 
@@ -307,7 +313,7 @@
               $('#duplicatePrefName').remove();
             });
           });
-    </script>
+    </script>}
 {% endblock %}
 {% block body %}
     <div class="">
