@@ -43,6 +43,18 @@ class ProfileController extends Controller
             'isAdmin' => $isAdmin
         ));
     }
+
+    /**
+     * @Route("/profile/{username}/ajaxDuplicatePrefName", name="ajax_duplicate_pref_name")
+     * Query the db for a mentor with matching username. If it exists, then return true. Else false.
+     * @param Request $request
+     * @return Response
+     */
+    public function queryForDuplicatePreferredName(Request $request)
+    {
+      //need to query for preferred name of the same value
+      return new Response("NODUP");
+    }
     /**
      * @Route("/profile/{username}/showDetailedScore", name="show_detailed_score")
      * Query the db for a mentor with matching username. Return all occurences of that user.

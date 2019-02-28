@@ -278,6 +278,35 @@
             $('.pic-upload-panel').get(0).style.display = 'block';
             $('#upload_new_profile_picture').get(0).style.display = 'none';
         });
+
+        $(window).load(function(){
+          $("#profile_preferredName").blur(function(){
+              //make ajax query.
+              console.log($('#profile_preferredName').val());
+              var path = 'ajaxDuplicatePrefName';
+              console.log(path);
+              $.ajax({
+                  type: "POST",
+                  url: path,
+                  data: $('#profile_preferredName').val(),
+                  dataType: "text"
+              }).fail(function(xhr, status, error){
+                  console.log(xhr.responseText);
+              }).done(function(response){
+                console.log(response);
+                if(response === 'NODUP'){
+                  $("<p id='duplicatePrefName'>Good. Preferred name is unique.</p>").insertAfter('#profile_preferredName');
+                } else{
+                  $("<p id='duplicatePrefName'>Preferred Name is already selected.</p>").insertAfter('#profile_preferredName');
+                  $('#profile_preferredName').val('');
+                }
+              });
+            });
+
+            $("#profile_preferredName").focusin(function(){
+              $('#duplicatePrefName').remove();
+            });
+          });
     </script>
 {% endblock %}
 {% block body %}
@@ -306,6 +335,8 @@
                                         {{ form_errors(form.preferredName) }}
                                         {{ form_widget(form.preferredName, {'attr': {'class': 'form-control'}}) }}
                                     </div>
+
+
 
                                     <div class="attr-field">
                                         <span class="field-label">{{ form_label(form.birthDate) }}:</span>
@@ -536,4 +567,5 @@
             </div>
         </div>
     </div>
+
 {% endblock %}
