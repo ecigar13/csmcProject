@@ -75,31 +75,40 @@ class ProfileController extends Controller {
         ));
     }
 
-    /**
-     * @Route("/profile/{username}", name="profile")
-     */
-    public function profileAction(Request $request, User $user) {
-        if(is_array($request->request->get('specialties'))) {
-            foreach($request->request->get('specialties') as $subject_id => $rating) {
-                $subject = $this->getDoctrine()
-                    ->getRepository(Subject::class)
-                    ->find($subject_id);
-
-                $user->updateSpecialty($subject, $rating);
-            }
-
-            $this->getDoctrine()->getManager()->flush();
-        }
-
-        $subjects = $this->getDoctrine()
-            ->getRepository(Subject::class)
-            ->findAll();
-
-        return $this->render('role/mentor/profile.html.twig', array(
-            'user' => $user,
-            'subjects' => $subjects
-        ));
-    }
+//    /**
+//     * @Route("/profile/{username}", name="profile")
+//     */
+//    public function profileAction(Request $request, User $user) {
+//	
+//        $isAdmin = $this->isGranted('admin');
+//
+//        // Protect against non-admin user trying to view someone else's profile
+//        if ($this->getUser() != $user && !$isAdmin) {
+//            // Redirect to home instead of displaying a forbidden message
+//            return $this->redirectToRoute('home');
+//        }        
+//
+//	if(is_array($request->request->get('specialties'))) {
+//            foreach($request->request->get('specialties') as $subject_id => $rating) {
+//                $subject = $this->getDoctrine()
+//                    ->getRepository(Subject::class)
+//                    ->find($subject_id);
+//
+//                $user->updateSpecialty($subject, $rating);
+//            }
+//
+//            $this->getDoctrine()->getManager()->flush();
+//        }
+//
+//        $subjects = $this->getDoctrine()
+//            ->getRepository(Subject::class)
+//            ->findAll();
+//
+//        return $this->render('role/mentor/profile.html.twig', array(
+//            'user' => $user,
+//            'subjects' => $subjects
+//        ));
+//   }
 
    /**
      * @Route("/profile/{username}/save_image", name="save_profile_image")
