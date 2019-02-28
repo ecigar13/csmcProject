@@ -1,0 +1,539 @@
+{% extends 'shared/base.html.twig' %}
+
+{# Customize how form errors are rendered for this form #}
+{% form_theme form _self %}
+{% block form_errors %}
+    {% spaceless %}
+        {% if errors|length == 1 %}
+            <div class="alert alert-danger" role="alert">
+                {% for error in errors %}
+                    <strong>Error: </strong> {{ error.message }}
+                {% endfor %}
+            </div>
+        {% elseif errors|length > 1 %}
+            <div class="alert alert-danger" role="alert">
+                <strong>Errors: </strong>
+                <ul>
+                    {% for error in errors %}
+                        <li>WAHOO!! {{ error.message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+    {% endspaceless %}
+{% endblock form_errors %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.css">
+    <link href="{{ asset('build/css/edit_profile.css') }}" rel="stylesheet"/>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.js"></script>
+    <script src="https://unpkg.com/imask"></script>
+    <script>
+        let phoneNumberMaskOptions = {
+            mask: '(000) 000-0000'
+        };
+
+        let phoneNumberMask = new IMask(document.getElementById('profile_phoneNumber'), phoneNumberMaskOptions);
+        let preferredPhoneNumberMask = new IMask(document.getElementById('profile_notificationPreferences_preferredPhoneNumber'), phoneNumberMaskOptions);
+
+        // This must be checked on form submit and not when submit button is clicked, otherwise the browser can cancel
+        // the submission because of required fields not being filled and the mask will break
+        $('form').on('submit', function () {
+            // Submit unmasked value by changing the mask format
+            // This is dirty but there doesn't seem to be a better way of doing it with this library
+            // I still like it because it's plain js and the as-you-type support is good
+            let emptyMaskOptions = {mask: '0000000000'};
+            phoneNumberMask.updateOptions(emptyMaskOptions);
+            preferredPhoneNumberMask.updateOptions(emptyMaskOptions);
+        });
+
+        // Integer mask for notification days
+        new IMask(document.getElementById('profile_notificationPreferences_sessionReminderAdvanceDays'),
+            {
+                mask: Number,
+                scale: 0,
+                signed: false,
+                max: 100
+            });
+    </script>
+    <script>
+        $(function () {
+            $('.expertise-slider').on('change', function () {
+                var sliderVal = $(this).find("input").val();
+                $(this).next().html(sliderVal);
+            });
+        });
+
+        Dropzone.autoDiscover = false;
+        $(function () {
+            $('.dropzone').dropzone({
+                url: "{{ path('save_profile_image', {'username': user.username}) }}",
+                autoProcessQueue: false,
+                maxFiles: 1,
+                createImageThumbnails: true,
+                thumbnailWidth: 250,
+                thumbnailHeight: 250,
+                previewTemplate: document.querySelector('#template-container').innerHTML,
+                init: function () {
+
+                    var element = $('#' + this.element.id);
+                    if (element.data('has-image')) {
+                    }
+                },
+                addedfile: function (file) {
+                    var dropzone = this;
+                    //remove previous uploaded file
+                    if (this.files[1] != null) {
+                        this.removeFile(this.files[0]);
+                    }
+                    if (this.element === this.previewsContainer) {
+                        this.element.classList.add("dz-started");
+                    }
+                    if (this.previewsContainer) {
+                        file.previewElement = Dropzone.createElement(this.options.previewTemplate.trim());
+
+                        this.previewsContainer.appendChild(file.previewElement);
+
+                        var size = file.previewElement.querySelector("[data-dz-size]");
+                        if (size) {
+                            size.innerHTML = this.filesize(file.size);
+                        }
+
+                        if (this.options.addRemoveLinks) {
+                            file._removeLink = Dropzone.createElement("<a class=\"dz-remove\" href=\"javascript:undefined;\" data-dz-remove>" + this.options.dictRemoveFile + "</a>");
+                            file.previewElement.appendChild(file._removeLink);
+                        }
+
+                        var removeFileEvent = function removeFileEvent(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (file.status === Dropzone.UPLOADING) {
+                                return Dropzone.confirm(_this2.options.dictCancelUploadConfirmation, function () {
+                                    return this.removeFile(file);
+                                });
+                            } else {
+                                if (this.options.dictRemoveFileConfirmation) {
+                                    return Dropzone.confirm(_this2.options.dictRemoveFileConfirmation, function () {
+                                        return this.removeFile(file);
+                                    });
+                                } else {
+                                    return this.removeFile(file);
+                                }
+                            }
+                        };
+
+                        var remove = file.previewElement.querySelector("[data-dz-remove]");
+                        if (remove) {
+                            remove.addEventListener("click", removeFileEvent);
+                        }
+                    }
+                    //if (!$(dropzone.element).data('has-image')) {
+                    $(file.previewElement).off().on('click', function () {
+                        $('#modal-image').data('active', dropzone.element.id);
+                        $('#modal-image').cropper('replace', file.dataURL);
+                        $('#modal').modal('show');
+                    });
+                    //}
+                },
+                thumbnail: function (file, dataUrl) {
+                    if (file.previewElement) {
+                        file.previewElement.classList.remove('dz-file-preview');
+
+                        var thumbnail = file.previewElement.querySelector("[data-dz-thumbnail]");
+                        if (thumbnail) {
+                            thumbnail.alt = file.name;
+                            thumbnail.src = dataUrl;
+                        }
+
+                        return setTimeout(function () {
+                            return file.previewElement.classList.add("dz-image-preview");
+                        }, 1);
+                    }
+                },
+                sending: function (file, xhr, formData) {
+                    var element = $('#' + this.element.id);
+
+                    var crop = element.data('crop');
+                    var canvas = element.data('canvas');
+                    var image = element.data('image');
+                    var user = element.data('user');
+
+                    formData.append("crop", crop);
+                    formData.append("canvas", canvas);
+                    formData.append("image", image);
+                    formData.append("user", user);
+                },
+                complete: function (file) {
+                    //$(file.previewElement).off('click');
+                    //$(file.previewElement.querySelector("[data-dz-thumbnail]")).css('border', '2px solid green');
+                },
+                success: function () {
+                    //this.removeAllFiles();
+                }
+            });
+
+            var minWidth = window.innerWidth < 500 ? window.innerWidth * 0.8 : window.innerWidth * 0.6;
+            var minHeight = window.innerHeight < 500 ? window.innerHeight * 0.8 : window.innerHeight * 0.6;
+
+            $('#modal-image').cropper({
+                aspectRatio: 1,
+                viewMode: 2,
+                minContainerWidth: minWidth,
+                minContainerHeight: minHeight,
+                responsive: true,
+                ready: function () {
+                    $('.cropper-container').css('margin', 'auto');
+                    $('.modal-content').css('width', minWidth + 30);
+                    $('#modal .btn-success').off('click').on('click', function (event) {
+                        var active = $('#modal-image').data('active');
+                        var dropzone = $('#' + active).get(0).dropzone;
+                        var file = dropzone.getQueuedFiles()[0];
+                        var thumb = $('#modal-image').cropper('getCroppedCanvas').toDataURL('image/jpeg');
+                        dropzone.emit("thumbnail", file, thumb);
+
+                        var crop = JSON.stringify($('#modal-image').cropper('getCropBoxData'));
+                        var canvas = JSON.stringify($('#modal-image').cropper('getCanvasData'));
+                        var image = JSON.stringify($('#modal-image').cropper('getImageData'));
+                        $('#' + active).data('crop', crop);
+                        $('#' + active).data('canvas', canvas);
+                        $('#' + active).data('image', image);
+
+                        //dropzone.processQueue();
+
+                        $('#modal').modal('hide');
+                    });
+                }
+            });
+
+            $('#modal').on('show.bs.modal', function (event) {
+                var active = $('#modal-image').data('active');
+
+                var crop = $('#' + active).data('crop');
+                var canvas = $('#' + active).data('canvas');
+                var image = $('#' + active).data('image');
+                if (crop && canvas && image) {
+                    $('#modal-image').cropper('setCropBoxData', JSON.parse(crop));
+                    $('#modal-image').cropper('setCanvasData', JSON.parse(canvas));
+                    $('#modal-image').cropper('setImageData', JSON.parse(image));
+                }
+            });
+            $('#modal').on('hidden.bs.modal', function (event) {
+                $('#modal').data('bs.modal', null);
+            });
+
+            $('.panel .glyphicon-trash').closest("button").on('click', function (event) {
+                var dropzone = $('#' + $(this).data('dropzone')).get(0).dropzone;
+                dropzone.removeAllFiles();
+                // TODO remove from server as well
+            });
+
+            $('.panel .glyphicon-open').closest("button").on('click', function (event) {
+                var dropzone = $('#' + $(this).data('dropzone')).get(0).dropzone;
+                dropzone.hiddenFileInput.click();
+            });
+
+            $('.panel .fa-compress').closest("button").on('click', function (event) {
+                var dropzone = $('#' + $(this).data('dropzone')).get(0).dropzone;
+                dropzone.getQueuedFiles()[0].previewElement.click();
+            });
+
+            $('#profile_submit').on('click', function (event) {
+                if (!isEmpty($('.dropzone').get(0).dropzone.files)) {
+                    if ($('.dropzone').data("crop")) {
+                        $('.dropzone').get(0).dropzone.processQueue();
+                        return true;
+                    }
+                    else {
+                        if (confirm('Uncropped picture will not be saved, crop your picture before submit?')) {
+                            $('.dropzone').get(0).dropzone.getQueuedFiles()[0].previewElement.click();
+                            return false;
+                        }
+                        else {
+                            return true;
+                        }
+                    }
+                }
+
+                function isEmpty(obj) {
+                    for (var key in obj) {
+                        if (obj.hasOwnProperty(key))
+                            return false;
+                    }
+                    return true;
+                }
+            });
+        });
+
+        $('#upload_new_profile_picture').on('click', function () {
+            $('.profile-picture-frame').get(0).style.display = 'none';
+            $('.pic-upload-panel').get(0).style.display = 'block';
+            $('#upload_new_profile_picture').get(0).style.display = 'none';
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <div class="">
+        <div class="container">
+            <div class="row pt">
+                <br>
+                <br>
+                <div class="col-md-6">
+
+                    <div class="row">
+                        <div class="col-md-12 info-board">
+                            <div class="main-name">
+                                {{ form_start(form, {'attr': {'class': 'form-group'}}) }}
+
+                                <fieldset>
+                                    <legend>{{ user.firstName }} {{ user.lastName }}</legend>
+
+                                    <div class="attr-field">
+                                        <span class="field-label">{{ form_label(form.preferredName) }}:</span>
+                                        <div class="alert alert-info">
+                                            <strong>Note: </strong>
+                                            If the preferred name is left blank, your first name will be used by
+                                            default
+                                        </div>
+                                        {{ form_errors(form.preferredName) }}
+                                        {{ form_widget(form.preferredName, {'attr': {'class': 'form-control'}}) }}
+                                    </div>
+
+                                    <div class="attr-field">
+                                        <span class="field-label">{{ form_label(form.birthDate) }}:</span>
+                                        {{ form_errors(form.birthDate) }}
+                                        {{ form_widget(form.birthDate, {'attr': {'class': 'form-control'}}) }}
+                                    </div>
+
+                                    <div class="attr-field">
+                                        <span class="field-label">{{ form_label(form.expectedGraduationSemester) }}
+                                            :</span>
+                                        {#FIXME:This is a workaround, since symfony won't let me display these errors on the right field, see https://github.com/symfony/symfony/issues/19598 #}
+                                        {#If we ever need to display form errors, this will break#}
+                                        {{ form_errors(form) }}
+                                        <div>
+                                            {{ form_widget(form.expectedGraduationSemester.season, {'attr': {'class': 'grad-sem-dropdown form-control inline-block'}}) }}
+                                            {{ form_widget(form.expectedGraduationSemester.year, {'attr': {'class': 'grad-sem-dropdown form-control inline-block'}}) }}
+                                        </div>
+                                    </div>
+
+                                    <div class="attr-field">
+                                        <span class="field-label">{{ form_label(form.phoneNumber) }}:</span>
+                                        {{ form_errors(form.phoneNumber) }}
+                                        {{ form_widget(form.phoneNumber, {'attr': {'class': 'form-control'}}) }}
+                                    </div>
+
+                                    <div class="attr-field">
+                                        <p class="field-label"> Course Expertise Levels: </p>
+                                        {% for specialty in form.specialties %}
+                                            {{ form_label(specialty) }}
+                                            {{ form_errors(specialty) }}
+                                            {{ form_widget(specialty, {'attr': {'class': 'expertise-slider col-md-11'}}) }}
+                                            <span class="expertise-level inline-block col-md-1">{{ specialty.vars.value.rating }}</span>
+                                        {% endfor %}
+                                    </div>
+
+                                    <div class="attr-field">
+                                        <span class="field-label">{{ form_label(form.dietaryRestrictions) }}:</span>
+                                        {{ form_errors(form.dietaryRestrictions) }}
+                                        {{ form_widget(form.dietaryRestrictions, {'attr': {'class': 'form-control'}}) }}
+                                    </div>
+
+                                    {% if isAdmin %}
+                                        <div class="attr-field">
+                                            <span class="field-label">{{ form_label(form.adminNotes) }}:</span>
+                                            {{ form_errors(form.adminNotes) }}
+                                            {{ form_widget(form.adminNotes, {'attr': {'class': 'form-control'}}) }}
+                                        </div>
+                                    {% endif %}
+                                </fieldset>
+
+                                <fieldset>
+                                    <legend>Notification Preferences:</legend>
+
+                                    <fieldset>
+                                        <legend><span class="field-label">Preferred Delivery Method:</span></legend>
+
+                                        <div class="attr-field-compact form-indent-1">
+                                            {{ form_errors(form.notificationPreferences.useEmail) }}
+                                            {{ form_widget(form.notificationPreferences.useEmail) }}
+                                            Email
+                                        </div>
+
+                                        <div class="attr-field-compact form-indent-2">
+                                            {{ form_errors(form.notificationPreferences.preferredEmail) }}
+                                            {{ form_widget(form.notificationPreferences.preferredEmail, {'attr': {'class': 'form-control'}}) }}
+                                        </div>
+
+                                        <div class="attr-field-compact form-indent-1">
+                                            {{ form_widget(form.notificationPreferences.usePhoneNumber) }}
+                                            Text
+                                        </div>
+
+                                        <div class="attr-field-compact form-indent-2">
+                                            {{ form_errors(form.notificationPreferences.preferredPhoneNumber) }}
+                                            {{ form_widget(form.notificationPreferences.preferredPhoneNumber, {'attr': {'class': 'form-control'}}) }}
+                                        </div>
+                                        <div class="attr-field-compact form-indent-2">
+                                            {{ form_errors(form.notificationPreferences.preferredPhoneNumberCarrier) }}
+                                            {{ form_widget(form.notificationPreferences.preferredPhoneNumberCarrier, {'attr': {'class': 'form-control'}}) }}
+                                        </div>
+                                    </fieldset>
+
+                                    <fieldset>
+                                        <legend><span
+                                                    class="field-label">I Would Like to Receive Notifications:</span>
+                                        </legend>
+
+                                        <div class="attr-field-compact form-indent-1">
+                                            {{ form_widget(form.notificationPreferences.notifyWhenAssigned) }} When I'm
+                                            assigned to a session
+                                        </div>
+
+                                        <div class="attr-field-compact form-indent-1">
+                                            {{ form_widget(form.notificationPreferences.notifyBeforeSession) }} Before a
+                                            session
+                                        </div>
+
+                                        <div class="attr-field-compact form-indent-2">
+                                            {{ form_errors(form.notificationPreferences.sessionReminderAdvanceDays) }}
+                                            {{ form_widget(form.notificationPreferences.sessionReminderAdvanceDays, {'attr': {'class': 'form-control form-control-inline'}}) }}
+                                            day(s)
+                                            before a session
+                                        </div>
+                                    </fieldset>
+                                </fieldset>
+
+                                <div class="attr-field-compact container">
+                                    <a href="{{ path("profile", {"username": user.username}) }}"
+                                       class="btn btn-default">
+                                        Cancel
+                                    </a>
+                                    {{ form_label(form.submit) }}
+                                    {{ form_widget(form.submit, {'attr': {'class': 'btn btn-info btn-ok'}}) }}
+                                </div>
+
+                                {{ form_end(form) }}
+
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                </div>
+                <div class="col-md-6">
+                    {#Change requested alert for profile picture#}
+                    {% set pictureRequest = user.profile.profilePictureModificationRequest %}
+                    {% if pictureRequest is not null %}
+                        <div class="panel panel-default change-req-panel profile-picture-frame">
+                            <p class="change-req-label">Pending Approval:</p>
+                            <img class="profile-picture"
+                                 src="{{ path('profile_requested_image', {'username': user.username}) }}">
+                        </div>
+                    {% else %}
+                        <div class="profile-picture-frame">
+                            {% if user.profilePicture is not null %}
+                                <img class="profile-picture"
+                                     src="{{ path('profile_image', {'username': user.username}) }}">
+                            {% else %}
+                                {#Use the placeholder image#}
+                                <img class="profile-picture" src="{{ asset('build/images/user.png') }}">
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <button type="button" id="upload_new_profile_picture" class="btn btn-info btn-block btn-edit">Upload
+                        New Profile Picture
+                    </button>
+
+                    <div class="panel panel-default pic-upload-panel" style="display: none;">
+                        <div class="panel-heading">
+                        </div>
+                        <div class="panel-body">
+                            <div id="{{ user.id }}" class="dropzone"
+                                 style="width: 100%; height: 0; min-height: 0; padding-bottom: calc(100% - 24px)"
+                                 data-crop
+                                 data-canvas data-image data-user="{{ user.id }}" data-username="{{ user.username }}"
+                                 data-has-image="{{ user.profile.image is not null }}">
+                            </div>
+                        </div>
+                        <div class="panel-footer">
+                            <div class="row">
+                                <div class="col-xs-4">
+                                    <button class="btn btn-default" style="width: 100%;" data-dropzone="{{ user.id }}">
+                                        <span class="glyphicon glyphicon-open"></span>
+                                        <span class="sr-only">Upload</span>
+                                    </button>
+                                </div>
+                                <div class="col-xs-4">
+                                    <button class="btn btn-default" style="width: 100%;" data-dropzone="{{ user.id }}">
+                                        <span class="glyphicon glyphicon-trash"></span>
+                                        <span class="sr-only">Trash</span>
+                                    </button>
+                                </div>
+                                <div class="col-xs-4">
+                                    <button class="btn btn-default" style="width: 100%;" data-dropzone="{{ user.id }}">
+                                        <span class="fas fa-compress"></span>
+                                        <span class="sr-only">Crop</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    <div id="template-container" hidden>
+        {# TODO add progress bar and indication if uploaded or not #}
+        <div class="dz-preview dz-file-preview"
+             style="width: calc(100% - 32px); height: 0; min-height: 0; padding-bottom: calc(100% - 32px);">
+            <div class="dz-image" style="width: 100%; height: 0; min-height: 0; padding-bottom: 100%;">
+                <img data-dz-thumbnail style="width: 100%; border: 2px solid red; border-radius: 20px"/>
+            </div>
+            <div class="dz-details">
+                <div class="dz-size">
+                    <span data-dz-size></span>
+                </div>
+                {#<div class="dz-filename">#}
+                {#<span data-dz-name></span>#}
+                {#</div>#}
+            </div>
+            <div class="dz-error-message">
+                <span data-dz-errormessage></span>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <img id="modal-image" data-active>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-success">Accept</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,928 @@
+{% extends 'role/admin/base.html.twig' %}
+
+{% block body %}
+    <style>
+    textarea.foo
+    {
+        resize:none;
+    }
+    .modal-dialog{
+        overflow-y: initial !important
+    }
+    .modal-body{
+        height: 500px;
+        overflow-y: auto;
+    }
+    </style>
+
+
+    <link href="{{ asset('build/css/view_summary.css') }}" rel="stylesheet"/>
+    <!-- <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+     -->
+    <div class="container">
+        <div class="row title">
+            {% if requestedUser is not null %}
+            <h1>{{ requestedUser.preferredName }}'s Occurrences</h1>
+            {% else %}
+            <h1>Mentor Management Occurrences</h1>
+            {% endif %}
+        </div>
+        <div class="">
+            <div class="row">
+                <div id="occurances">
+                    <div class="row occurances-checkbox">
+                        <div class=col-md-3>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="occurrence-filter-btn-all"
+                                   value="option1" checked="checked">
+                            <label class="form-check-label" for="inlineRadio1">All </label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="occurrence-filter-btn-attendance"
+                                   value="option2">
+                            <label class="form-check-label" for="inlineRadio2">Attendance </label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="inlineRadioOptions" id="occurrence-filter-btn-behavior"
+                                   value="option3">
+                            <label class="form-check-label" for="inlineRadio3">Behavior </label>
+                        </div>
+                        </div>
+                        <div class="col-md-9 text-right">
+
+                            <div class="search-wrap">
+                               <div class="search">
+                                  <input type="text" class="searchTerm" placeholder="What are you looking for?">
+                                  <button type="submit" class="searchButton">
+                                    <i class="fa fa-search"></i>
+                                 </button>
+                               </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row"><h2>Pending</h2></div>
+
+                    <div class="row table-outer">
+                        <table class="table table-hover" id="pendingTable">
+                            <thead>
+                            <tr>
+                                <th hidden>ID</th>
+                                <th hidden>FilterType</th>
+
+                                <th>Submitted</th>
+                                <th>By</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Subject</th>
+                                <th>Date Occurred</th>
+                                <th>Points</th>
+                                <th>Notes</th>
+                                <th>Action</th>
+                                <th class="thead-details">Details</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for occurrence in pendingOccurrences %}
+                                <tr>
+                                    <td hidden>{{ occurrence.id }}</td>
+                                    <td hidden>{{ occurrence | occurrenceFilter }}</td>
+                                    <td>{{ occurrence.creationDate | date("m/d/Y") }}</td>
+                                    <td>{{ occurrence | occurrenceSubmitter }}</td>
+                                    <td>
+                                        <span class="occurrence-type{% if occurrence | occurrenceCanEditType %} editable-cell{% endif %}">
+                                            <span {% if occurrence | occurrenceCanEditType %} class="{{ occurrence | occurrenceEditClass }}" {% endif %}>
+                                                {{ occurrence | occurrenceType }}
+                                            </span>
+                                            {% if occurrence | occurrenceCanEditType %}
+                                            <span class="edit-icon"><i class="glyphicon glyphicon-pencil"></i></span>
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence | occurrenceDescription }}</td>
+                                    <td>{{ occurrence.subject.preferredName }}</td>
+                                    <td>{{ occurrence | occurrenceDate | date("m/d/Y") }}</td>
+                                    <td>
+                                        <span class="occurrence-points editable-cell">
+                                            <span class="points-text">{{ occurrence | occurrencePoints }}</span>
+                                            <span class="edit-icon"><i class="glyphicon glyphicon-pencil"></i></span>
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence.adminNotes }}</td>
+                                    <td><span class="clickable reject-badge glyphicon glyphicon-remove"
+                                              data-toggle="tooltip"
+                                              title="Reject"> </span>
+                                        <span class="clickable approve-badge glyphicon glyphicon-ok"
+                                              data-toggle="tooltip" title="Approve"></span></td>
+                                    <td><span class="clickable glyphicon glyphicon-info-sign detail-btn" onclick="showDetails('{{ occurrence.id }}')"
+                                              data-toggle="tooltip"
+                                              title="See more info"></span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row"><h2>Closed</h2></div>
+                    <div class="row table-outer">
+                        <table class="table table-hover" id="closedTable">
+                            <thead>
+                            <tr>
+                                <th hidden>ID</th>
+                                <th hidden>FilterType</th>
+                                <th>Submitted</th>
+                                <th>By</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Subject</th>
+                                <th>Date Occurred</th>
+                                <th>Points</th>
+                                <th>Notes</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for occurrence in closedOccurrences %}
+                                <tr>
+                                    <td hidden>{{ occurrence.id }}</td>
+                                    <td hidden>{{ occurrence | occurrenceFilter }}</td>
+
+                                    <td>{{ occurrence.creationDate | date("m/d/Y") }}</td>
+                                    <td>{{ occurrence | occurrenceSubmitter }}</td>
+                                    <td>
+                                        <span class="occurrence-type{% if occurrence | occurrenceCanEditType %} editable-cell{% endif %}">
+                                            <span {% if occurrence | occurrenceCanEditType %} class="{{ occurrence | occurrenceEditClass }}" {% endif %}>
+                                                {{ occurrence | occurrenceType }}
+                                            </span>
+                                            {% if occurrence | occurrenceCanEditType %}
+                                                <span class="edit-icon"><i class="glyphicon glyphicon-pencil"></i></span>
+                                            {% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence | occurrenceDescription }}</td>
+                                    <td>{{ occurrence.subject.preferredName }}</td>
+                                    <td>{{ occurrence | occurrenceDate | date("m/d/Y") }}</td>
+                                    <td>
+                                        <span class="occurrence-points editable-cell">
+                                            <span class="points-text">{{ occurrence | occurrencePoints }}</span>
+                                            <span class="edit-icon"><i class="glyphicon glyphicon-pencil"></i></span>
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence.adminNotes }}</td>
+                                    <td>
+                                        {#TODO: Occurrence approval/rejection on the client side can be tested using symfony#}
+                                        {% if occurrence is approved %}
+                                            <span class="glyphicon glyphicon-ok glyphicon-approve-icon"
+                                                  data-toggle="tooltip" title="Approved"></span>
+                                        {% else %}
+                                            <span class="glyphicon glyphicon-remove" data-toggle="tooltip"
+                                                  title="Rejected"> </span>
+                                        {% endif %}
+                                    </td>
+                                    <td><span class="clickable glyphicon glyphicon-info-sign detail-btn" data-toggle="tooltip" onclick="showDetails('{{ occurrence.id }}')"
+                                              title="See more info"></span></td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="modal fade" id="occurrenceDetails" tabindex="-1" role="dialog">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Occurrence Details</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="occurrenceDetailsForm">
+                                        <div class="form-group" id="occurrenceId" hidden>
+                                            <input type="text" hidden class="form-control" id="occurrence-id">
+                                        </div>
+                                        <div class="form-group" id="submissionDate">
+                                            <label for="submission-date" class="col-form-label">Submission Date:</label>
+                                            <span id="submission-date"></span>
+                                        </div>
+                                        <div class="form-group" id="submittedBy">
+                                            <label for="submitted-by" class="col-form-label">Submitted By:</label>
+                                            <span id="submitted-by"></span>
+                                        </div>
+                                        <div class="form-group" id="occurrenceDate">
+                                            <label for="occurrence-date" class="col-form-label">Date of Occurrence:</label>
+                                            <span id="occurrence-date"></span>
+                                        </div>
+                                        <div class="form-group" id="typeNoOptions">
+                                            <label for="occurrence-type-no-options" class="col-form-label">Type:</label>
+                                            <span id="occurrence-type-no-options"></span>
+                                        </div>
+                                        <div class="form-group" id="optionsForType">
+                                            <label for="occurrence-type" class="col-form-label">Type:</label>
+                                            <select class="form-control" id="options-for-type"></select>
+                                        </div>
+                                        <div class="form-group" id="subject">
+                                            <label for="subject-val" class="col-form-label">Subject:</label>
+                                            <span id="subject-val"></span>
+                                        </div>
+                                        <div class="form-group" id="description">
+                                            <label for="description-val" class="col-form-label">Description:</label>
+                                            <span id="description-val"></span>
+                                        </div>
+                                        <div class="form-group" id="zeroPointTardiness">
+                                            <label for="zero-point-tardiness" class="col-form-label">0-Point Tardiness (in minutes):</label>
+                                            <span id="zero-point-tardiness"></span>
+                                            <table id="accumulated-tardies">
+                                                <thead>
+                                                <th>Date</th>
+                                                <th>Minutes</th>
+                                                </thead>
+                                                <tbody>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="form-group" id="points">
+                                            <label for="points-val" class="col-form-label">Points:</label>
+                                            <input type="text" class="form-control" id="points-val" placeholder="-5">
+                                        </div>
+                                        <div class="form-group" id="adminNotes">
+                                            <label for="admin-notes" class="col-form-label">Admin Notes:</label>
+
+                                            <textarea class="form-control admin-notes-textares" id="admin-notes"
+                                                      placeholder="If admin wants to add any notes to the occurrence, they would go here."></textarea>
+                                        </div>
+                                        <div class="form-group" id="status">
+                                            <label for="status-option" class="col-form-label">Status:</label>
+                                            <select class="form-control" id="status-option">
+                                            </select>
+                                        </div>
+                                        <button id="save-btn" type="submit" class="btn btn-primary">Save changes</button>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript" charset="utf8"
+            src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+
+    <script>
+        let occurrenceTypes = {{ occurrenceTypes | raw }};
+        let unjustifiedPenalties = {{ unjustifiedPenalties | raw }};
+        let justifiedPenalties = {{ justifiedPenalties | raw }};
+        let noticeAmounts = {{ noticeAmounts | raw }};
+        var noNoticePenaltyAmount = null;
+        {% if noNoticePenaltyAmount %}
+        noNoticePenaltyAmount = {{ noNoticePenaltyAmount }};
+        {% endif %}
+
+        function showPleaseWait() {
+            var modalLoading = '<div class="modal fade" id="pleaseWaitDialog" data-backdrop="static" data-keyboard="false role="dialog">\
+                <div class="modal-dialog">\
+                    <div class="modal-content">\
+                        <div class="modal-header">\
+                            <h4 class="modal-title">Please wait...</h4>\
+                        </div>\
+                        <div class="modal-body">\
+                            <div class="progress">\
+                            <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar"\
+                                aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width:100%; height: 40px">\
+                                </div>\
+                            </div>\
+                        </div>\
+                    </div>\
+                </div>\
+            </div>';
+            $(document.body).append(modalLoading);
+            $("#pleaseWaitDialog").modal("show");
+        }
+
+        function hidePleaseWait() {
+            $("#pleaseWaitDialog").modal("hide");
+        }
+
+        function showDetails(occurrenceId)
+        {
+            showPleaseWait();
+            $.ajax({
+                type: 'POST',
+                url: "{{ path('admin_ajax_get_occurrence_details') }}",
+                data: {'occurrenceId':occurrenceId},
+                dataType:"json",
+                success: function (response) {
+                    var occurrence = response[0];
+
+                    $("#occurrence-id").val(occurrenceId);
+
+                    $("#submissionDate").show();
+                    $("#typeNoOptions").show();
+
+                    $("#status").hide();
+                    $("#status-option").hide();
+                    $("#occurrenceDate").hide();
+                    $("#submittedBy").hide();
+                    $("#optionsForType").hide();
+                    $("#zeroPointTardiness").hide();
+                    $("#status-option").empty();
+
+                    hidePleaseWait();
+                    $('#occurrenceDetails').modal('show');
+
+                    var creationDate = new Date(occurrence.creationDate.date);
+
+                    $("#submission-date").text(creationDate.toLocaleString());
+                    $("#occurrence-type-no-options").text(occurrence.type);
+                    var pointsInput = $("#points-val");
+
+                    if(occurrence.isAbsenceOccurrence)
+                    {
+                        $("#typeNoOptions").hide();
+
+                        $("#optionsForType").show();
+                        var options = "<option value='Absence (Unexcused)'>Absence (Unexcused)</option><option value='Absence (Excused)'>Absence (Excused)</option>";
+
+                        $("#options-for-type").empty();
+
+                        $("#options-for-type").append(options);
+                        $("#options-for-type").val(occurrence.type);
+                    }
+
+                    if(occurrence.isBehaviorOccurrence) {
+                        $("#submissionDate").hide();
+                        $("#typeNoOptions").hide();
+                        $("#zeroPointTardiness").hide();
+
+                        $("#occurrenceDate").show();
+                        $("#submittedBy").show();
+                        $("#optionsForType").show();
+
+                        $("#occurrence-date").text(creationDate.toLocaleString());
+                        $("#submitted-by").text(occurrence.submitter);
+
+                        var occurrenceTypes = response[1];
+
+                        var options="";
+                        for(var i = 0; i < occurrenceTypes.length; i++) {
+                            options += "<option value='" + occurrenceTypes[i].description + "'>" + occurrenceTypes[i].description + "</option>";
+                        }
+
+                        var optionsMenu = $("#options-for-type");
+                        optionsMenu.empty();
+
+                        optionsMenu.append(options);
+                        preselectOccurrenceTypesMenu(occurrence.type, optionsMenu);
+
+                        // Update points when type changes to a configured occurrence type
+                        optionsMenu.on('change', function() {
+                            let selectedType = $(this).children(':selected').text();
+                            let selectedOccurrence = occurrenceTypes.find(function (occurrenceType) {
+                                return occurrenceType.description === selectedType;
+                            });
+
+                            // selectedOccurrence could be null if occurence type no longer exists; in that case don't update points
+                            if (selectedOccurrence) {
+                                pointsInput.val(formatPoints(selectedOccurrence.defaultPoints));
+                            }
+                        });
+                    }
+
+                    if(occurrence.isCumulativeOccurrence){
+
+                        $("#zeroPointTardiness").show();
+                        $("#accumulated-tardies tbody").empty();
+                        var cumulativeTardiness = response[2];
+
+                        var cumulativeStartDate = new Date(cumulativeTardiness.startDate.date);
+                        var cumulativeEndDate = new Date(cumulativeTardiness.endDate.date);
+                        $("#zero-point-tardiness").text("Week of " + cumulativeStartDate.toLocaleDateString() + "- " + cumulativeEndDate.toLocaleDateString() );
+
+                        var accumulateTableRows = "";
+                        var accumulatedTardies = cumulativeTardiness.cumulativeOccurrence;
+
+                        for(var i=0; i < accumulatedTardies.length; i++)
+                        {
+                            var dateString = new Date(accumulatedTardies[i].tardinessDate.date);
+                            dateString = dateString.toLocaleString();
+                            accumulateTableRows += "<tr><td>"+dateString+"</td><td align='right'>"+accumulatedTardies[i].tardinessMinutes+"</td></tr>";
+                        }
+
+                        $("#accumulated-tardies tbody").append(accumulateTableRows);
+                    }
+
+                    if(occurrence.status === "approved" || occurrence.status === "rejected")
+                    {
+                        $("#status").show();
+                        $("#status-option").show();
+                        $("#status-option").append("<option value='approved'>Approved</option>"+
+                            "<option value='rejected'>Rejected</option>");
+                        $("#status-option").val(occurrence.status);
+                    }
+                    $("#subject-val").text(occurrence.subject);
+                    $("#description-val").text(occurrence.description);
+
+                    $("#points-val").val(occurrence.points);
+                    var previousPoints = pointsInput.val();
+                    pointsInput.on('blur', function() {
+                        let newPoints = pointsInput.val();
+                        if ($.isNumeric(newPoints)) {
+                            let newPointsString = formatPoints(newPoints);
+                            pointsInput.val(newPointsString);
+                            previousPoints = newPointsString;
+                        } else {
+                            pointsInput.val(previousPoints);
+                        }
+                    });
+
+                    $("#admin-notes").val(occurrence.adminNotes);
+                }
+            });
+
+        }
+
+        function preselectOccurrenceTypesMenu(currentType, typesMenu) {
+            var selectedIndex = occurrenceTypes.map(function (occurrenceType) {
+                return occurrenceType.description;
+            }).indexOf(currentType);
+
+            var options = $(typesMenu).children();
+            if (selectedIndex == -1) {
+                // Could currently be an occurrence type that once existed but was later removed
+                // Here, we create an option for it (admin should still be able to keep it as is)
+                // But if another option is selected, the old non-existent option can't be re-selected
+                var newOption = $('<option></option>');
+                $(newOption).attr('value', options.length);
+                $(newOption).text(currentType);
+                $(newOption).prop('selected', true);
+                if (options.length > 0) {
+                    $(typesMenu).children().first().before(newOption);
+                } else {
+                    $(typesMenu).append(newOption);
+                }
+            } else {
+                // mark current type as selected
+                $(options[selectedIndex]).prop('selected', true);
+            }
+        }
+
+        function formatPoints(points) {
+            var inputNum = Number(points);
+            return (inputNum >= 0 ? '+' : '') + inputNum.toFixed(1);
+        }
+
+        $(document).ready(function () {
+
+            let pendingTable = $('#pendingTable').DataTable({
+                language: {
+                    "paginate": {
+                        "previous": "<<",
+                        "next": ">>"
+                    }
+                },
+                dom: 'rtp',
+                columnDefs: [
+                    {"visible": false, targets: [0, 1]}, // Hides ID column, even from inspection
+                    {"searchable": true, targets: 1}, // Makes filterType searchable
+                    {'searchable': false, targets: 0},
+                    {'orderable': false, targets: [9, 10, 11]}, // Disallow ordering the columns that are just icons
+                    { 'width': 60, targets: 10 }, // Make sure approve/reject icons are always side-by-side
+                ],
+                "order": [[ 2, "desc" ], [ 0, "desc" ]] // Order by submission date by default, then break ties with ID
+            });
+
+            let closedTable = $('#closedTable').DataTable({
+                language: {
+                    "paginate": {
+                        "previous": "<<",
+                        "next": ">>"
+                    }
+                },
+                dom: 'rtp',
+                columnDefs: [
+                    {"visible": false, targets: [0, 1]}, // Hides ID column, even from inspection
+                    {"searchable": true, targets: 1}, // Makes filterType searchable
+                    {'searchable': false, targets: 0},
+                    {'orderable': false, targets: [9, 10, 11]}, // Disallow ordering the columns that are just icons
+                    { 'width': 60, targets: 10 }, // Make sure approve/reject icons are always side-by-side
+                ],
+                "order": [[ 2, "desc" ], [ 2, "desc" ]] // Order by submission date by default, then break ties with ID
+            });
+
+            function getTable(id) {
+                switch (id) {
+                    case 'pendingTable':
+                        return pendingTable;
+                    case 'closedTable':
+                        return closedTable;
+                    default:
+                        return null;
+                }
+            }
+
+            $(".occurances-checkbox input").click(function(event){
+                var btnId = event.target.id;
+
+                switch (btnId) {
+                    case 'occurrence-filter-btn-attendance':
+                        pendingTable.column(1).search("AttendanceEvent").draw();
+                        closedTable.column(1).search("AttendanceEvent").draw();
+                        break;
+
+                    case 'occurrence-filter-btn-behavior':
+                        pendingTable.column(1).search("BehaviorEvent").draw();
+                        closedTable.column(1).search("BehaviorEvent").draw();
+                        break;
+
+                    default:
+                        pendingTable.column(1).search("").draw();
+                        closedTable.column(1).search("").draw();
+                        break;
+                }
+            });
+
+
+            $(".searchTerm").on( 'keyup change', function () {
+                pendingTable.search( this.value ).draw();
+                closedTable.search( this.value ).draw();
+            } );
+
+
+            $("#occurrenceDetailsForm").on('submit', function (event) {
+                event.preventDefault();
+                $('#save-btn').html("<i class='fas fa-spinner fa-spin'></i><span class='spinner-text'>Saving...<span>");
+
+                makeUpdateOccurrenceRequest({
+                    id : $(this)[0][0].value,
+                    type : $(this)[0][1].value,
+                    points : $(this)[0][2].value,
+                    adminNotes : $(this)[0][3].value,
+                    status : $(this)[0][4].value
+                }, function() {
+                    window.location.reload();
+                });
+            });
+
+            // When the table changes pages or sort order, events handlers need to be reattached to the visible elements
+            pendingTable.on('draw', refreshEventHandlers);
+            closedTable.on('draw', refreshEventHandlers);
+
+            function refreshEventHandlers() {
+                $('.occurrence-points.editable-cell')
+                    .off('click', enterEditPointsMode)
+                    .on('click', enterEditPointsMode);
+
+                $('.occurrence-type.editable-cell')
+                    .off('click', enterEditOccurrenceTypeMode)
+                    .on('click', enterEditOccurrenceTypeMode);
+
+                $('.approve-badge')
+                    .off('click', approveOccurrence)
+                    .on('click', approveOccurrence);
+
+                $('.reject-badge')
+                    .off('click', rejectOccurrence)
+                    .on('click', rejectOccurrence);
+
+                $('[data-toggle="tooltip"]').tooltip();
+            }
+
+            $('.occurrence-points').on('click', enterEditPointsMode);
+
+            function enterEditPointsMode() {
+                var table = getTable($(this).closest('.table').attr('id'));
+                $(this).hide();
+
+                var clickedCell = $(this).closest('td');
+
+                var input = $('<input>').addClass("edit-points");
+                $(clickedCell).append(input);
+                $(input).val($(this).find('.points-text').text());
+                $(input).select();
+
+                $(input).blur(function () {
+                    replaceInputWithText(this, table);
+                });
+
+                // blur when 'enter' is pressed
+                $(input).on('keydown', function (e) {
+                    if (13 == e.keyCode) {
+                        $(this).blur();
+                    }
+                });
+            }
+
+            function replaceInputWithText(input, table) {
+                var occurrenceRow = $(input).closest('tr');
+                var occurrenceId = table.row(occurrenceRow).data()[0];
+                var editableCell = $(input).siblings('.editable-cell');
+                var pointsSpan = $(editableCell).find('.points-text');
+                $(editableCell).show();
+
+                var inputVal = $(input).val();
+
+                if (inputVal !== "" && $.isNumeric(inputVal)) {
+                    var inputNum = Number(inputVal);
+                    var currentNum = Number($(pointsSpan).text());
+                    if (inputNum !== currentNum) {
+                        makeUpdateOccurrenceRequest({
+                            id: occurrenceId,
+                            points: inputNum
+                        });
+                    }
+                    $(pointsSpan).text(formatPoints(inputVal));
+                }
+                $(input).remove();
+            }
+
+            function makeUpdateOccurrenceRequest(occurrence, callback) {
+                $.ajax({
+                    type: 'POST',
+                    url: "{{ path('admin_update_occurrence') }}",
+                    data: occurrence,
+                    complete: function (response) {
+                        if (response.status !== 200) {
+                            alert("Something went wrong");
+                        }
+                        if (callback) {
+                            callback();
+                        }
+                    }
+                });
+            }
+
+            $('.occurrence-type.editable-cell').on('click', enterEditOccurrenceTypeMode);
+
+            function enterEditOccurrenceTypeMode() {
+                var table = getTable($(this).closest('.table').attr('id'));
+                $(this).hide();
+                var clickedCell = $(this).closest('td');
+                var typesMenu;
+
+                var occurrenceTypeSpan = $(this).find('.occurrence-type-editable');
+
+                // Some leading whitespace is inserted in the beginning; remove before processing
+                var currentType = $(occurrenceTypeSpan).text().trim();
+
+                if ($(occurrenceTypeSpan).hasClass('behavior-type-editable')) {
+                    typesMenu = makeOccurrenceTypesMenu();
+                    $(clickedCell).append(typesMenu);
+                    preselectOccurrenceTypesMenu(currentType, typesMenu);
+                    $(typesMenu).on('blur change', function () {
+                        replaceOptionMenuWithText(this, table);
+                    });
+                } else if ($(occurrenceTypeSpan).hasClass('absence-type-editable')) {
+                    typesMenu = makeAbsenceTypesMenu(clickedCell);
+                    $(clickedCell).append(typesMenu);
+                    preselectAbsenceTypesMenu(currentType, typesMenu);
+                    $(typesMenu).on('blur change', function () {
+                        replaceAbsenceOptionMenuWithText(this, table);
+                    });
+                }
+            }
+
+            function makeOccurrenceTypesMenu() {
+                var typesMenu = $('<select></select>').addClass("select-occurrence-type");
+                $.each(occurrenceTypes, function (index, occurrenceType) {
+                    var option = $('<option></option>');
+                    $(option).attr('value', index);
+                    $(option).text(occurrenceType.description);
+                    $(typesMenu).append(option);
+                });
+                return typesMenu;
+            }
+
+            function replaceOptionMenuWithText(optionMenu, table) {
+                var clickedRow = $(optionMenu).closest('tr');
+                var clickedCell = $(optionMenu).closest('td');
+
+                var occurrenceId = table.row(clickedRow).data()[0];
+
+                var editableCell = $(clickedCell).find('.editable-cell');
+                $(editableCell).show();
+
+                var typeSpan = $(editableCell).find('span.occurrence-type-editable');
+
+                var selectedType = $(optionMenu).children(':selected').text();
+                var selectedOccurrence = occurrenceTypes.find(function (occurrenceType) {
+                    return occurrenceType.description === selectedType;
+                });
+
+                // Some leading whitespace is inserted in the beginning; remove before comparing
+                var previousType = $(typeSpan).text().trim();
+
+                if (previousType !== selectedType && selectedOccurrence) {
+                    // make AJAX request to update occurrence
+                    makeUpdateOccurrenceRequest({
+                        id: occurrenceId,
+                        points: selectedOccurrence.defaultPoints,
+                        type: selectedOccurrence.description
+                    });
+                    $(clickedRow).find('.points-text')
+                        .text(formatPoints(selectedOccurrence.defaultPoints));
+                    $(typeSpan).text(selectedType);
+                }
+
+                $(optionMenu).remove();
+            }
+
+            // Deselects any open occurrence type option menus when clicking outside of them
+            function deselectOccurrenceTypeMenus(e) {
+                var occurrenceTypeOption = $(e.target).closest(".select-occurrence-type");
+                var occurrenceTypeCell = $(e.target).closest(".editable-cell.occurrence-type");
+
+                // Clicked somewhere outside of an occurrence types option menu
+                if (!occurrenceTypeOption.length && !occurrenceTypeCell.length) {
+                    var allOptionMenus = $('.select-occurrence-type');
+                    $.each(allOptionMenus, function (index, optionMenu) {
+                        var table = getTable($(optionMenu).closest('.table').attr('id'));
+                        replaceOptionMenuWithText(optionMenu, table);
+                    });
+                }
+            }
+
+            function makeAbsenceTypesMenu() {
+                var typesMenu = $('<select></select>').addClass("select-absence-type");
+
+                var option = $('<option></option>');
+                $(option).attr('value', 0);
+                $(option).text('Absence (Unexcused)');
+                $(typesMenu).append(option);
+
+                option = $('<option></option>');
+                $(option).attr('value', 1);
+                $(option).text('Absence (Excused)');
+                $(typesMenu).append(option);
+
+                return typesMenu;
+            }
+
+            function preselectAbsenceTypesMenu(currentType, absenceTypesMenu) {
+                var selectedIndex = currentType == 'Absence (Excused)' ? 1 : 0;
+
+                var options = $(absenceTypesMenu).children();
+                $(options[selectedIndex]).prop('selected', true);
+            }
+
+            function replaceAbsenceOptionMenuWithText(optionMenu, table) {
+                var clickedRow = $(optionMenu).closest('tr');
+                var clickedCell = $(optionMenu).closest('td');
+
+                var occurrenceId = table.row(clickedRow).data()[0];
+                var editableCell = $(clickedCell).find('.editable-cell');
+                $(editableCell).show();
+
+                var typeSpan = $(editableCell).find('span.occurrence-type-editable');
+
+                var selectedType = $(optionMenu).children(':selected').text();
+
+                // Some leading whitespace is inserted in the beginning; remove before comparing
+                var previousType = $(typeSpan).text().trim();
+
+                if (previousType !== selectedType) {
+                    var isJustified = selectedType === 'Absence (Excused)';
+                    var noticeAmount = noticeAmounts[occurrenceId];
+                    var newPenaltyPoints = getAbsencePenaltyPoints(isJustified, noticeAmount);
+
+                    if (newPenaltyPoints !== null) {
+                        // make AJAX request to update occurrence type and points
+                        makeUpdateOccurrenceRequest({
+                            id: occurrenceId,
+                            points: newPenaltyPoints,
+                            type: selectedType
+                        });
+                        $(clickedRow).find('.points-text')
+                            .text(formatPoints(newPenaltyPoints));
+                        $(typeSpan).text(selectedType);
+                    } else {
+                        // make AJAX request to update only occurrence type
+                        makeUpdateOccurrenceRequest({
+                            id: occurrenceId,
+                            type: selectedType
+                        });
+                        $(typeSpan).text(selectedType);
+                    }
+                }
+
+                $(optionMenu).remove();
+            }
+
+            // Deselects any open absence type option menus when clicking outside of them
+            function deselectAbsenceOccurrenceTypeMenus(e) {
+                var occurrenceTypeOption = $(e.target).closest(".select-absence-type");
+                var occurrenceTypeCell = $(e.target).closest(".editable-cell.occurrence-type");
+
+                // Clicked somewhere outside of an absence types option menu
+                if (!occurrenceTypeOption.length && !occurrenceTypeCell.length) {
+                    var allOptionMenus = $('.select-absence-type');
+                    $.each(allOptionMenus, function (index, optionMenu) {
+                        var table = getTable($(optionMenu).closest('.table').attr('id'));
+                        replaceAbsenceOptionMenuWithText(optionMenu, table);
+                    });
+                }
+            }
+
+            function getAbsencePenaltyPoints(isJustified, hoursNotice) {
+                var penalties;
+                if (isJustified)
+                    penalties = justifiedPenalties;
+                else
+                    penalties = unjustifiedPenalties;
+
+                if (hoursNotice === -1) {
+                    return noNoticePenaltyAmount;
+                }
+
+                var foundPenaltyAmount = false;
+                var penaltyPoints = null;
+                penalties.forEach((penalty) => {
+                    if (!foundPenaltyAmount && (hoursNotice < penalty.hoursBefore || penalty.hoursBefore === null )) {
+                        foundPenaltyAmount = true;
+                        penaltyPoints = penalty.penaltyAmount;
+                    }
+                });
+
+                return penaltyPoints;
+            }
+
+            $("body").on('click', deselectOccurrenceTypeMenus)
+                .on('click', deselectAbsenceOccurrenceTypeMenus);
+
+            $(".btn-approve").click(function () {
+                alert("Send Approve Event, Todo.")
+            });
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+            /**
+             * Approve and reject occurrences
+             */
+
+            $('.approve-badge').on('click', approveOccurrence);
+
+            function approveOccurrence() {
+                let url = '{{ path('admin_approve_occurrence') }}';
+                let icon = $('<span>', {
+                    'class': 'glyphicon glyphicon-ok glyphicon-approve-icon',
+                    'data-toggle': 'tooltip',
+                    'title': 'Approved'
+                });
+                resolveOccurrence(url, this, icon);
+            }
+
+            $('.reject-badge').on('click', rejectOccurrence);
+
+            function rejectOccurrence() {
+                let url = '{{ path('admin_reject_occurrence') }}';
+                let icon = $('<span>', {
+                    'class': 'glyphicon glyphicon-remove',
+                    'data-toggle': 'tooltip',
+                    'title': 'Rejected'
+                });
+                resolveOccurrence(url, this, icon);
+            }
+
+            function resolveOccurrence(url, clickedBadge, icon) {
+                let row = $(clickedBadge).closest('tr');
+                let cell = $(clickedBadge).closest('td');
+                let badges = cell.children();
+                let id = pendingTable.row(row).data()[0];
+
+                // Hide the badges so that they cannot be clicked more than once
+                badges.hide();
+
+                $(cell).append('<div class="loader"><img src="{{ asset('build/images/ajax-loader.gif') }}"></div>');
+
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: {id: id},
+                    complete: function (response) {
+                        if (response.status === 200) {
+                            cell.empty();
+                            cell.append(icon);
+                            $('[data-toggle="tooltip"]').tooltip();
+                        } else {
+                            badges.show();
+                            alert('The server encountered an error when trying to process the request')
+                        }
+                    }
+                })
+            }
+        });
+
+    </script>
+
+{% endblock %}

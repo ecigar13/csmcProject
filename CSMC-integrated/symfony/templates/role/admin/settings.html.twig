@@ -1,0 +1,848 @@
+
+{% extends 'role/admin/base.html.twig' %}
+
+{% block body %}
+    <link href="{{ asset('build/css/view_summary.css') }}" rel="stylesheet" />
+    {#TODO: remove _new from template name#}
+    <!-- <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+     -->
+    <div class="container">
+        <div class="row title">
+            <h1>Mentor Management Settings</h1>
+        </div>
+        <div class="">
+            <div class="row">
+                <div id="settings">
+                    <div class="col-md-12 settings-group">
+                        <div id="tardiness-settings" class="col-md-6 interval-table-group">
+                            <h2 class="test">Tardiness Intervals and Points                <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="bottom" title="Sets penalty points for each amount of tardiness, and specifies at what point a tardy counts as an unnotified absence instead."></span></h2>
+                            <div class="interval-btn-row">
+                                <div class="add-del-btns">
+                                    <span role="button" class="glyphicon glyphicon-plus-sign add-interval-btn" data-toggle="tooltip" title="Add Interval"></span>
+                                    <span role="button" class="glyphicon glyphicon-minus-sign del-interval-btn" data-toggle="tooltip" title="Remove Interval"></span>
+                                </div>
+                                <div class="vertical-bar"></div>
+                                <div class="inc-dec-btns">
+                                    <button type="button" class="btn btn-primary btn_inc_time">Increase</button>
+                                    <button type="button" class="btn btn-warning btn_dec_time">Decrease</button>
+                                </div>
+                            </div>
+                            <div class="interval-table">
+                                <div class="bkg main_bar" id="main_bar"> </div>
+                                <div class="bar_last_fixed" id="bar_absence">
+                                    <p id="abs_label" class="bar-label"></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h2 class="test">Miscellaneous Points</h2>
+                            <div>&nbsp;</div>
+                            <h4>Unnotified absence                 <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="bottom" title="Penalty for being absent to a shift without giving advance notice."></span></h4>
+                            <input id="unnotified-abs" class="force-negative sm-input single-points-input" type="text" value="0">
+                            <span>points</span>
+                            <h4>Shift is covered                 <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="bottom" title="Points awarded to a mentor who is absent but got his/her shift covered."></span></h4>
+                            <input id="shift-covered" class="force-positive sm-input single-points-input" type="text" value="0">
+                            <span>points</span>
+                            <h4>Covering another's shift                 <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="bottom" title="Points awarded to a mentor for covering an absent mentor’s shift."></span></h4>
+                            <input id="cover-shift" class="force-positive sm-input single-points-input" type="text" value="0">
+                            <span>points</span>
+                        </div>
+                    </div>
+                    <div class="col-md-12 settings-group">
+                        <h2>Notice-of-Absence Intervals and Points                <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="bottom" title="Sets penalty points for an absence depending on the amount of notice that the mentor gave in advance and whether the absence is excused or unexcused."></span></h2>
+                        <div id="exc-abs-settings" class="col-md-6 interval-table-group">
+                            <h3 class="test">Excused</h3>
+                            <div class="interval-btn-row">
+                                <div class="add-del-btns">
+                                    <span role="button" class="glyphicon glyphicon-plus-sign add-interval-btn" data-toggle="tooltip" title="Add Interval"></span>
+                                    <span role="button" class="glyphicon glyphicon-minus-sign del-interval-btn" data-toggle="tooltip" title="Remove Interval"></span>
+                                </div>
+                                <div class="vertical-bar"></div>
+                                <div class="inc-dec-btns">
+                                    <button type="button" class="btn btn-primary btn_inc_time">Increase</button>
+                                    <button type="button" class="btn btn-warning btn_dec_time">Decrease</button>
+                                </div>
+                            </div>
+                            <div class="interval-table">
+                                <div class="bkg main_bar" id="main_bar_exc_abs"> </div>
+                                <div class="bar_last_fixed" id="bar_init_exc_absence">
+                                    <p id="exc_gt_label" class="bar-label"></p>
+                                    <input class="force-negative sm-input last-row-input" value=0 type="text">
+                                    <span>points</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="unexc-abs-settings" class="col-md-6 interval-table-group">
+                            <h3 class="test">Unexcused</h3>
+                            <div class="interval-btn-row">
+                                <div class="add-del-btns">
+                                    <span role="button" class="glyphicon glyphicon-plus-sign add-interval-btn" data-toggle="tooltip" title="Add Interval"></span>
+                                    <span role="button" class="glyphicon glyphicon-minus-sign del-interval-btn" data-toggle="tooltip" title="Remove Interval"></span>
+                                </div>
+                                <div class="vertical-bar"></div>
+                                <div class="inc-dec-btns">
+                                    <button type="button" class="btn btn-primary btn_inc_time">Increase</button>
+                                    <button type="button" class="btn btn-warning btn_dec_time">Decrease</button>
+                                </div>
+                            </div>
+                            <div class="interval-table">
+                                <div class="bkg main_bar" id="main_bar_unexc_abs"> </div>
+                                <div class="bar_last_fixed" id="bar_init_unexc_absence">
+                                    <p id="unexc_gt_label" class="bar-label"></p>
+                                    <input class="force-negative sm-input last-row-input" style="width:50px;" value=0 type="text">
+                                    <span>points</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 settings-group">
+                        <div class="col-md-6">
+                            <h2 class="test">Suggested Actions                <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="bottom" title=" Sets the actions that will be suggested in the mentor summary screen after a mentor’s points total has crossed a points threshold. (Thresholds can be positive or negative point values.)"></span></h2>
+                            <table class="table table-hover" id="courseOfAction">
+                                <thead>
+                                <tr>
+                                    <th class="col-md-9">Action</th>
+                                    <th class="col-md-3">Threshold</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for courseOfAction in coursesOfAction %}
+                                <tr>
+                                    <td>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <span role="button" class="glyphicon glyphicon-minus-sign courseOfAction_remove"data-toggle="tooltip" title="Remove Suggested Action"></span>
+                                            </div>
+                                            <div class="col-md-9"></div>
+                                            <input type="text" class="form-control inputAction" aria-label="ActionLabel" aria-describedby="basic-addon1" value="{{ courseOfAction.description }}"/>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <input type="text" class="form-control inputPoints" aria-label="pointsLabel" aria-describedby="basic-addon1" value="{{ courseOfAction.threshold }}">
+                                            </div>
+                                            <div class="col-md-5">
+                                                <p>points</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                <tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <span role="button" class="glyphicon glyphicon-plus-sign" id="courseOfAction_add" data-toggle="tooltip" title="Add Suggested Action" style="padding-left: 10px;"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <h2 class="test">Occurrence Types                <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-placement="bottom" title="Sets the types of occurrences that can be submitted when filling out an occurrence form as well as the default points for each type."></span></h2>
+                            <table class="table table-hover" id="occurrenceTypes">
+                                <thead>
+                                <tr>
+                                    <th class="col-md-9">Type</th>
+                                    <th class="col-md-3">Default Points</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for occurrenceType in occurrenceTypes %}
+                                 <tr>
+                                    <td>
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <span role="button" class="glyphicon glyphicon-minus-sign occurrenceTypes_remove"data-toggle="tooltip" title="Remove Occurrence Type"></span>
+                                            </div>
+                                        <div class="col-md-9"></div>
+                                        <input type="text" class="form-control inputAction" aria-label="ActionLabel" aria-describedby="basic-addon1" value="{{ occurrenceType.description }}">
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="row">
+                                            <div class="col-md-7">
+                                                <input type="text" class="form-control inputPoints" aria-label="pointsLabel" aria-describedby="basic-addon1" value="{{ occurrenceType.defaultPoints }}">
+                                            </div>
+                                            <div class="col-md-5">
+                                                <p>points</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                <tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <span role="button" class="glyphicon glyphicon-plus-sign" id="occurrenceTypes_add" data-toggle="tooltip" title="Add Occurence Type" style="padding-left: 10px;"></span>
+                        </div>
+                    </div>
+                    <div id="apply-div" class="col-md-12 settings-group">
+                        <button class="btn btn-primary" id="apply-btn">Apply</button>
+                        <p id="response-message"></p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+<style>
+    .test {
+        border-bottom: 3px solid;
+        padding-bottom: 8px;
+        line-height: 1.75em;
+    }
+    .info {
+        background-color: #e7f3fe;
+        border-left: 6px solid #2196F3;
+    }
+</style>
+    <script>
+        $(document).ready(function() {
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+            $('#myTabs a').click(function (e) {
+                e.preventDefault()
+                $(this).tab('show')
+            })
+
+
+
+            $("#courseOfAction_add").on('click',function(){
+
+                var newRow = '<tr>'+
+                    '                            <td>'+
+                    '                                <div class="row">'+
+                    '                                <div class="col-md-3">'+
+                    '                                    <span role="button" class="glyphicon glyphicon-minus-sign courseOfAction_remove"data-toggle="tooltip" title="Remove Course of Action"></span>'+
+                    '                                </div>'+
+                    '                                <div class="col-md-9"></div>'+
+                    '                                    <input type="text" class="form-control inputAction" aria-label="ActionLabel" aria-describedby="basic-addon1">                             '+
+                    '                                </div>'+
+                    '                            </td>'+
+                    '                            <td>'+
+                    '                                <div class="row">'+
+                    '                                    <div class="col-md-7">'+
+                    '                                        <input type="text" class="form-control inputPoints" aria-label="pointsLabel" aria-describedby="basic-addon1"> '+
+                    '                                    </div>'+
+                    '                                    <div class="col-md-5">'+
+                    '                                        <p>points</p>'+
+                    '                                    </div>'+
+                    '                                </div>'+
+                    '                            </td>'+
+                    '                        <tr>';
+
+
+                $("#courseOfAction tbody").append(newRow);
+            });
+
+            $("#courseOfAction tbody").on('click', '.courseOfAction_remove',function(){
+                console.log($(this));
+                $(this).parent().parent().parent().parent().remove();
+            });
+
+            $("#occurrenceTypes_add").on('click',function(){
+
+                var newRow = '<tr>'+
+                    '                            <td>'+
+                    '                                <div class="row">'+
+                    '                                <div class="col-md-3">'+
+                    '                                    <span role="button" class="glyphicon glyphicon-minus-sign occurrenceTypes_remove"data-toggle="tooltip" title="Remove Occurrence Type"></span>'+
+                    '                                </div>'+
+                    '                                <div class="col-md-9"></div>'+
+                    '                                    <input type="text" class="form-control inputAction" aria-label="ActionLabel" aria-describedby="basic-addon1">                             '+
+                    '                                </div>'+
+                    '                            </td>'+
+                    '                            <td>'+
+                    '                                <div class="row">'+
+                    '                                    <div class="col-md-7">'+
+                    '                                        <input type="text" class="form-control inputPoints" aria-label="pointsLabel" aria-describedby="basic-addon1"> '+
+                    '                                    </div>'+
+                    '                                    <div class="col-md-5">'+
+                    '                                        <p>points</p>'+
+                    '                                    </div>'+
+                    '                                </div>'+
+                    '                            </td>'+
+                    '                        <tr>';
+
+
+                $("#occurrenceTypes tbody").append(newRow);
+            });
+
+            // $(".courseOfAction_remove").click(function(){
+            //     console.log($(this).parent().parent().parent().parent());
+            //     // $(this).parent().parent().parent().parent().remove();
+            // });
+            $("#occurrenceTypes tbody").on('click', '.occurrenceTypes_remove',function(){
+                console.log($(this));
+                $(this).parent().parent().parent().parent().remove();
+            });
+
+            var base_height = 72;           // pixels
+            var max_height_threshold = 30;  // clicks
+            var inc_dec_step = 2;           // pixels
+
+            // sizes of the time slots in terms of
+            var timeSlotTables = {
+                "tardiness-settings" : [],  // minutes
+                "exc-abs-settings" : [],    // hours
+                "unexc-abs-settings" : []   // hours
+            };
+
+            // amounts to increase/decrease interval duration by
+            var timeStep = {
+                "tardiness-settings" : 1,   // minutes
+                "exc-abs-settings" : 12,    // hours
+                "unexc-abs-settings" : 12   // hours
+            };
+
+            var labelPrefixes = {
+                "tardiness-settings" : "ta_lbl",
+                "exc-abs-settings" : "ea_lbl",
+                "unexc-abs-settings" : "ua_lbl"
+            };
+
+            var divPrefixes = {
+                "tardiness-settings" : "ta_div",
+                "exc-abs-settings" : "ea_div",
+                "unexc-abs-settings" : "ua_div"
+            };
+
+            var pointValues = {
+                "tardiness-settings" : [],  // minutes
+                "exc-abs-settings" : [],    // hours
+                "unexc-abs-settings" : [0],   // hours
+                "unnotified-abs" : 0,
+                "shift-covered": 0,
+                "cover-shift" : 0
+            };
+
+            var coursesOfAction = {};
+            var occurrenceTypes = {};
+
+            function allValid() {
+                for (var fieldName in pointValues) {
+                    var field = pointValues[fieldName];
+                    if (Array.isArray(field)) {
+                        for (var index = 0; index < field.length; index++) {
+                            var pointValue = field[index];
+                            if (index == 0 && fieldName == "tardiness-settings") {
+                                if (!$.isNumeric(pointValue) && pointValue != "cumulative") {
+                                    return false;
+                                }
+                            } else {
+                                if (!$.isNumeric(pointValue)) {
+                                    return false;
+                                }
+                            }
+                        }
+                    } else {
+                        if (!$.isNumeric(field)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            function validateAllInputData() {
+                if (allValid()) {
+                    $("#apply-btn").prop('disabled', false);
+                } else {
+                    $("#apply-btn").prop('disabled', 'disabled');
+                }
+            }
+
+            // event handler for when a bar div is clicked
+            var selectDivHandler = function () {
+                var intervalTableGroup = $(this).closest(".interval-table-group");
+                deselectAll(intervalTableGroup);
+                this.className = "bar_sel";
+                populateSelected(this);
+                $(this).off("click");
+            };
+
+            var getValueLabelText = function (value, tardinessFirstRow) {
+                if ($.isNumeric(value)) {
+                    return value + " points";
+                } else if (tardinessFirstRow && value == "cumulative") {
+                    return "Cumulative";
+                } else {
+                    return "Invalid Number";
+                }
+            };
+
+            var updateRowPointValue = function() {
+                var intervalTableGroup = $(this).closest(".interval-table-group");
+                var tableId = $(intervalTableGroup).attr('id');
+                var thisRow = getSelectedElementIndex(intervalTableGroup);
+                pointValues[tableId][thisRow] = $(this).val();
+                validateAllInputData();
+            };
+
+            var updateLastRowPointValue = function() {
+                var intervalTableGroup = $(this).closest(".interval-table-group");
+                var tableId = $(intervalTableGroup).attr('id');
+                var lastRow = $(intervalTableGroup).find(".main_bar").children().length;
+                pointValues[tableId][lastRow] = $(this).val();
+                validateAllInputData();
+            };
+
+            var updateEffectiveValues = function (intervalTableGroup) {
+                var tableId = $(intervalTableGroup).attr('id');
+                var tableGroupMainBar = $(intervalTableGroup).find(".main_bar");
+                var children = $(tableGroupMainBar).children();
+                var timeSlotTable = timeSlotTables[tableId];
+                var labelPrefix = labelPrefixes[tableId];
+                var unitLabel = tableId == 'tardiness-settings' ? " min" : " hours";
+
+                var eV = 0;
+
+                $(children).each(function(index) {
+                    var prevEv = eV;
+                    eV += timeSlotTable[index];
+                    var uid = $(this).attr('id').substring(6);
+                    $("#" + labelPrefix + uid).text(prevEv + " – " + eV + unitLabel);
+                });
+
+                switch (tableId) {
+                    case "tardiness-settings":
+                        $("#abs_label").text("Unnotified Absence (after " + eV + " min)");
+                        break;
+                    case "exc-abs-settings":
+                        $("#exc_gt_label").text("More than " + eV + " hours");
+                        break;
+                    case "unexc-abs-settings":
+                        $("#unexc_gt_label").text("More than " + eV + " hours");
+                        break;
+                    default:
+                        console.error("Invalid Table ID");
+                }
+            };
+
+            var deselectAll = function(intervalTableGroup) {
+                var selected = getSelectedElement(intervalTableGroup);
+                var selectedIndex = getSelectedElementIndex(intervalTableGroup);
+                var tableId = $(intervalTableGroup).attr('id');
+                $(selected).each(function() {
+                    // set value label
+                    var valueLabel = $(this).find(".value-label");
+                    var value = pointValues[tableId][selectedIndex];
+
+                    var isTardinessFirstRow = tableId == "tardiness-settings" && selectedIndex == 0;
+
+                    var valueLabelText = getValueLabelText(value, isTardinessFirstRow);
+                    $(valueLabel).html(valueLabelText);
+                    if (valueLabelText == "Invalid Number") {
+                        $(valueLabel).addClass("invalid-label");
+                    } else {
+                        $(valueLabel).removeClass("invalid-label");
+                    }
+
+                    $(this).find(".value-label").removeClass("hidden");
+                    $(this).removeClass("bar_sel");
+                    $(this).addClass("bar_def");
+                    $(this).children(".inner_div").remove();
+                    $(this).on("click", selectDivHandler);
+                });
+            };
+
+            var getSelectedElement = function (intervalTableGroup) {
+                var selectedBar = $(intervalTableGroup).find(".main_bar .bar_sel");
+
+                // selectedBar.length will be 0 if none found
+                return selectedBar.length ? selectedBar : null;
+            };
+
+            var getSelectedElementIndex = function (intervalTableGroup) {
+                var tableGroupMainBar = $(intervalTableGroup).find(".main_bar");
+                var selectedBar = $(tableGroupMainBar).find(".bar_sel");
+
+                // selectedBar.length will be 0 if none found
+                return selectedBar.length ?
+                    $(tableGroupMainBar).children().index(selectedBar) : -1;
+            };
+
+            var forceNegative = function() {
+                var value = $(this).val();
+                if ($.isNumeric(value)) {
+                    $(this).removeClass('invalid-input');
+                    value = Number(value);
+                    value = Math.abs(value) * (-1);
+                    $(this).val(value);
+                } else if (value === "") {
+                    $(this).val(0);
+                }
+                else {
+                    $(this).addClass('invalid-input');
+                }
+            };
+
+            var forcePositive = function() {
+                var value = $(this).val();
+                if ($.isNumeric(value)) {
+                    $(this).removeClass('invalid-input');
+                    value = Number(value);
+                    value = Math.abs(value);
+                    $(this).val(value);
+                } else if (value === "") {
+                    $(this).val(0);
+                }
+                else {
+                    $(this).addClass('invalid-input');
+                }
+            };
+
+            var populateSelected = function(target) {
+                var intervalTableGroup = $(target).closest(".interval-table-group");
+                var tableId = $(intervalTableGroup).attr('id');
+                var thisRow = getSelectedElementIndex(intervalTableGroup);
+
+                $(target).find(".value-label").addClass("hidden");
+
+                var inner_div = $("<div></div>", { class: "inner_div" });
+
+                // Add a cumulative checkbox to first row in tardiness settings
+                if (tableId == "tardiness-settings" && thisRow == 0) {
+                    var cb = $("<input>", {
+                        type: "checkbox",
+                        name: "cumulative",
+                        id: "cumulative",
+                        checked: pointValues[tableId][0] == "cumulative",
+                        on: {
+                            change: function() {
+                                var checked = $(this).is(':checked');
+
+                                // should disable inputting a point value if cumulative
+                                if (checked) {
+                                    var input = $(this).siblings('input');
+                                    $(input).val(0);
+                                    $(input).prop('disabled', true);
+                                    pointValues[tableId][0] = "cumulative";
+                                } else {
+                                    var input = $(this).siblings('input');
+                                    $(input).prop('disabled', false);
+                                    pointValues[tableId][0] = 0;
+                                }
+                            }
+                        }
+                    });
+
+                    var label = $("<label>Cumulative</label>", { for: "cumulative" });
+                    var orLabel = $("<span>or</span>");
+
+                    $(inner_div).append(cb);
+                    $(inner_div).append(label);
+                    $(inner_div).append(orLabel);
+                }
+
+                var valueFromTable = pointValues[tableId][thisRow];
+                var input = $("<input>", {
+                    class: "force-negative sm-input",
+                    value: (valueFromTable == "cumulative") ? 0 : valueFromTable,
+                    on: {
+                        blur: function() {
+                            forceNegative.bind(this)();
+                            updateRowPointValue.bind(this)();
+                        }
+                    },
+                    disabled: (valueFromTable == "cumulative")
+                });
+                var pointsLabel = $("<span>points</span>");
+
+                $(inner_div).append(input);
+                $(inner_div).append(pointsLabel);
+                $(target).append(inner_div);
+
+                // set value label
+                var valueLabel = $(target).find(".value-label");
+                var value = pointValues[tableId][thisRow];
+
+                var isTardinessFirstRow = tableId == "tardiness-settings" && thisRow == 0;
+
+                var valueLabelText = getValueLabelText(value, isTardinessFirstRow);
+                $(valueLabel).html(valueLabelText);
+                if (valueLabelText == "Invalid Number") {
+                    $(input).addClass("invalid-input");
+                } else {
+                    $(input).removeClass("invalid-input");
+                }
+            };
+
+            var pickUniqueId = function(intervalTableGroup) {
+                var tableGroupMainBar = $(intervalTableGroup).find(".main_bar");
+                var children = $(tableGroupMainBar).children();
+                var max = 0;
+
+                $(children).each(function() {
+                    var temp = Number($(this).attr('id').substring(6));
+                    if (temp > max) {
+                        max = temp;
+                    }
+                });
+
+                return max + 1;
+            };
+
+            var createIntervalDiv = function(intervalTableGroup, loadWithValue) {
+                var thisVal = loadWithValue || 0;
+
+                var tableId = $(intervalTableGroup).attr('id');
+                var labelPrefix = labelPrefixes[tableId];
+                var divPrefix = divPrefixes[tableId];
+
+                var uid = pickUniqueId(intervalTableGroup);
+
+                var element = $("<div></div>", {
+                    id: divPrefix + uid,
+                    class: "bar_def",
+                    style: "height: " + base_height + "px;",
+                    on: {
+                        click: selectDivHandler
+                    }
+                });
+                var label = $("<p></p>", {
+                    id: labelPrefix + uid,
+                    class: "bar-label"
+                });
+                var valueLabel = $("<span></span>", { class: "value-label" });
+                valueLabel.html(thisVal == "cumulative" ? "Cumulative" : thisVal + " points");
+                $(element).append(label);
+                $(element).append(valueLabel);
+
+                var mainBar = $(intervalTableGroup).find(".main_bar");
+                $(mainBar).append(element);
+            };
+
+            var loadFromTables = function(points, intervals) {
+                pointValues = points;
+                timeSlotTables = intervals;
+                // create intervals
+                for (var settingIntervalId in intervals) {
+                    var intervalTable = intervals[settingIntervalId];
+                    for (var index = 0; index < intervalTable.length; index++) {
+                        var intervalTableGroup = $("#" + settingIntervalId);
+                        var loadWithValue = points[settingIntervalId][index];
+                        createIntervalDiv(intervalTableGroup, loadWithValue);
+                    }
+                }
+
+                // load points in visible inputs
+                for (var settingValueId in points) {
+                    if (Array.isArray(points[settingValueId])) {
+                        // load points in last bar (if visible)
+                        var length = points[settingValueId].length;
+                        var lastInput = $("#" + settingValueId + " .bar_last_fixed input");
+                        $(lastInput).val(points[settingValueId][length-1]);
+                    } else {
+                        // load single-value points
+                        $("#" + settingValueId).val(points[settingValueId]);
+                    }
+                }
+            };
+
+            var loadFromDatabase = function() {
+
+                var pTable = {{ pTable|raw }};
+                var iTable = {{ iTable|raw }};
+
+                if (pTable['unexc-abs-settings'].length == 0) {
+                    pTable['unexc-abs-settings'] = [0];
+                }
+
+                if (pTable['exc-abs-settings'].length == 0) {
+                    pTable['exc-abs-settings'] = [0];
+                }
+
+                loadFromTables(pTable, iTable);
+                $(".interval-table-group").each(function() {
+                    updateEffectiveValues(this);
+                });
+            };
+
+            // Page set up
+            loadFromDatabase();
+
+            // Event handlers
+            $(".btn_inc_time").on("click", function () {
+                var intervalTableGroup = $(this).closest(".interval-table-group");
+                var tableId = $(intervalTableGroup).attr('id');
+                var timeSlotTable = timeSlotTables[tableId];
+                var selected = getSelectedElement(intervalTableGroup);
+
+                if (selected != null) {
+                    var ind = getSelectedElementIndex(intervalTableGroup);
+                    if (timeSlotTable[ind] < max_height_threshold * timeStep[tableId]) {
+                        var current_height = $(selected).height();
+                        $(selected).height(current_height + inc_dec_step);
+                    }
+                    timeSlotTable[ind] += timeStep[tableId];
+                    updateEffectiveValues(intervalTableGroup);
+                }
+            });
+
+            $(".btn_dec_time").on("click", function () {
+                var intervalTableGroup = $(this).closest(".interval-table-group");
+                var tableId = $(intervalTableGroup).attr('id');
+                var timeSlotTable = timeSlotTables[tableId];
+                var selected = getSelectedElement(intervalTableGroup);
+
+                var minTime = timeStep[tableId];
+
+                if (selected != null) {
+                    var ind = getSelectedElementIndex(intervalTableGroup);
+                    if (timeSlotTable[ind] > minTime) {
+                        timeSlotTable[ind] -= timeStep[tableId];
+                        if (timeSlotTable[ind] < max_height_threshold * timeStep[tableId]) {
+                            var current_height = $(selected).height();
+                            $(selected).height(current_height - inc_dec_step);
+                        }
+                    }
+                    updateEffectiveValues(intervalTableGroup);
+                }
+            });
+
+            $(".add-interval-btn").on("click", function () {
+                var intervalTableGroup = $(this).closest(".interval-table-group");
+                var tableId = $(intervalTableGroup).attr('id');
+                var timeSlotTable = timeSlotTables[tableId];
+                var initialTime = timeStep[tableId];
+
+                createIntervalDiv(intervalTableGroup);
+
+                // create entries in tables for the new interval
+                timeSlotTable[timeSlotTable.length] = initialTime;
+
+                var numRows = pointValues[tableId].length;
+
+                if (tableId == "tardiness-settings") {
+                    // Tardiness table has no last row; put new value at end
+                    pointValues[tableId][numRows] = 0;
+                } else {
+                    // Absence tables have a last row; insert new value before last
+                    pointValues[tableId][numRows] = pointValues[tableId][numRows-1];
+                    pointValues[tableId][numRows-1] = 0;
+                }
+
+                updateEffectiveValues(intervalTableGroup);
+            });
+
+            $(".del-interval-btn").on("click", function() {
+                var intervalTableGroup = $(this).closest(".interval-table-group");
+                var tableId = $(intervalTableGroup).attr('id');
+                var timeSlotTable = timeSlotTables[tableId];
+
+                var selected = getSelectedElement(intervalTableGroup);
+                if (selected != null) {
+                    var selectedIndex = getSelectedElementIndex(intervalTableGroup);
+                    $(selected).remove();
+
+                    // remove respective entry in each table
+                    timeSlotTable.splice(selectedIndex, 1);
+                    pointValues[tableId].splice(selectedIndex, 1);
+                    updateEffectiveValues(intervalTableGroup);
+                }
+            });
+
+            $("input.force-negative").on("blur", forceNegative);
+
+            $("input.force-positive").on("blur", forcePositive);
+
+            $("input.last-row-input").on("blur", updateLastRowPointValue);
+
+            $(".single-points-input").on("blur", function() {
+                var inputId = $(this).attr('id');
+                pointValues[inputId] = $(this).val();
+                validateAllInputData();
+            });
+
+            $("#apply-btn").click(function() {
+                $("#response-message").fadeOut(100, function() { $("#response-message").empty(); });
+                coursesOfAction = getTableData("courseOfAction")
+                occurrenceTypes = getTableData("occurrenceTypes")
+
+                if (allValid()) {
+                    var penaltyAmount = JSON.stringify(pointValues, null, 2);
+                    var intervalSlots = JSON.stringify(timeSlotTables, null, 2);
+                    coursesOfAction = JSON.stringify(coursesOfAction, null, 2);
+                    occurrenceTypes = JSON.stringify(occurrenceTypes, null, 2);
+                    $.ajax({
+                        type: 'POST',
+                        url: "{{ path('admin_ajax_penalty_configuration') }}",
+                        data: {
+                            'penaltyAmount' : penaltyAmount,
+                            'intervalSlots' : intervalSlots,
+                            'coursesOfAction' : coursesOfAction,
+                            'occurrenceTypes': occurrenceTypes
+                        },
+                        success: function(response) {
+                            $("#response-message").fadeIn(100);
+                            $("#response-message").addClass("response-message");
+                            $("#response-message").append(response);
+                        }
+                    });
+                } else {
+                    // Should never get here...
+                    // Button should be disabled if not all inputs are valid
+                    console.log("Some inputs are invalid!");
+                }
+            });
+
+            function getTableData(tableId)
+            {
+                var tableData = new Array();
+                $("#"+tableId+" tr").each(function(i,row) {
+                    var description = $(row).find("input.inputAction").val(),
+                        points = $(row).find("input.inputPoints").val();
+                    if(description && points) {
+                        var temp = {
+                            "description": description,
+                            "points": points
+                        };
+                        tableData.push(temp);
+                    }
+                });
+                return tableData;
+            }
+            $("body").click(function(e) {
+                var intervalTable = $(e.target).closest(".interval-table");
+                var incDecBtns = $(e.target).closest(".inc-dec-btns");
+                var addDelBtns = $(e.target).closest(".add-del-btns");
+
+                var intervalTableGroupIT = $(intervalTable).closest(".interval-table-group");
+                var intervalTableGroupID = $(incDecBtns).closest(".interval-table-group");
+                var intervalTableGroupAD = $(addDelBtns).closest(".interval-table-group");
+
+                if (intervalTableGroupAD.length) {
+                    var clickedTableId = $(intervalTableGroupAD).attr('id');
+                    $(".interval-table-group").each(function() {
+                        if ($(this).attr('id') != clickedTableId) {
+                            deselectAll(this);
+                        }
+                    });
+                } else if (intervalTableGroupID.length) {
+                    var clickedTableId = $(intervalTableGroupID).attr('id');
+                    $(".interval-table-group").each(function() {
+                        if ($(this).attr('id') != clickedTableId) {
+                            deselectAll(this);
+                        }
+                    });
+                } else if (intervalTableGroupIT.length) {
+                    var clickedTableId = $(intervalTableGroupIT).attr('id');
+                    $(".interval-table-group").each(function() {
+                        if ($(this).attr('id') != clickedTableId) {
+                            deselectAll(this);
+                        }
+                    });
+                } else {
+                    $(".interval-table-group").each(function() {
+                        deselectAll(this);
+                    });
+                }
+            });
+        });
+
+    </script>
+
+{% endblock %}
