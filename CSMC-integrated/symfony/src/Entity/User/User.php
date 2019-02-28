@@ -149,6 +149,7 @@ class User implements UserInterface, \Serializable {
         $this->username = $username;
 
         $this->profile = Profile::createForUser($this);
+        $this->info = Info::createForUser($this);
         $this->notificationPreferences = new NotificationPreferences($this);
 
         $this->roles = new ArrayCollection();
@@ -392,8 +393,7 @@ class User implements UserInterface, \Serializable {
         return $this->profile->getProfilePicture();
     }
 
-    public function updateProfilePicture(File $image, bool $adminOverride = false)
-    {
+    public function updateProfilePicture(File $image, bool $adminOverride = false) {
         $this->profile->updateProfilePicture($image, $adminOverride);
     }
 
