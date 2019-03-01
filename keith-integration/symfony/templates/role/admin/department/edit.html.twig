@@ -1,0 +1,132 @@
+{% extends "role/admin/base.html.twig" %}
+{% block body %}
+    {#Confirmation Modal Box for saving edited data#}
+    <div class="modal" tabindex="-1" role="dialog" id="myModalEdit">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background: rgba(38,185,154,.88);height:45px">
+                    <h5 class="modal-title"
+                        style="color:white; font-size: large;font-family: Helvetica, Arial, sans-serif;"><b>Save</b>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"/>
+                        <span aria-hidden="true">&times;</span></h5>
+                    </button>
+                </div>
+                <div class="modal-body" style="height: 50px">
+                    <p>Are you sure you want to save the changes?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Discard</button>
+                    <button type="button" class="btn btn-success" id="saveChanges">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {#Confirmation Modal Box for deleting department#}
+    <div class="modal" tabindex="-1" role="dialog" id="myModalDelete">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background: #C82829;height:45px">
+                    <h5 class="modal-title"
+                        style="color:white; font-size: large;font-family: Helvetica, Arial, sans-serif;"><b>Delete</b>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"/>
+                        <span aria-hidden="true">&times;</span></h5>
+                    </button>
+                </div>
+                <div class="modal-body" style="height: 50px">
+                    <p>Are you sure you want to delete the Department?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Discard</button>
+                    <button type="button" class="btn btn-danger" id="deleteItem"
+                            onclick="location.href='./deleteDepartment?id={{ deleteId }}'">Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="center_col" role="main">
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <div class="title_left">
+                            <h2 style="font-family:''"> Edit Department ({{ departmentName }})</h2>
+                            <button type="button" id="deleteBtn" class="btn btn-danger" data-toggle="modal"
+                                    data-target="#myModalDelete" style="float: right">Delete
+                            </button>
+                        </div>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                        {# Displaying Flash message for foreign key constraint violation#}
+                        {% for label, messages in app.flashes %}
+                            <div class="alert alert-danger" id="errorDiv">
+                                {% for message in messages %}
+                                    <div class="flash-{{ label }}">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        {# Displaying form errors#}
+                        {% if not form.vars.valid %}
+                            <div class="alert alert-danger" id="errorDiv">
+                                {{ form_errors(form) }}
+                            </div>
+                        {% endif %}
+                        <br/>
+                        {{ form_start(form,{'attr':{'class':'form-horizontal form-label-left input_mask'}}) }}
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                                   for="first-name">{{ form_label(form.name) }}
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.name, {'attr': {'class': 'form-control col-md-7 col-xs-12'}} ) }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                                   for="first-name">{{ form_label(form.abbreviation) }}
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.abbreviation, {'attr': {'class': 'form-control col-md-7 col-xs-12'}} ) }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                                   for="first-name">{{ form_label(form.adminNotes,null ,{ 'label_attr': {'style': 'font-weight:200'}}) }}
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.adminNotes, {'attr': {'class': 'form-control col-md-7 col-xs-12'}} ) }}
+                            </div>
+                        </div>
+                        <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-5">
+                            <button type="button" class="btn btn-secondary"
+                                    onclick="location.href='./list_departments'">Cancel
+                            </button>
+                            {{ form_widget(form.submit,{'attr':{'class':'btn btn-success','data-toggle':'modal','data-target':'#myModalEdit'}}) }}
+                        </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% block javascripts %}
+        {{ parent() }}
+        <script type="text/javascript">
+            {# Preventing default submit for form to display confirmation box#}
+            $('#form_submit').on('click', function (event) {
+                event.preventDefault();
+            });
+            {# Submitting form on confirmation from modal box#}
+            $('#saveChanges').on('click', function () {
+                $('form').submit();
+            });
+            {# Preventing default delete to display confirmation box#}
+            $('#deleteBtn').on('click', function (event) {
+                event.preventDefault();
+            });
+        </script>
+    {% endblock %}
+{% endblock %}

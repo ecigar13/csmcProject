@@ -1,0 +1,72 @@
+@CHARSET "ISO-8859-1";
+
+.content_table {
+  padding: 0px;
+  margin-top: 8px;
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #008542;
+}
+
+.content_table_head {
+  height: 40px;
+  background-color: #69be28;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.content_table_data {
+  height: 16px;
+  line-height: 16px;
+  font-size: 16px;
+  text-align: center;
+  border: 1px solid #008542;
+  color: #766a72;
+}
+
+.content_table_data:nth-child(odd) {
+  background-color: #dfdfdf;
+}
+
+.content_table_data:hover {
+  background-color: #b7b1a9;
+}
+
+.content_table_cell {
+  border: 1px solid #008542;
+  position: relative;
+  padding: 8px;
+}
+
+.content_table_cell_dropdown {
+  display: inline-block;
+  font-size: 16px;
+  width: 100%;
+  height: 100%;
+  line-height: 32px;
+  background-color: #ffffff;
+  border: 1px solid #b7b1a9;
+}
+
+.content_table_cell_week {
+  border: 1px solid #000000;
+  position: relative;
+  padding: 8px;
+  background-color: #ffffff;
+}
+
+.content_table_data_option {
+  position: absolute;
+  height: 24px;
+  line-height: 24px;
+  margin: 5%;
+  top: 0px;
+  right: 0px;
+  width: 90%;
+  font-size: 12px;
+  visibility: hidden;
+}
+
+.content_table_data:hover .content_table_data_option {
+  visibility: visible;
+}

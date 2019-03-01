@@ -1,0 +1,120 @@
+{% extends "role/admin/base.html.twig" %}
+{% block body %}
+
+
+
+    <div class="center_col" role="main">
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2> Create Section</h2>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+
+                        {# Checking for form errors and displaying them#}
+                        {% if not form.vars.valid %}
+                            <div class="alert alert-danger" id="errorDiv">
+                                {{ form_errors(form) }}
+                            </div>
+                        {% endif %}
+                        <br/>
+
+                        {{ form_start(form, {'attr': {'class': 'form-horizontal form-label-left'}}) }}
+                        {{ form_errors(form) }}
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.course) }}
+                            </div>
+                            {{ form_errors(form.course) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.course, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.number) }}
+                            </div>
+                            {{ form_errors(form.number) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.number, {'attr': {'class': 'form-control col-md-7 col-xs-12', 'required': 'required'}}) }}
+                            </div>
+                        </div>
+
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.semester) }}
+                            </div>
+                            {{ form_errors(form.semester) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.semester, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+
+
+                        <!-- should be selected from selection box -->
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.instructor, null, { 'label_attr': {'style': 'font-weight:200'}}) }}
+                            </div>
+                            {{ form_errors(form.instructor) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.instructor, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.teaching_assistants, null, { 'label_attr': {'style': 'font-weight:200'}}) }}
+                            </div>
+                            {{ form_errors(form.teaching_assistants) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.teaching_assistants, {'attr': {'class': 'form-control col-md-7 col-xs-12', 'size': '7'}}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.description, null, { 'label_attr': {'style': 'font-weight:200'}}) }}
+                            </div>
+                            {{ form_errors(form.description) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.description, {'attr': {'class': 'form-control col-md-7 col-xs-12', 'rows': '7' }}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                Upload Roster
+                            </div>
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                <b>[[File Upload Control ...]]</b>
+                            </div>
+                        </div>
+
+                        <div class="ln_solid"></div>
+
+                        <div class="form-group">
+                            <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                                <button class="btn btn-secondary" type="button" onclick="location.href='/listSections'">
+                                    Cancel
+                                </button>
+                                {{ form_widget(form.save, {'attr': {'class': 'btn btn-success'}}) }}
+                            </div>
+                        </div>
+
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

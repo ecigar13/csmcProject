@@ -1,0 +1,154 @@
+{% extends 'shared/base.html.twig' %}
+{% block body %}
+    {{ include('shared/component/flash_messages.html.twig') }}
+    <h2>My Absences
+        <a class="pull-right btn btn-success" href="{{ path('absence_create') }}">
+            Submit Absence
+        </a>
+    </h2>
+    <table id="my" class="table table-bordered table-striped">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Shift</th>
+            <th>Reason</th>
+            <th>Substitute</th>
+            <th>Update</th>
+            <th>Cancel</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for absence in your_absences %}
+        <tr id="{{ absence.id }}">
+            <td>{{ absence.assignment.scheduledShift.date|date('m/d/Y') }}</td>
+            <td>{{ absence.assignment.scheduledShift.shift.startTime|date('g:i A') }}</td>
+            <td>{{ absence.reason }}</td>
+            <td>
+                {% if absence.substitute.mentor is defined %}
+                    {{ absence.substitute.mentor }}
+                    {% set sub = true %}
+                {% else %}
+                    {% set sub = false %}
+                {% endif %}
+            </td>
+
+            {% set f_date = absence.assignment.scheduledShift.date|date('Y-m-d') > "now"|date('Y-m-d') %}
+            {% set c_date = absence.assignment.scheduledShift.date|date('Y-m-d') == "now"|date('Y-m-d') %}
+            {% set f_time = absence.assignment.scheduledShift.shift.startTime|date('H:i') > "now"|date('H:i') %}
+            {% if f_date or ( c_date and f_time ) %}
+                {% set future = true %}
+            {% else %}
+                {% set future = false %}
+            {% endif %}
+            <td>
+                {% if not sub and future %}
+                    <a class="btn btn-success" href="{{ path('absence_edit', {'id': absence.id}) }}">
+                        Update
+                    </a>
+                {% else %}
+                    {#<div class="btn btn-default">Update</div>#}
+                {% endif %}
+            </td>
+            <td>
+                {% if not sub and future %}
+                    <button id="cancel" class="btn btn-warning" data-absence="{{ absence.id }}">
+                        Cancel
+                    </button>
+                {% else %}
+                    {#<div class="button grey_button">Cancel</div>#}
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <h2>Absences</h2>
+    <div class="alert alert-danger">Reminder: Make sure you do NOT work more than 19 hours in a week!</div>
+    <table id="other" class="table table-bordered table-striped">
+        <thead>
+        <tr>
+            <th>Mentor</th>
+            <th>Date</th>
+            <th>Shift</th>
+            <th>Session</th>
+            <th>Substitute Mentor</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for absence in absences %}
+        <tr>
+            <td>{{ absence.assignment.mentor }}</td>
+            <td>{{ absence.assignment.scheduledShift.date|date('m/d/Y') }}</td>
+            <td>{{ absence.assignment.scheduledShift.shift.startTime|date('g:i A') }}</td>
+            <td>
+                {% if absence.assignment.session.session is defined %}
+                    {{ absence.assignment.session.session.topic }}
+                {% endif %}
+            </td>
+            <td id="{{ absence.id }}">
+                {% if absence.substitute.mentor is defined %}
+                    {{ absence.substitute.mentor }}
+                {% else %}
+                    <button id="claim-{{ absence.id }}" class="btn btn-success"
+                            data-absence="{{ absence.id }}">
+                        Claim Shift
+                    </button>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script type="application/javascript">
+        $(function () {
+            var my = $('#my').DataTable({
+                'paging': false,
+                'ordering': true,
+                'searching': true
+            });
+
+            var other = $('#other').DataTable({
+                'paging': false,
+                'ordering': true,
+                'searching': true
+            });
+
+            $('#cancel').on('click', function () {
+                var absence = $(this).data('absence');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{{ path('absence_cancel_ajax') }}',
+                    data: {'absence': absence}
+                }).done(function (data) {
+                    // success
+                    my.row($('#' + absence)).remove().draw();
+                }).fail(function (data) {
+                    // error
+                    {# TODO implement fail #}
+                });
+            });
+
+            $('[id^="claim"]').on('click', function () {
+                var absence = $(this).data('absence');
+
+                console.log('hello');
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{{ path('absence_market_ajax') }}',
+                    data: {'absence': absence}
+                }).done(function (data) {
+                    // success
+                    $('#' + absence).text('{{ app.user }}');
+                }).fail(function (data) {
+                    // error
+                    {# TODO implement fail #}
+                });
+            });
+        });
+    </script>
+{% endblock %}

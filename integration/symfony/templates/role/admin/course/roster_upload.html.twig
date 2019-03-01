@@ -1,0 +1,8 @@
+{% extends 'role/admin/base.html.twig' %}
+{% block body %}
+    {% include('shared/component/flash_messages.html.twig') %}
+    <div class="content_head">
+        <h2 class="content_title">Bulk Roster Upload</h2>
+    </div>
+    {{ form(form) }}
+{% endblock %}

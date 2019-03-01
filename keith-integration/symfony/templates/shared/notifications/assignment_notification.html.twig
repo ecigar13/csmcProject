@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title>UT Dallas Mentor Center Session Assignment Notification</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+
+<body>
+<h1>CSMC Assignment Notification</h1>
+
+<p>Hello {{ mentor.preferredName }},</p>
+
+{% set count = assignments | length %}
+{% set assignmentString = 'session|sessions' %}
+
+<p>Today, {{ assignmentDate | date('l m/d/Y') }}, you have been assigned to the
+    following {{ assignmentString | transchoice(count) }}:</p>
+
+<ul>
+    {% for assignment in assignments %}
+        {% set scheduledShift = assignment.scheduledShift %}
+        {% set shift = assignment.scheduledShift.shift %}
+        <li>{{ scheduledShift.date | date('l m/d/Y') }} from {{ shift.startTime | date('h:i A') }}
+            to {{ shift.endTime | date('h:i A') }}</li>
+    {% endfor %}
+</ul>
+
+<p>Sincerely,</p>
+<p>The Computer Science Mentor Center</p>
+</body>
+</html>

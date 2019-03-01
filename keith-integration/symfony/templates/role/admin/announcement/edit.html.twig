@@ -1,0 +1,317 @@
+{% extends "role/admin/base.html.twig" %}
+{% block body %}
+    <div class="modal" tabindex="-1" role="dialog" id="myModalEdit">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background: rgba(38,185,154,.88);height:45px">
+                    <h5 class="modal-title"
+                        style="color:white; font-size: large;font-family: Helvetica, Arial, sans-serif;"><b>Save</b>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"/>
+                        <span aria-hidden="true">&times;</span></h5>
+                    </button>
+                </div>
+                <div class="modal-body" style="height: 50px">
+                    <p>Are you sure you want to save the changes?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Discard</button>
+                    <button type="button" class="btn btn-success" id="saveChanges">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" tabindex="-1" role="dialog" id="myModalDelete">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background: #C82829;height:45px">
+                    <h5 class="modal-title"
+                        style="color:white; font-size: large;font-family: Helvetica, Arial, sans-serif;"><b>Delete</b>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"/>
+                        <span aria-hidden="true">&times;</span></h5>
+                    </button>
+                </div>
+                <div class="modal-body" style="height: 50px">
+                    <p>Are you sure you want to delete the Announcement?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Discard</button>
+                    {# Change the delete URL #}
+                    {#<button type="button" class="btn btn-danger" id="deleteItem"#}
+                            {#onclick="location.href='/deleteAnnouncement?id={{ deleteId }}'">Delete#}
+                    {#</button>#}
+                    <a class="btn btn-danger" id="deleteItem" href="{{ path('admin_announcement_delete') }}"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="center_col" role="main">
+
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2> Edit Announcement ({{ subject }}) </h2>
+                        <span class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3" align="right">
+                        <button type="button" id="deleteBtn" class="btn btn-danger" data-toggle="modal"
+                                data-target="#myModalDelete" style="float: right">Delete</button>
+                    </span>
+                        <div class="clearfix"></div>
+                    </div>
+
+                    <div class="x_content">
+                        {# Displaying Flash message for foreign key constraint violation#}
+                        {% for label, messages in app.flashes %}
+                            <div class="alert alert-danger" id="errorDiv">
+                                {% for message in messages %}
+                                    <div class="flash-{{ label }}">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+
+                        {# Checking for form errors and displaying them#}
+                        {% if not form.vars.valid %}a\
+                            <div class="alert alert-danger" id="errorDiv">
+                                {{ form_errors(form) }}
+                            </div>
+                        {% endif %}
+                        <br/>
+
+                        {{ form_start(form, {'attr': {'class': 'form-horizontal form-label-left' }}) }}
+                        {{ form_errors(form) }}
+
+                        {#
+                       <form id="demo-form2" data-parsley-validate class="form-horizontal form-label-left">
+                       how to apply this? -- data-parsley-validate
+                       #}
+
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.subject) }}
+                            </div>
+                            {{ form_errors(form.subject) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.subject, {'attr': {'class': 'form-control col-md-7 col-xs-12' }}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.message) }}
+                            </div>
+                            {{ form_errors(form.message) }}
+
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                <div class="btn-toolbar editor" data-role="editor-toolbar" data-target="#editor-one">
+                                    <div class="btn-group">
+                                        <a class="btn dropdown-toggle" data-toggle="dropdown" title="Font"><i
+                                                    class="fas fa-font"></i><b class="caret"></b></a>
+                                        <ul class="dropdown-menu">
+                                        </ul>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a class="btn dropdown-toggle" data-toggle="dropdown" title="Font Size"><i
+                                                    class="fas fa-text-height"></i>&nbsp;<b class="caret"></b></a>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a data-edit="fontSize 5">
+                                                    <p style="font-size:17px">Huge</p>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a data-edit="fontSize 3">
+                                                    <p style="font-size:14px">Normal</p>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a data-edit="fontSize 1">
+                                                    <p style="font-size:11px">Small</p>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a class="btn" data-edit="bold" title="Bold (Ctrl/Cmd+B)"><i
+                                                    class="fas fa-bold"></i></a>
+                                        <a class="btn" data-edit="italic" title="Italic (Ctrl/Cmd+I)"><i
+                                                    class="fas fa-italic"></i></a>
+                                        <a class="btn" data-edit="strikethrough" title="Strikethrough"><i
+                                                    class="fas fa-strikethrough"></i></a>
+                                        <a class="btn" data-edit="underline" title="Underline (Ctrl/Cmd+U)"><i
+                                                    class="fas fa-underline"></i></a>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a class="btn" data-edit="insertunorderedlist" title="Bullet list"><i
+                                                    class="fas fa-list-ul"></i></a>
+                                        <a class="btn" data-edit="insertorderedlist" title="Number list"><i
+                                                    class="fas fa-list-ol"></i></a>
+                                        <a class="btn" data-edit="outdent" title="Reduce indent (Shift+Tab)"><i
+                                                    class="fas fa-dedent"></i></a>
+                                        <a class="btn" data-edit="indent" title="Indent (Tab)"><i
+                                                    class="fas fa-indent"></i></a>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a class="btn" data-edit="justifyleft" title="Align Left (Ctrl/Cmd+L)"><i
+                                                    class="fas fa-align-left"></i></a>
+                                        <a class="btn" data-edit="justifycenter" title="Center (Ctrl/Cmd+E)"><i
+                                                    class="fas fa-align-center"></i></a>
+                                        <a class="btn" data-edit="justifyright" title="Align Right (Ctrl/Cmd+R)"><i
+                                                    class="fas fa-align-right"></i></a>
+                                        <a class="btn" data-edit="justifyfull" title="Justify (Ctrl/Cmd+J)"><i
+                                                    class="fas fa-align-justify"></i></a>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a class="btn dropdown-toggle" data-toggle="dropdown" title="Hyperlink"><i
+                                                    class="fas fa-link"></i></a>
+                                        <div class="dropdown-menu input-append">
+                                            <input class="span2" placeholder="URL" type="text" data-edit="createLink"/>
+                                            <button class="btn" type="button">Add</button>
+                                        </div>
+                                        <a class="btn" data-edit="unlink" title="Remove Hyperlink"><i
+                                                    class="fas fa-cut"></i></a>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a class="btn" title="Insert picture (or just drag & drop)" id="pictureBtn"><i
+                                                    class="fas fa-picture-o"></i></a>
+                                        <input type="file" data-role="magic-overlay" data-target="#pictureBtn"
+                                               data-edit="insertImage"/>
+                                    </div>
+                                    <div class="btn-group">
+                                        <a class="btn" data-edit="undo" title="Undo (Ctrl/Cmd+Z)"><i
+                                                    class="fas fa-undo"></i></a>
+                                        <a class="btn" data-edit="redo" title="Redo (Ctrl/Cmd+Y)"><i
+                                                    class="fas fa-repeat"></i></a>
+                                    </div>
+                                </div>
+
+                                {# TODO: HOW DO We Pass the JavaScript Value to the Textarea??? #}
+                                <div id="editor-one" class="editor-wrapper"></div>
+                                {{ form_widget(form.message, {'attr': {'style': 'display:none;', 'class': 'form-control col-md-7 col-xs-12' }}) }}
+                                <br/>
+                            </div>
+                        </div>
+
+                        {#
+                                                <div class="form-group">
+                                                    <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                                        {{ form_label(form.active) }}
+                                                    </div>
+                                                    {{ form_errors(form.active) }}
+                                                    <div class="col-md-6 col-sm-6 col-xs-12">
+                                                        {{ form_widget(form.active, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                                                    </div>
+                                                </div>
+                        #}
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.roles) }}
+                            </div>
+                            {{ form_errors(form.roles) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.roles, {'attr': {'class': 'form-control col-md-7 col-xs-12', 'size': '7' }}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.userGroups) }}
+                            </div>
+                            {{ form_errors(form.userGroups) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.userGroups, {'attr': {'class': 'form-control col-md-7 col-xs-12', 'size': '7' }}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.startDate) }}
+                            </div>
+                            {{ form_errors(form.startDate) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.startDate, {'attr': {'class': 'form-control col-md-7 col-xs-12' }}) }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="control-label col-md-3 col-sm-3 col-xs-12">
+                                {{ form_label(form.endDate) }}
+                            </div>
+                            {{ form_errors(form.endDate) }}
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.endDate, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+
+                        <div class="ln_solid"></div>
+
+
+                        <div class="form-group">
+                            <div class="col-md-6 col-sm-6 col-xs-12 col-md-offset-3">
+                                <button class="btn btn-secondary" type="button"
+                                        onclick="location.href='/listAnnouncements'">Cancel
+                                </button>
+                                {{ form_widget(form.save, {'attr': {'class': 'btn btn-success', 'data-toggle':'modal','data-target':'#myModalEdit' }}) }}
+                            </div>
+                        </div>
+
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {% block javascripts %}
+        {{ parent() }}
+
+
+        <script type="text/javascript">
+
+            var storedMessage = document.getElementById("form_message").value;
+
+            $('#editor-one').wysiwyg();
+
+
+            // $( "#editor-one").html( "<span class='red'>Hello <b>Again</b></span>" );
+            $("#editor-one").html(storedMessage);
+
+            $('#form_save').click(function () {
+                document.getElementById("form_message").value = $('#editor-one').html();
+            });
+
+
+            {#
+            function myFunction() {
+                alert("FORM loaded");
+
+                return true;
+            }
+            #}
+
+
+            $('#form_submit').on('click', function (event) {
+                event.preventDefault();
+            });
+
+
+            $('#saveChanges').on('click', function () {
+                $('form').submit();
+            });
+
+
+            $('#deleteBtn').on('click', function (event) {
+                event.preventDefault();
+            });
+
+
+        </script>
+    {% endblock %}
+
+{% endblock %}

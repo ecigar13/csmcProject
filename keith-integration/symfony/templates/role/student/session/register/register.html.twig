@@ -1,0 +1,33 @@
+{% extends 'shared/base.html.twig' %}
+{% block body %}
+    {{ include('shared/component/flash_messages.html.twig') }}
+    <h2>{{ session.topic }}</h2>
+    <dl class="dl-horizontal">
+        <dt>Date</dt>
+        <dd>{{ timeslot.startTime|date('m/d/Y') }}</dd>
+        <dt>Time</dt>
+        <dd>{{ timeslot.startTime|date('g:i A') }}</dd>
+        <dt>Room</dt>
+        <dd>{{ timeslot.location }}</dd>
+        <dt>Descriptions</dt>
+        <dd>{{ session.description }}</dd>
+        <dt>Instructions</dt>
+        <dd>{{ session.studentInstructions }}</dd>
+        <dt>Remaining Seats</dt>
+        <dd>{{ timeslot.remainingSeats }}/{{ timeslot.capacity }}</dd>
+    </dl>
+    {{ form_start(form, {'attr': {'class': 'content_form'} }) }}
+    {% if form.policyCheck is defined %}
+        {{ form_widget(form.policyCheck, {'attr': {'class': 'content_form_policy_agreement_checkbox'} }) }}
+        {# TODO reconsider below check on policy existence #}
+        <div class="content_form_policy_agreement_label">
+            I have read and agree to the CSMC
+            <a target="_blank" href="{% if policy is not empty %}{{ path('download', {'fid': policy.file.id}) }}{% endif %}">
+                Rules and Policies
+            </a>.
+        </div>
+    {% endif %}
+    {{ form_widget(form.submit, {'attr': {'class': 'button green_button content_form_button'} }) }}
+    {{ form_rest(form) }}
+    {{ form_end(form) }}
+{% endblock %}

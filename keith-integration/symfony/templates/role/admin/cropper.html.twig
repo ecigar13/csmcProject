@@ -1,0 +1,301 @@
+413ba376-a743-11e8-ab44-005056005c1d{% extends 'role/admin/base.html.twig' %}
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.css">
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.js"></script>
+    <script>
+        Dropzone.autoDiscover = false;
+        $(function () {
+            $('.dropzone').dropzone({
+                url: "{{ path('admin_image_upload') }}",
+                autoProcessQueue: false,
+                maxFiles: 1,
+                createImageThumbnails: true,
+                maxfilesexceeded: function (file) {
+                    this.removeAllFiles();
+                    this.emit('addedfile', file);
+                },
+                {# TODO below is terrible and fails when the boxes are larger than 250px #}
+                thumbnailWidth: 250,
+                thumbnailHeight: 250,
+                previewTemplate: document.querySelector('#template-container').innerHTML,
+                init: function () {
+                    {# TODO get picture if it exists #}
+                    var element = $('#' + this.element.id);
+                    if (element.data('has-image')) {
+                        // var f = {name: this.element.id};
+                        // this.files.push(f);
+                        // this.emit('addedfile', f);
+                        // this.emit('thumbnail', f, '/profile/' + element.data('username') + '/image');
+                        // this.emit('complete', f);
+                    }
+                },
+                addedfile: function (file) {
+                    var dropzone = this;
+                    if (this.element === this.previewsContainer) {
+                        this.element.classList.add("dz-started");
+                    }
+                    if (this.previewsContainer) {
+                        file.previewElement = Dropzone.createElement(this.options.previewTemplate.trim());
+
+                        this.previewsContainer.appendChild(file.previewElement);
+
+                        // var name = file.previewElement.querySelector("[data-dz-name]");
+                        // if (name) {
+                        //     name.textContent = file.name;
+                        // }
+
+                        var size = file.previewElement.querySelector("[data-dz-size]");
+                        if (size) {
+                            size.innerHTML = this.filesize(file.size);
+                        }
+
+                        if (this.options.addRemoveLinks) {
+                            file._removeLink = Dropzone.createElement("<a class=\"dz-remove\" href=\"javascript:undefined;\" data-dz-remove>" + this.options.dictRemoveFile + "</a>");
+                            file.previewElement.appendChild(file._removeLink);
+                        }
+
+                        var removeFileEvent = function removeFileEvent(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (file.status === Dropzone.UPLOADING) {
+                                return Dropzone.confirm(_this2.options.dictCancelUploadConfirmation, function () {
+                                    return this.removeFile(file);
+                                });
+                            } else {
+                                if (this.options.dictRemoveFileConfirmation) {
+                                    return Dropzone.confirm(_this2.options.dictRemoveFileConfirmation, function () {
+                                        return this.removeFile(file);
+                                    });
+                                } else {
+                                    return this.removeFile(file);
+                                }
+                            }
+                        };
+
+                        var remove = file.previewElement.querySelector("[data-dz-remove]");
+                        if (remove) {
+                            remove.addEventListener("click", removeFileEvent);
+                        }
+                    }
+
+                    if(!$(dropzone.element).data('has-image')) {
+                        $(file.previewElement).off().on('click', function () {
+                            $('#modal-image').data('active', dropzone.element.id);
+                            $('#modal-image').cropper('replace', file.dataURL);
+                            $('#modal').modal('show');
+                        });
+                    }
+                },
+                thumbnail: function (file, dataUrl) {
+                    if (file.previewElement) {
+                        file.previewElement.classList.remove('dz-file-preview');
+
+                        var thumbnail = file.previewElement.querySelector("[data-dz-thumbnail]");
+                        if (thumbnail) {
+                            thumbnail.alt = file.name;
+                            thumbnail.src = dataUrl;
+                        }
+
+                        return setTimeout(function () {
+                            return file.previewElement.classList.add("dz-image-preview");
+                        }, 1);
+                    }
+                },
+                sending: function (file, xhr, formData) {
+                    var element = $('#' + this.element.id);
+
+                    var crop = element.data('crop');
+                    var canvas = element.data('canvas');
+                    var image = element.data('image');
+                    var user = element.data('user');
+
+                    formData.append("crop", crop);
+                    formData.append("canvas", canvas);
+                    formData.append("image", image);
+                    formData.append("user", user);
+                },
+                complete: function (file) {
+                    $(file.previewElement).off('click');
+                    $(file.previewElement.querySelector("[data-dz-thumbnail]")).css('border', '2px solid green');
+                },
+                success: function () {
+                    {# TODO add some success message maybe #}
+                }
+            });
+
+            {# TODO make more better for resizing #}
+            var minWidth = window.innerWidth < 500 ? window.innerWidth * 0.8 : window.innerWidth * 0.6;
+            var minHeight = window.innerHeight < 500 ? window.innerHeight * 0.8 : window.innerHeight * 0.6;
+
+            var measurement = Math.min(minWidth, minHeight);
+
+
+            var cropper = $('#modal-image').cropper({
+                aspectRatio: 1,
+                minContainerWidth: measurement,
+                minContainerHeight: measurement,
+                responsive: true,
+                ready: function () {
+                    $('.cropper-container').css('margin', 'auto');
+                    $('#modal .btn-success').off('click').on('click', function (event) {
+                        var active = $('#modal-image').data('active');
+                        var dropzone = $('#' + active).get(0).dropzone;
+                        var file = dropzone.getQueuedFiles()[0];
+
+                        var thumb = $('#modal-image').cropper('getCroppedCanvas').toDataURL('image/jpeg');
+                        dropzone.emit("thumbnail", file, thumb);
+
+                        var crop = JSON.stringify($('#modal-image').cropper('getCropBoxData'));
+                        var canvas = JSON.stringify($('#modal-image').cropper('getCanvasData'));
+                        var image = JSON.stringify($('#modal-image').cropper('getImageData'));
+                        $('#' + active).data('crop', crop);
+                        $('#' + active).data('canvas', canvas);
+                        $('#' + active).data('image', image);
+
+                        dropzone.processQueue();
+
+                        $('#modal').modal('hide');
+                    });
+                }
+            });
+
+            $('#modal').on('show.bs.modal', function (event) {
+                var active = $('#modal-image').data('active');
+
+                var crop = $('#' + active).data('crop');
+                var canvas = $('#' + active).data('canvas');
+                var image = $('#' + active).data('image');
+                if (crop && canvas && image) {
+                    $('#modal-image').cropper('setCropBoxData', JSON.parse(crop));
+                    $('#modal-image').cropper('setCanvasData', JSON.parse(canvas));
+                    $('#modal-image').cropper('setImageData', JSON.parse(image));
+                }
+            });
+            $('#modal').on('hidden.bs.modal', function (event) {
+                $('#modal').data('bs.modal', null);
+            });
+
+            $('.panel .glyphicon-trash').closest("button").on('click', function (event) {
+                var dropzone = $('#' + $(this).data('dropzone')).get(0).dropzone;
+                dropzone.removeAllFiles();
+                // TODO remove from server as well
+            });
+
+            $('.panel .glyphicon-open').closest("button").on('click', function (event) {
+                var dropzone = $('#' + $(this).data('dropzone')).get(0).dropzone;
+                dropzone.hiddenFileInput.click();
+            });
+
+            $('.panel .fa-compress').closest("button").on('click', function (event) {
+                var dropzone = $('#' + $(this).data('dropzone')).get(0).dropzone;
+                dropzone.getQueuedFiles()[0].previewElement.click();
+            });
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <div class="page-title">
+        <div class="title_left">
+            <h3>Picture Upload</h3>
+        </div>
+
+        <div class="title_right">
+
+        </div>
+    </div>
+
+    <div class="clearfix"></div>
+
+    <div class="row">
+        {% for mentor in mentors %}
+            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            {{ mentor.firstName }} {{ mentor.lastName }}
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <div id="{{ mentor.id }}" class="dropzone"
+                             style="width: 100%; height: 0; min-height: 0; padding-bottom: calc(100% - 24px)" data-crop
+                             data-canvas data-image data-user="{{ mentor.id }}" data-username="{{ mentor.username }}"
+                             data-has-image="{{ mentor.profilePicture is not null }}"></div>
+                    </div>
+                    <div class="panel-footer">
+                        <div class="row">
+                            <div class="col-xs-4">
+                                <button class="btn btn-default" style="width: 100%;" data-dropzone="{{ mentor.id }}">
+                                    <span class="glyphicon glyphicon-open"></span>
+                                    <span class="sr-only">Upload</span>
+                                </button>
+                            </div>
+                            <div class="col-xs-4">
+                                <button class="btn btn-default" style="width: 100%;" data-dropzone="{{ mentor.id }}">
+                                    <span class="glyphicon glyphicon-trash"></span>
+                                    <span class="sr-only">Trash</span>
+                                </button>
+                            </div>
+                            <div class="col-xs-4">
+                                <button class="btn btn-default" style="width: 100%;" data-dropzone="{{ mentor.id }}">
+                                    <span class="fas fa-compress"></span>
+                                    <span class="sr-only">Crop</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div id="template-container" hidden>
+        {# TODO add progress bar and indication if uploaded or not #}
+        <div class="dz-preview dz-file-preview"
+             style="width: calc(100% - 32px); height: 0; min-height: 0; padding-bottom: calc(100% - 32px);">
+            <div class="dz-image" style="width: 100%; height: 0; min-height: 0; padding-bottom: 100%;">
+                <img data-dz-thumbnail style="width: 100%; border: 2px solid red; border-radius: 20px"/>
+            </div>
+            <div class="dz-details">
+                <div class="dz-size">
+                    <span data-dz-size></span>
+                </div>
+                {#<div class="dz-filename">#}
+                {#<span data-dz-name></span>#}
+                {#</div>#}
+            </div>
+            <div class="dz-error-message">
+                <span data-dz-errormessage></span>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <img id="modal-image" data-active>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-success">Accept</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

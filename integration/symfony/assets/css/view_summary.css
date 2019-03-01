@@ -1,0 +1,575 @@
+.title{
+    padding-left: 20px
+}
+.tab-content {
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+    padding: 10px;
+}
+
+.nav-tabs {
+    margin-bottom: 0;
+}
+
+.occurances-checkbox .col-md-3{
+    display: inline-flex;
+}
+.pr-1 {
+    /*padding-right: 5%;*/
+    padding-top: 1%;   
+}
+.pr-3 {
+    padding-right: 5%;
+    padding-top: 1%;   
+}
+.search {
+  width: 100%;
+  position: relative;
+}
+
+.searchTerm {
+  float: left;
+  width: 100%;
+  border: 3px solid #00B4CC;
+  padding: 5px;
+  height: 36px;
+  border-radius: 5px;
+  outline: none;
+  color: #9DBFAF;
+}
+
+.searchTerm:focus{
+  color: black;
+}
+
+.searchButton {
+  position: absolute;  
+  right: -50px;
+  width: 40px;
+  height: 36px;
+  border: 1px solid #00B4CC;
+  background: #00B4CC;
+  text-align: center;
+  color: #fff;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 20px;
+}
+
+/*Resize the wrap to see the search bar change!*/
+.search-wrap{
+  width: 30%;
+  top: 50%;
+  right: 5%;
+  float: right;
+  padding-right: 49px;
+}
+
+.table-outer{
+    padding-top: 25px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+.table-hover{
+    border: 1px solid #ddd;
+}
+.row.occurances-checkbox label {
+    padding-right: 20px;
+}
+.form-check.form-check-inline {
+    padding-left: 20px;
+}
+.row h2{
+    padding-left: 20px;
+
+}
+.pending-review p {
+    display: inline-block;
+}
+#summaryTable img{
+    max-width: 85px;
+    float: right;
+}
+
+
+
+
+
+
+
+/* CSS for Summary modal*/
+#summary table thead th{
+    vertical-align: middle;
+}
+.pt{
+    padding-top: 45px
+}
+.info-board{
+    padding-left: 35px;
+}
+.main-name h2{
+    font-weight: bolder;
+}
+
+.btn-edit {
+    background-image: -webkit-linear-gradient(top,#1ABB9C 0,#1ABB9C 100%);
+    background-image: -o-linear-gradient(top,#1ABB9C 0,#1ABB9C 100%);
+    background-image: -webkit-gradient(linear,left top,left bottom,from(#1ABB9C),to(#1ABB9C));
+    background-image: linear-gradient(to bottom,#1ABB9C 0,#1ABB9C 100%);
+
+    background-repeat: repeat-x;
+    border-color: #1ABB9C;
+}
+
+.align-middle{
+    min-height: 8vh;
+    display: flex;
+    align-items: center;
+}
+.attr-field p{
+    display: inline-block;
+}
+.attr-field p:nth-child(1){
+    font-weight: bold
+}
+.attr-field .level-list p{
+    font-weight: normal;
+}
+.level-list{
+    padding-left: 30px;
+}
+.progress-container{
+    padding-left: 0px;
+}
+.dietary{
+    padding-left: 30px;
+}
+.profile_image{
+    padding-left: 70px;
+
+}
+.profile_image_requested{
+    padding-left: 21px;
+    padding-right: 11px;
+
+}
+.profile_image_requested{
+border: 2px solid #1ABB9C;
+}
+/* CSS for table */
+table.dataTable tbody td {
+  vertical-align: middle;
+}
+div#pendingTable_paginate {
+    margin-top: 15px;
+    margin-right: 50%;
+    margin-left: 50%;
+}
+div#closedTable_paginate {
+    margin-top: 15px;
+    margin-right: 50%;
+    margin-left: 50%;
+}
+div#summaryTable_paginate {
+    margin-top: 15px;
+    margin-right: 50%;
+    margin-left: 50%;
+}
+.dataTables_paginate a{
+    background: none !important;
+    border: 1px solid;
+    border-color: #ddd !important;
+    color: #08c;
+    cursor: pointer;
+}
+th {
+    background-color: #ddd;
+}
+.glyphicon-ok{
+    color: white;
+    background-color: #1ABB9C;
+    border-radius: 9px;
+    border: 1px solid #1ABB9C;
+}
+.glyphicon-ok.glyphicon-approve-icon{
+    color: #1ABB9C;
+    background-color: initial;
+    border-radius: initial;
+    border: initial;
+}
+.glyphicon.glyphicon-plus-sign{
+    color: #1ABB9C;
+    /* background-color: #1ABB9C; */
+    border-radius: 15px;
+    /* border: 2px solid #1ABB9C; */
+    font-size: 32px;
+}
+.glyphicon.glyphicon-minus-sign{
+    color: red;
+    /* background-color: #1ABB9C; */
+    border-radius: 15px;
+    /* border: 2px solid #1ABB9C; */
+    font-size: 32px;
+}
+.pending-profile-picture{
+    color: #1ABB9C;
+}
+.pending-preferred-name{
+    color: #1ABB9C;
+    top: 4px;
+}
+.pending-occurrences{
+    color: red;
+}
+span.glyphicon-ok.clickable {
+    margin-left: 7px;
+}
+span.glyphicon.glyphicon-info-sign{
+    font-size: 18px;
+}
+.thead-details{
+    text-align: center;
+}
+.thead-notes{
+    border-right: 1px solid #ccc;
+    width: 0px;
+}
+.tbody-details{
+    text-align: center;
+}
+.tbody-action{
+    display:inline-flex;
+}
+/* CSS for modal*/
+.modal {
+  text-align: center;
+}
+
+@media screen and (min-width: 768px) { 
+  .modal:before {
+    display: inline-block;
+    vertical-align: middle;
+    content: " ";
+    height: 100%;
+  }
+}
+
+.modal-dialog {
+  display: inline-block;
+  text-align: left;
+  vertical-align: middle;
+}
+.modal-footer {
+    padding: 15px;
+    text-align: left;
+    padding-left: 37px;
+    padding-bottom: 20px;
+    padding-top: 0px;}
+.modal-body {
+    padding: 37px;
+}
+label.col-form-label {
+    font-size: 15px;
+    font-weight: bold;
+}
+.btn-approve {
+    background-image: -webkit-linear-gradient(top,#1ABB9C 0,#1ABB9C 100%);
+    background-image: -o-linear-gradient(top,#1ABB9C 0,#1ABB9C 100%);
+    background-image: -webkit-gradient(linear,left top,left bottom,from(#1ABB9C),to(#1ABB9C));
+    background-image: linear-gradient(to bottom,#1ABB9C 0,#1ABB9C 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#1ABB9C', endColorstr='#1ABB9C', GradientType=0);
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+    background-repeat: repeat-x;
+    border-color: #1ABB9C;
+    color: white;
+}
+.btn-cropping {
+    background-image: -webkit-linear-gradient(top,#999 0,#999 100%);
+    background-image: -o-linear-gradient(top,#999 0,#999 100%);
+    background-image: -webkit-gradient(linear,left top,left bottom,from(#999),to(#999));
+    background-image: linear-gradient(to bottom,#999 0,#999 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#999', endColorstr='#999', GradientType=0);
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+    background-repeat: repeat-x;
+    border-color: #999;
+    color: white;
+}
+.admin-notes-textares{
+    height: 113px !important;
+}
+.modal-footer{
+    border-top: initial !important;
+}
+
+
+div#summaryUserInfoModal > div {
+    width: 85%;
+    float: right;
+    padding-right: 20px;
+}
+.changed-request{
+    border: 2px solid #1ABB9C;
+}
+.changed-request p:nth-child(1){
+    color: #1ABB9C;
+    font-size: 16px;
+}
+.changed-request p {
+    display: inherit;
+    font-weight: bold;
+}
+.changed-request > *{
+    padding-left: 20px;
+}
+.changed-request btn{
+    margin-left: 10px;
+}
+.changed-request .row{
+    padding-left: 28px;
+}
+.changed-request-btn-remove{
+        /* background-image: -webkit-linear-gradient(top,#fff 0,#e0e0e0 100%); */
+    background-image: -o-linear-gradient(top,#eee 0,#eee 100%);
+    /* background-image: -webkit-gradient(linear,left top,left bottom,from(#fff),to(#e0e0e0)); */
+    background-image: linear-gradient(to bottom,#eee 0,#eee 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#eee', endColorstr='#eee', GradientType=0);
+    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+     background-repeat: repeat-x; 
+     border-color: #eee; 
+     border-color: #eee;
+    color: #777;
+}
+.changed-request-btn-remove span{
+    color: #777;
+    background-color: initial;
+    border-radius: initial;
+    border: initial;
+}
+
+.settings-group {
+    margin-top: 36px;
+}
+
+.settings-group h2 {
+    padding-left: 0px;
+    font-size: 30px;
+}
+
+/*CSS for add list*/
+#courseOfAction tbody td p{
+  vertical-align: middle;
+}
+#courseOfAction .inputAction{
+    width: 75%;
+}
+#courseOfAction .inputPoints{
+    width: 100%;
+}
+
+
+#occurrenceTypes tbody td p{
+  vertical-align: middle;
+}
+#occurrenceTypes .inputAction{
+    width: 75%;
+}
+#occurrenceTypes .inputPoints{
+    width: 100%;
+}
+
+/* CSS for interval tables*/
+div.bkg {
+    width: 400px;
+    margin: auto;
+    border: 1px solid #888888;
+}
+
+div.bar_def {
+    width: 400px;
+    margin: auto;
+    border: 1px solid #888888;
+    color: black;
+    text-align: center;
+}
+
+div.bar_sel {
+    width: 400px;
+    margin: auto;
+    border: 2px solid #000000;
+    text-align: center;
+    color: white;
+    background: repeating-linear-gradient(45deg, #606dbc, #606dbc 10px, #465298 10px, #465298 20px);
+}
+
+div > input {
+    color: #555555;
+}
+
+div.bar_last_fixed {
+    width: 400px;
+    height: 65px;
+    margin: auto;
+    border: 2px solid #000000;
+    text-align: center;
+    color: black;
+    background: #AAAAAA;
+}
+
+.interval-table {
+    float: left;
+}
+
+.interval-btn-row {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.interval-btn-row > * {
+    display: inline-block;
+}
+
+.add-del-btns {
+    padding-right: 20px;
+}
+
+.add-interval-btn {
+    padding-right: 4px;
+}
+
+.glyphicon-plus-sign:hover {
+    color: #169F85;
+}
+
+.glyphicon-minus-sign:hover {
+    color: #e40b0b;
+}
+
+.inc-dec-btns {
+    padding-left: 27px;
+    vertical-align: top;
+}
+
+.vertical-bar {
+    border-left: 1px solid #888888;
+    height: 35px;
+    position: absolute;
+}
+
+.bar_sel span {
+    padding: 0px 15px;
+}
+
+input:disabled {
+    background: #dddddd;
+}
+
+input.sm-input {
+    width: 50px;
+}
+
+#apply-div {
+    padding-top: 25px;
+}
+
+.hidden {
+    display: none;
+}
+.response-message{
+    float:right;
+    color:green;
+    text-align:center;
+    font-size:12px;
+    text-transform:uppercase;
+    background-color:rgb(236, 255, 216);
+    width: 800px;
+    border: 1px solid #D8D8D8;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: Arial;
+}
+.response-message-short{
+    float:right;
+    color:green;
+    text-align:center;
+    font-size:12px;
+    text-transform:uppercase;
+    background-color:rgb(236, 255, 216);
+    width: 80px;
+    border: 1px solid #D8D8D8;
+    padding: 10px;
+    border-radius: 5px;
+    font-family: Arial;
+}
+input.invalid-input+span:after,
+.invalid-label {
+    content: 'Invalid Number';
+    color: #ed1c24;
+    background-color: #f2dede;
+    margin-left: 10px;
+    border-radius: 3px;
+    border: 1px solid #ebccd1;
+    padding: 8px;
+}
+
+.bar-label {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.pending-review a {
+    color: inherit;
+}
+
+input.edit-points {
+    max-width: 50px;
+}
+
+#pendingTable td,
+#closedTable td{
+    cursor: default;
+}
+
+.occurrence-points.editable-cell {
+    cursor: text;
+}
+
+.occurrence-type.editable-cell {
+    cursor: pointer;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.glyphicon-remove.reject-badge {
+    color: white;
+    background-color: red;
+    border-radius: 9px;
+    border: 3px solid red;
+}
+
+.glyphicon-ok.approve-badge {
+    color: white;
+    background-color: #1ABB9C;
+    border-radius: 9px;
+    border: 3px solid #1ABB9C;
+}
+
+.editable-cell .glyphicon-pencil {
+    color: #b5c1ce;
+    margin-left: 5px;
+}
+
+.editable-cell:hover .glyphicon-pencil {
+    color: #283f55;
+}
+
+.editable-cell:hover {
+    border: 1px solid #283f55;
+    padding: 2px 6px;
+    border-radius: 5px;
+}
+
+.spinner-text {
+    padding-left: 10px;
+}

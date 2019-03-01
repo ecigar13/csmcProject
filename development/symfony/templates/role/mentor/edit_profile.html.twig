@@ -303,8 +303,10 @@
 
                 if(xhr === "NODUP"){
                   $("<p id='duplicatePrefName'>Good. Preferred name is unique.</p>").insertAfter("#profile_preferredName");
+                  $('#profile_submit').prop('disabled', false);
                 } else{
-                  $("<p id='duplicatePrefName'>Preferred Name is already chosen.</p>").insertAfter('#profile_preferredName');
+                  $("<p id='duplicatePrefName' class='red'>Preferred Name is already chosen.</p>").insertAfter('#profile_preferredName');
+                  $('#profile_submit').prop('disabled', true);
                 }
 
               }).fail(function(xhr, status, err){

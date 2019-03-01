@@ -1,0 +1,56 @@
+{% extends 'shared/base.html.twig' %}
+{% block body %}
+    <div class="content_head">
+        <h2 class="content_title">{{ session.topic }}</h2>
+    </div>
+    <div class="content_list">
+        <div class="content_list_label">Description</div>
+        <div class="content_list_info">{{ session.description }}</div>
+        <div class="content_list_label">Student Instructions</div>
+        <div class="content_list_info">{{ session.studentInstructions }}</div>
+        <div class="content_list_label">Mentor Instructions</div>
+        <div class="content_list_info">{{ session.mentorInstructions }}</div>
+        <div class="content_list_label">Graded</div>
+        <div class="content_list_info">{{ session.graded ? 'yes' : 'no' }}</div>
+        {% if session.graded %}
+            <div class="content_list_label">Grading Scheme</div>
+            <div class="content_list_info">{{ session.numericGrade ? 'numeric' : 'pass/fail' }}</div>
+        {% endif %}
+        <div class="content_list_label">Materials</div>
+        {% for file in session.files %}
+            {% if not loop.first %}
+                <div class="content_list_label"></div>
+            {% endif %}
+            <div class="content_list_info">
+                <a href="{{ path('download', {'fid': file.id}) }}">{{ file.name }}</a>
+            </div>
+        {% else %}
+            <div class="content_list_info"></div>
+        {% endfor %}
+        <div class="content_list_label">Dates</div>
+        <div class="content_list_info">
+            {{ session.startDate|date('m/d/Y') }} - {{ session.endDate|date('m/d/y') }}
+        </div>
+        {#<div class="content_list_label">Date and Time</div>#}
+        {#<div class="content_list_info">#}
+            {#{{ timeslot.scheduledTime|date('m/d/Y g:i A') }} - {{ timeslot.scheduledEndTime|date('g:i A') }}#}
+        {#</div>#}
+        {#<div class="content_list_label">Room</div>#}
+        {#<div class="content_list_info">{{ timeslot.room }}</div>#}
+        {#<div class="content_list_label">Mentors</div>#}
+        {#{% for assignment in timeslot.mentors %}#}
+            {#{% if not loop.first %}#}
+                {#<div class="content_list_label"></div>#}
+            {#{% endif %}#}
+            {#<div class="content_list_info">{{ assignment.mentor }}</div>#}
+        {#{% else %}#}
+            {#<div class="content_list_info"></div>#}
+        {#{% endfor %}#}
+        {#<div class="content_list_label">Registrations</div>#}
+        {#<div class="content_list_info">{{ timeslot.registrations|length }}/{{ timeslot.capacity }}</div>#}
+        {#<div class="content_list_label">Download Roster</div>#}
+        {#<div class="content_list_info">#}{# TODO implement roster download #}
+            {#<a href="{{ path('session_timeslot_roster', {'tid': timeslot.id}) }}">Download</a>#}
+        {#</div>#}
+    </div>
+{% endblock %}

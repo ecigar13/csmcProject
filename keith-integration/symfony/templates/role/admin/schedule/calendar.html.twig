@@ -1,0 +1,763 @@
+{% extends 'role/admin/base.html.twig' %}
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.min.css">
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar-scheduler/1.9.3/scheduler.min.css">
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.5.3/css/bootstrap-colorpicker.min.css">
+
+    <style>
+        #row-main {
+            overflow-x: hidden;
+        }
+
+        #content {
+            transition: width 0.3s ease;
+        }
+
+        #sidebar {
+            transition: margin 0.3s ease;
+        }
+
+        .collapsed {
+            display: none;
+        }
+
+        /*@media (min-width: 992px) {*/
+        /*.collapsed {*/
+        /*display: block;*/
+        /*!* same width as sidebar *!*/
+        /*margin-right: -25%;*/
+        /*}*/
+        /*}*/
+
+        .row-eq-height {
+            display: -webkit-box;
+            display: -webkit-flex;
+            display: -ms-flexbox;
+            display: flex;
+        }
+
+        .mentor {
+            margin-bottom: 2px;
+        }
+
+        #mentors-filter {
+            line-height: 50px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        #subjects-filter {
+            line-height: 50px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .subjectTable {
+            min-height: 22%;
+        }
+
+        .subjectTable td {
+            border-width: 0px;
+        }
+
+        .shiftLeaderHeader {
+            min-height: 12%;
+            text-align: center;
+        }
+
+        .fc-time-grid:hover .fc-event:hover, .fc-time-grid:hover .fc-bgevent:hover {
+            z-index: 10000 !important;
+        }
+
+        #calendar {
+            z-index: 1;
+        }
+
+        .subject-button {
+            width: 100%;
+            background-image: none;
+        }
+
+        .colorpicker-2x {
+            width: 272px;
+        }
+
+        .colorpicker-2x .colorpicker-saturation {
+            width: 200px;
+            height: 200px;
+        }
+
+        .colorpicker-2x .colorpicker-hue {
+            width: 30px;
+            height: 200px;
+        }
+
+        .colorpicker-2x .colorpicker-preview {
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+
+        .colorpicker-2x .colorpicker-preview,
+        .colorpicker-2x .colorpicker-preview div {
+            height: 30px;
+            font-size: 16px;
+            line-height: 160%;
+        }
+
+        .colorpicker-saturation .colorpicker-guide {
+            height: 10px;
+            width: 10px;
+            border-radius: 10px;
+            margin: -5px 0 0 -5px;
+        }
+
+        .fc-today {
+            background: initial !important;
+        }
+
+        .sidebar-headers {
+            width: 100%;
+            vertical-align: middle;
+            text-align: center;
+            font-size: large;
+            background-color: #EEEEEE;
+        }
+
+        span.glyphicon-remove {
+            opacity: 0.1;
+            filter: alpha(opacity=10);
+            -webkit-opacity: 0.1;
+            -moz-opacity: 0.1;
+        }
+
+        span.glyphicon-remove:hover {
+            opacity: 0.9;
+            filter: alpha(opacity=90);
+            -webkit-opacity: 0.9;
+            -moz-opacity: 0.9;
+        }
+
+    </style>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.9.0/fullcalendar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar-scheduler/1.9.3/scheduler.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.5.3/js/bootstrap-colorpicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.4.1/jspdf.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#sidebar-toggle').on('click', function () {
+                $("#sidebar").toggleClass("collapsed");
+                $("#content").toggleClass("col-md-12 col-md-10");
+            });
+
+            $('#external-events .fc-event').each(function () {
+                // store data so the calendar knows to render an event upon drop
+                $(this).data('event', {
+                    title: $.trim($(this).text()),
+                    stick: true
+                });
+
+                // make the event draggable using jQuery UI
+                $(this).draggable({
+                    zIndex: 999,
+                    revert: true,
+                    revertDuration: 0
+                });
+            });
+
+            var dropShiftLeader = function (event, ui) {
+                var mentorName = $(ui.draggable).text();
+                // var position = 'leader';
+                var mentorID = $(ui.draggable).data("mentor-id");
+                var shiftID = $(this).data("shift-id");
+                // var subjectID = 'leader';
+
+                $(this).text(mentorName);
+
+                $.ajax({
+                    url: "{{ path('admin_schedule_ajax_shift_leader') }}",
+                    data: {"mentorID": mentorID, "shiftID": shiftID},
+                    type: 'POST'
+                });
+
+                // var deleteLink = $("<span class='glyphicon glyphicon-remove' data-mentor-id='"+mentorID+"' data-mentor-name='"+mentorName+"' data-shift-id='"+shiftID+"' data-subject-id='"+subjectID+"' data-position='"+position+"'></span>");
+                // $(deleteLink).on("click", function () {
+                //     $("#myModalLabel").empty();
+                //     $("#myModalLabel").append("Do you really want to remove <b>"+$(this).data("mentor-name")+"</b> as the leader from this shift?");
+                //
+                //     //Set deletion data
+                //     $("#confirmDeletion").data('mentor-id', $(this).data("mentor-id"));
+                //     $("#confirmDeletion").data('shift-id', $(this).data("shift-id"));
+                //     $("#confirmDeletion").data('subject-id', $(this).data("subject-id"));
+                //     $("#confirmDeletion").data('position', $(this).data('position'));
+                //
+                //     $("#deleteConfirmation").modal('show');
+                // });
+                //
+                // $(this).append(deleteLink);
+            };
+
+            function shortName(name) {
+                var newName = name;
+
+                if (newName.length >= 15) {
+                    var firstPart = newName.substring(0, 8);
+                    var secondPart = newName.substring(newName.length - 3, newName.length);
+
+                    newName = firstPart + '...' + secondPart;
+                }
+
+                return newName;
+            }
+
+            var dropMentor = function (event, ui) {
+
+                var newName = shortName($(ui.draggable).text().trim());
+                var inserted = false;
+                var allowInsertion = true;
+
+                $(this).find("td").each(function () {
+                    // if this is the column that shows the number of available spots (rowspan = 2), remove 1 from the number. otherwise, just look for the right place to write the name
+                    if ($(this).attr("rowspan") == 2 && allowInsertion) {
+
+                        if ($(this).text() == 0)
+                            allowInsertion = false;
+                        else
+                            $(this).text(parseInt($(this).text()) - 1);
+
+
+                    } else {
+                        if ($(this).text() == newName)
+                            allowInsertion = false;
+
+                        if (allowInsertion && !inserted && ($(this).text() == '')) {
+
+                            //extract table from tbody, from tr, from td (which is the droppable) to get subject and shift info
+                            var table = $(this).parent().parent().parent();
+
+                            var mentorID = $(ui.draggable).data("mentor-id");
+                            var shiftID = $(table).data("shift-id");
+                            var subjectID = $(table).data("subject-id");
+
+                            $.ajax({
+                                url: "{{ path('admin_schedule_ajax_shift') }}",
+                                data: {"mentorID": mentorID, "shiftID": shiftID, "subjectID": subjectID},
+                                type: 'POST'
+                            });
+
+                            var deleteLink = $("<span class='glyphicon glyphicon-remove' data-mentor-id='" + mentorID + "' data-mentor-name='" + newName + "' data-shift-id='" + shiftID + "' data-subject-id='" + subjectID + "'></span>");
+                            $(deleteLink).on("click", function () {
+                                $("#myModalLabel").empty();
+                                $("#myModalLabel").append("Do you really want to remove <b>" + $(this).data("mentor-name") + "</b> from this shift?");
+
+                                //Set deletion data
+                                $("#confirmDeletion").data('mentor-id', $(this).data("mentor-id"));
+                                $("#confirmDeletion").data('shift-id', $(this).data("shift-id"));
+                                $("#confirmDeletion").data('subject-id', $(this).data("subject-id"));
+
+                                $("#deleteConfirmation").modal('show');
+                            });
+
+                            $(deleteLink).toggleClass('hover');
+
+                            $(this).text(newName);
+                            $(this).append(deleteLink);
+
+                            inserted = true;
+                        }
+                    }
+
+                });
+            };
+
+            function createMentorDrop(mentorID, mentorName, shiftID, subjectID, position) {
+                var deleteLink = $("<span class='glyphicon glyphicon-remove' data-mentor-id='" + mentorID + "' data-mentor-name='" + mentorName + "' data-shift-id='" + shiftID + "' data-subject-id='" + subjectID + "' data-position='" + position + "'></span>");
+                $(deleteLink).on("click", function () {
+                    $("#myModalLabel").empty();
+                    $("#myModalLabel").append("Do you really want to remove <b>" + $(this).data("mentor-name") + "</b> from this shift?");
+
+                    //Set deletion data
+                    $("#confirmDeletion").data('mentor-id', $(this).data("mentor-id"));
+                    $("#confirmDeletion").data('shift-id', $(this).data("shift-id"));
+                    $("#confirmDeletion").data('subject-id', $(this).data("subject-id"));
+                    $("#confirmDeletion").data('position', $(this).data('position'));
+
+                    $("#deleteConfirmation").modal('show');
+                });
+
+                var mentorOne = $("<td id='" + mentorID.concat(shiftID, subjectID, position) + "'>" + shortName(mentorName) + "</td>");
+                mentorOne.append(deleteLink);
+
+                return mentorOne;
+            }
+
+            {#function createLeaderDrop(mentorID, mentorName, shiftID) {#}
+            {#var position = 'leader';#}
+            {#var subjectID = 'leader';#}
+
+            {#var leaderDrop = $("<div id='"+mentorID.concat(shiftID, subjectID, position)+"' data-shift-id='"+shiftID+"' class='shiftLeaderHeader'>"+mentorName+"</div>");#}
+
+            {#$.ajax({#}
+            {#url: "{{ path('admin_schedule_ajax_shift_leader') }}",#}
+            {#data: {"mentorID": mentorID, "shiftID": shiftID},#}
+            {#type: 'POST'#}
+            {#});#}
+
+            {#var deleteLink = $("<span class='glyphicon glyphicon-remove' data-mentor-id='"+mentorID+"' data-mentor-name='"+mentorName+"' data-shift-id='"+shiftID+"' data-subject-id='"+subjectID+"' data-position='"+position+"'></span>");#}
+            {#$(deleteLink).on("click", function () {#}
+            {#$("#myModalLabel").empty();#}
+            {#$("#myModalLabel").append("Do you really want to remove <b>"+$(this).data("mentor-name")+"</b> as the leader from this shift?");#}
+
+            {#//Set deletion data#}
+            {#$("#confirmDeletion").data('mentor-id', $(this).data("mentor-id"));#}
+            {#$("#confirmDeletion").data('shift-id', $(this).data("shift-id"));#}
+            {#$("#confirmDeletion").data('subject-id', $(this).data("subject-id"));#}
+            {#$("#confirmDeletion").data('position', $(this).data('position'));#}
+
+            {#$("#deleteConfirmation").modal('show');#}
+            {#});#}
+
+            {#$(leaderDrop).append(deleteLink);#}
+
+            {#return $(leaderDrop);#}
+            {#}#}
+
+            var $cal = $('#calendar');
+            $cal.fullCalendar({
+                height: 'auto',
+                contentHeight: 'auto',
+                schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+                defaultView: 'agendaWeek',
+                minTime: '10:00:00',
+                maxTime: '22:00:00',
+                header: false,
+                footer: false,
+                columnHeaderFormat: 'dddd',
+                slotDuration: '00:10:00',
+                slotLabelInterval: '00:30:00',
+                allDaySlot: false,
+                editable: false,
+                droppable: false,
+                dragRevertDuration: 0,
+                eventLimit: true,
+                themeSystem: 'bootstrap3',
+                bootstrapGlypicons: {
+                    close: 'glyphicon-remove',
+                    prev: 'glyphicon-chevron-left',
+                    next: 'glyphicon-chevron-right',
+                    prevYear: 'glyphicon-backward',
+                    nextYear: 'glyphicon-forward'
+                },
+                businessHours: [
+                    {% for d in hours %}
+                    {
+                        dow: [{{ d.day }}],
+                        start: '{{ d.startTime|date('H:i') }}',
+                        end: '{{ d.endTime|date('H:i') }}'
+                    },
+                    {% endfor %}
+                ],
+                events: [
+                    {% for shift in schedule.shifts %}
+                    {% set aux = shift.startTime|date('H:i') %}
+                    {% set aux2 = shift.endTime|date('H:i') %}
+                    {% set start = aux|split(':') %}
+                    {% set end = aux2|split(':') %}
+
+
+                    {
+                        start: moment().day({{ shift.day }}).hours({{ start[0] }}).minutes({{ start[1] }}).seconds(0).milliseconds(0).format('YYYY-MM-DDTHH:mm:ss'),
+                        end: moment().day({{ shift.day }}).hours({{ end[0] }}).minutes({{ end[1] }}).seconds(0).milliseconds(0).format('YYYY-MM-DDTHH:mm:ss'),
+                        allDay: false,
+                        shiftID: "{{ shift.id }}",
+                        {#{% if shift.shiftLeader is null %}#}
+                        {#leaderID: "none",#}
+                        {#leaderName: "none",#}
+                        {#{% endif %}#}
+                        {% if shift.shiftLeader is not null %}
+                        leaderID: "{{ shift.shiftLeader.id }}",
+                        leaderName: "{{ shift.shiftLeader.firstName }} {{ shift.shiftLeader.lastName|first }}",
+                        {% endif %}
+                        shiftSubjects: [
+                            {% for shiftSubject in shift.subjects %}
+                            {
+                                subjectID: "{{ shiftSubject.subject.id }}",
+                                subjectColor: "{{ shiftSubject.subject.color }}",
+                                mentors: [
+                                    {% for mentor in shiftSubject.mentors %}
+                                    {
+                                        mentorID: "{{ mentor.id }}",
+                                        mentorName: shortName("{{ mentor.firstName }} {{ mentor.lastName|first }}")
+                                    },
+                                    {% endfor %}
+                                ],
+                                maxMentors: "{{ shiftSubject.maxMentors }}"
+                            },
+                            {% endfor %}
+
+                        ]
+                    },
+
+                    {% endfor %}
+                ],
+                eventRender: function (event, element) {
+                    element.find('.fc-title').remove();
+                    element.find('.fc-time').remove();
+
+                    if (event.leaderName == undefined)
+                        event.leaderName = "";
+                    var shiftLeader = $("<div data-shift-id='" + event.shiftID + "' class='shiftLeaderHeader'>" + event.leaderName + "</div>");
+                    // if(event.leaderID != 'none') {
+                    //     shiftLeader = createLeaderDrop(event.leaderID, event.leaderName, event.shiftID);
+                    // }
+                    $(shiftLeader).droppable({drop: dropShiftLeader});
+
+                    element.append(shiftLeader);
+
+                    var subjectTable, firstLine, secondLine;
+                    event.shiftSubjects.forEach(function (shiftSubject) {
+
+                        //FIXME create dynamic table
+                        subjectTable = $("<table class='subjectTable " + shiftSubject.subjectID + "' data-shift-id='" + event.shiftID + "' data-subject-id='" + shiftSubject.subjectID + "' style='background-color: " + shiftSubject.subjectColor + ";'></table>");
+                        firstLine = $("<tr></tr>");
+                        secondLine = $("<tr></tr>");
+
+                        var availableSpots = shiftSubject.maxMentors - shiftSubject.mentors.length;
+
+                        switch (shiftSubject.mentors.length) {
+                            case 0:
+                                firstLine.append("<td></td>");
+                                firstLine.append("<td></td>");
+                                firstLine.append("<td class='availableCounter' rowspan='2' style='width: 10px; vertical-align: middle; text-align:center;'>" + availableSpots + "</td>");
+                                secondLine.append("<td></td>");
+                                secondLine.append("<td></td>");
+                                break;
+                            case 1:
+                                firstLine.append(createMentorDrop(shiftSubject.mentors[0].mentorID, shiftSubject.mentors[0].mentorName, event.shiftID, shiftSubject.subjectID, 0));
+                                firstLine.append("<td></td>");
+                                firstLine.append("<td class='availableCounter' rowspan='2' style='width: 10px; vertical-align: middle; text-align:center;'>" + availableSpots + "</td>");
+                                secondLine.append("<td></td>");
+                                secondLine.append("<td></td>");
+                                break;
+                            case 2:
+                                firstLine.append(createMentorDrop(shiftSubject.mentors[0].mentorID, shiftSubject.mentors[0].mentorName, event.shiftID, shiftSubject.subjectID, 0));
+                                firstLine.append(createMentorDrop(shiftSubject.mentors[1].mentorID, shiftSubject.mentors[1].mentorName, event.shiftID, shiftSubject.subjectID, 1));
+                                firstLine.append("<td class='availableCounter' rowspan='2' style='width: 10px; vertical-align: middle; text-align:center;'>" + availableSpots + "</td>");
+                                secondLine.append("<td></td>");
+                                secondLine.append("<td></td>");
+                                break;
+                            case 3:
+                                firstLine.append(createMentorDrop(shiftSubject.mentors[0].mentorID, shiftSubject.mentors[0].mentorName, event.shiftID, shiftSubject.subjectID, 0));
+                                firstLine.append(createMentorDrop(shiftSubject.mentors[1].mentorID, shiftSubject.mentors[1].mentorName, event.shiftID, shiftSubject.subjectID, 1));
+                                firstLine.append("<td class='availableCounter' rowspan='2' style='width: 10px; vertical-align: middle; text-align:center;'>" + availableSpots + "</td>");
+                                secondLine.append(createMentorDrop(shiftSubject.mentors[2].mentorID, shiftSubject.mentors[2].mentorName, event.shiftID, shiftSubject.subjectID, 2));
+                                secondLine.append("<td></td>");
+                                break;
+                            case 4:
+                                firstLine.append(createMentorDrop(shiftSubject.mentors[0].mentorID, shiftSubject.mentors[0].mentorName, event.shiftID, shiftSubject.subjectID, 0));
+                                firstLine.append(createMentorDrop(shiftSubject.mentors[1].mentorID, shiftSubject.mentors[1].mentorName, event.shiftID, shiftSubject.subjectID, 1));
+                                firstLine.append("<td class='availableCounter' rowspan='2' style='width: 10px; vertical-align: middle; text-align:center;'>" + availableSpots + "</td>");
+                                secondLine.append(createMentorDrop(shiftSubject.mentors[2].mentorID, shiftSubject.mentors[2].mentorName, event.shiftID, shiftSubject.subjectID, 2));
+                                secondLine.append(createMentorDrop(shiftSubject.mentors[3].mentorID, shiftSubject.mentors[3].mentorName, event.shiftID, shiftSubject.subjectID, 3));
+                                break;
+                        }
+
+
+                        subjectTable.append(firstLine);
+                        subjectTable.append(secondLine);
+
+
+                        $(subjectTable).droppable({drop: dropMentor});
+
+                        element.append(subjectTable);
+                    });
+
+                }
+            });
+
+            var subjectID, subjectTitle, bgColor;
+            {% for subject in subjects %}
+            subjectID = '{{ subject.id }}';
+            subjectTitle = '{{ subject.name }}';
+            bgColor = '{{ subject.color }}';
+
+            $('#subjects').append("<button type='button' id='" + subjectID + "' class='btn btn-primary subject-button' style='background-color: " + bgColor + "' data-subject-id='" + subjectID + "' data-toggle='modal' data-target='#exampleModal'><b>" + subjectTitle + "</b> <span class='subject-filter glyphicon glyphicon-eye-open'></span></button>");
+            {% endfor %}
+
+            $('.subject-button').on("click", function () {
+                $('#colorpicker-div').empty();
+                $('#colorpicker-div').append("<input id='subjectModalColorField' type='text' class='form-control input-lg' data-subject-id='" + $(this).data('subject-id') + "' value='" + $(this).css("background-color") + "'/>");
+
+                $(".modal-body").css("background-color", $(this).css("background-color"));
+
+                $('#subjectModalColorField').colorpicker({
+                    format: 'hex',
+                    customClass: 'colorpicker-2x',
+                    sliders: {
+                        saturation: {
+                            maxLeft: 200,
+                            maxTop: 200
+                        },
+                        hue: {
+                            maxTop: 200
+                        }
+                    }
+                }).on('changeColor', function (e) {
+                    console.log()
+                    $(".modal-body").css("background-color", e.color.toString('rgba'));
+                });
+            });
+
+            $('#btn-save-color').on("click", function () {
+                var subjectID = $('#subjectModalColorField').data('subject-id');
+                var subjectColor = $('#subjectModalColorField').val();
+
+                $("#" + subjectID).css("background-color", subjectColor);
+
+                $("." + subjectID).each(function () {
+                    $(this).css("background-color", subjectColor);
+                });
+
+                $.ajax({
+                    url: "{{ path('admin_subject_ajax_color') }}",
+                    data: {"subjectID": subjectID, "subjectColor": subjectColor},
+                    type: 'POST'
+                });
+
+                $("#exampleModal").modal('hide');
+            });
+
+            $('#mentors-filter').on('click', function () {
+                $(this).toggleClass('glyphicon-eye-close').toggleClass('glyphicon-eye-open');
+
+                $("#calendar").find('td').each(function(){
+
+                    if($(this).attr('id') != undefined || ($(this).hasClass("availableCounter"))) {
+                        var currentColor = $(this).css('color');
+
+                        if(currentColor == "rgb(128, 128, 128)") {
+                            $(this).css('color', 'rgb(255, 255, 255)');
+                        } else {
+                            $(this).css('color', 'rgb(128, 128, 128)');
+                        }
+                    }
+                });
+            });
+
+            $('.mentor-filter').on('click', function () {
+                $(this).toggleClass('glyphicon-eye-close').toggleClass('glyphicon-eye-open');
+                var mentorID = $(this).data("mentor-id");
+
+                $("#calendar").find(`[data-mentor-id='${mentorID}']`).parent().each(function(){
+
+                    var currentColor = $(this).css('color');
+
+                    if(currentColor == "rgb(128, 128, 128)") {
+                        $(this).css('color', 'rgb(255, 255, 255)');
+                    } else {
+                        $(this).css('color', 'rgb(128, 128, 128)');
+                    }
+                });
+            });
+            $('#subjects-filter').on('click', function () {
+                $(this).toggleClass('glyphicon-eye-close').toggleClass('glyphicon-eye-open');
+                $('.subject-filter').each(function () {
+                    $(this).toggleClass('glyphicon-eye-close').toggleClass('glyphicon-eye-open');
+                });
+                //TODO filter all subjects
+
+            });
+            $('.subject-filter').on('click', function () {
+                $(this).toggleClass('glyphicon-eye-close').toggleClass('glyphicon-eye-open');
+                //TODO filter a subject
+
+            });
+
+            $("#confirmDeletion").on("click", function () {
+                var mentorID = $(this).data("mentor-id");
+                var shiftID = $(this).data("shift-id");
+                var subjectID = $(this).data("subject-id");
+                var position = $(this).data("position");
+
+                {#if(position == 'leader') {#}
+                {#console.log('trying to delete leader');#}
+                {#$.ajax({#}
+                {#url: "{{ path('admin_schedule_ajax_shift_leader') }}",#}
+                {#data: {"shiftID": shiftID},#}
+                {#type: 'POST'#}
+                {#});#}
+
+                {#$("#"+mentorID.concat(shiftID, subjectID, position)).empty();#}
+                // } else {
+                $.ajax({
+                    url: "{{ path('admin_schedule_ajax_shift_remove') }}",
+                    data: {"mentorID": mentorID, "shiftID": shiftID, "subjectID": subjectID},
+                    type: 'POST'
+                });
+
+                var availableSpots = parseInt($("#" + mentorID.concat(shiftID, subjectID, position)).parent().parent().find(".availableCounter").text()) + 1;
+
+                $("#" + mentorID.concat(shiftID, subjectID, position)).parent().parent().find(".availableCounter").text(availableSpots);
+                $("#" + mentorID.concat(shiftID, subjectID, position)).empty();
+                // }
+
+                $("#deleteConfirmation").modal('hide');
+            });
+
+            $("#cancelDeletion").on("click", function () {
+                $("#deleteConfirmation").modal('hide');
+            });
+
+            //Fixing hover issue while dragging
+            var all = document.getElementsByTagName("*");
+            for (var i = 0, max = all.length; i < max; i++) {
+                if (!all[i].classList.contains('modal'))
+                    all[i].style.zIndex = "1";
+            }
+
+            //Fixing focus issue for events
+            $(".fc-nonbusiness").each(function () {
+                $(this).remove();
+            });
+
+            //TODO hide menu as page loads
+        });
+
+        $(function() {
+            $('#download').on('click', function() {
+                var target = $('#content');
+                html2canvas(target, {
+                    onrendered: function(canvas) {
+                        var img = canvas.toDataURL("image/jpeg", 1.0);
+                        var pdf = new jsPDF('p', 'pt', [target.innerWidth(), target.innerHeight()]);
+                        pdf.addImage(img, 'JPEG', 0, 0, target.innerWidth(), target.innerHeight(), null, 'NONE');
+                        pdf.save('schedule.pdf');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}
+{% block body %}
+    <div class="row">
+        <div class="col-xs-10">
+            <h3>Staffing Calendar
+                <div class="btn btn-success" id="download">Download PDF</div>
+                <div class="btn-group pull-right" role="group">
+                    <div class="btn btn-success" type="button"><a href="{{ path('admin_schedule_update') }}">Update
+                            Schedule</a></div>
+                </div>
+            </h3>
+        </div>
+        <div class="col-xs-2">
+            <div class="input-group">
+                <button id="sidebar-toggle" class="btn btn-default" type="button">Toggle Sidebar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="clearfix"></div>
+
+    <div id="row-main" class="row row-eq-height">
+        <div id="content" class="col-md-10">
+            <div class="panel">
+                <div class="panel-body">
+                    <div id='calendar'></div>
+                </div>
+            </div>
+        </div>
+        <div id="sidebar" class="col-md-2">
+            <div>
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+
+                                <p class='sidebar-headers'>List of Mentors <span id="mentors-filter"
+                                                                                 class="glyphicon glyphicon-eye-open"></span>
+                                </p>
+
+                                {#<ul id="external-events" class="list-unstyled">#}
+                                {#<li id="1">#}
+                                <div id="external-events">
+
+                                    {% for mentor in mentors %}
+                                        <div class="fc-event label label-default mentor"
+                                             style="background-color: darkcyan;" data-mentor-id="{{ mentor.id }}">
+                                            {{ mentor.firstName }} {{ mentor.lastName|first }} <span
+                                                    class="mentor-filter glyphicon glyphicon-eye-open"
+                                                    data-mentor-name="{{ mentor.firstName }} {{ mentor.lastName|first }}" data-mentor-id="{{ mentor.id }}"></span>
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+                                <br/>
+
+                                {#</li>#}
+                                {#</ul>#}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div id="subjects" class="col-xs-12">
+                                <p class='sidebar-headers'>List of Subjects <span id='subjects-filter'
+                                                                                  class='glyphicon glyphicon-eye-open'></span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12"></div>
+                        </div>
+                    </div>
+                    {#<div class="panel-footer"></div>#}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true"
+         id="deleteConfirmation">
+        <div class="modal-dialog modal-sm" style="width: 30%;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"></h4>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="confirmDeletion">Delete</button>
+                    <button type="button" class="btn btn-primary" id="cancelDeletion">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Select a new color:</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="colorpicker-div">
+                    <input id="subjectModalColorField" type="text" class="form-control input-lg" value=""/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button id="btn-save-color" type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
