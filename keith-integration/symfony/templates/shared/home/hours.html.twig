@@ -1,7 +1,0 @@
-<h3>Hours of Operation</h3>
-<dl class="dl-horizontal">
-    {% for day in hours %}
-        <dt>{{ day.dayName }}</dt>
-        <dd>{{ day.startTime|date('g:i A') }} - {{ day.endTime|date('g:i A') }}</dd>
-    {% endfor %}
-</dl>
