@@ -23,13 +23,15 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+use Psr\Log\LoggerInterface;
 
 class ProfileController extends Controller
 {
   /**
      * @Route("/profile/{username}", name="profile")
+     *
      */
-  public function viewProfile(Request $request, User $user)
+  public function viewProfile(Request $request, User $user, LoggerInterface $l)
   {
     $isAdmin = $this->isGranted('admin');
 
@@ -39,7 +41,19 @@ class ProfileController extends Controller
       return $this->redirectToRoute('home');
     }
 
+    $occurrences = $this->getDoctrine()->getRepository(Occurrence::class)->findAll();
+
+    //find accummulated score of approved occurrences.
+    $totalScore = 0;
+    $userId = $user->getId();
+    foreach ($occurrences as $occurrence) {
+      if ($occurrence->getSubject()->getId() == $userId && $occurrence->getStatus() == "approved") {
+        $totalScore += $occurrence->getPoints();
+      }
+    }
+
     return $this->render('role/mentor/profile.html.twig', array(
+      'totalScore' => $totalScore,
       'user' => $user,
       'isAdmin' => $isAdmin
     ));
@@ -51,23 +65,29 @@ class ProfileController extends Controller
      * @param Request $request
      * @return Response
      */
-  public function queryForDuplicatePreferredName(Request $request)
+  public function queryForDuplicatePreferredName(Request $request, LoggerInterface $logger)
   {
-    //need to query for preferred name of the same value
     $payload = $request->getContent();
-    $criteria = array("preferredName" => $payload["preferredName"], "user" => $payload["id"]);
-    $preferredName = array("preferredName" => $payload["preferredName"]);
-    $userId = array("user" => $payload["id"]);
+    //$logger->critical($payload);
+    $criteria = json_decode($payload, true);
+    $preferredName = array("preferredName" => $criteria["preferredName"]);
 
-    $preferredNames = $this->getDoctrine()->getRepository(Profile::class)->findBy($preferredName);
-    $exist = $this->getDoctrine()->getRepository(Profile::class)->findBy($criteria);
-    //$ids = $this->getDoctrine()->getRepository(Profile::class)->findBy($userId);
+    $userId = $criteria["id"];
+    //return an array of Profile object by Preferred name
+    $preferredNames = $this->getDoctrine()->getRepository(Profile::class)->findOneBy($preferredName);
 
-    //if the name belongs to this user, then it's not a duplicate.
-    if (sizeof($exist) != 0 || sizeof($preferredNames) == 0) {
+    //Find by key. Return a Profile object
+    $ids = $this->getDoctrine()->getRepository(Profile::class)->find($userId);
+
+    //if preferred name does not exist then NODUP
+    if (empty($preferredNames)) {
       return new Response("NODUP");
     }
-    return new Response(implode(", ",$preferredName));
+    //if the name belongs to this user, then it's not a duplicate.
+    if ($preferredNames->getUser()->getId() == $userId) {
+      return new Response("NODUP");
+    }
+    return new Response("HASDUP");
   }
   /**
      * @Route("/profile/{username}/showDetailedScore", name="show_detailed_score")

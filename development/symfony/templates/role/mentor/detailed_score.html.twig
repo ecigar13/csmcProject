@@ -36,20 +36,14 @@ Render example :
                                         <h2>{{ user.firstName }} {{ user.lastName }}</h2>
 
                                     </div>
-                                    <div class="col-md-3 main-btn">
-                                        <a href="{{ path("edit_profile", {"username" : user.username}) }}"
-                                           class="btn btn-info btn-block btn-edit" aria-label="Left Align">
-                                            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
-                                            Profile
-                                        </a>
-                                    </div>
+
                                     <div class="col-md-3 main-btn">
                                         <a href="{{ path("profile", {"username" : user.username}) }}"
                                            class="btn btn-info btn-block btn-edit" aria-label="Left Align">
                                             <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Profile
                                         </a>
                                     </div>
-                                    
+
                                 </div>
 
                             </div>
@@ -150,17 +144,17 @@ Render example :
                         </div>
                         </div>
                     </div>
-                
+
 
                 </div>
 
-                
+
             </div>
         </div>
     </div>
     {% dump user %}
 
-    
+
 {% endblock %}
 {% block javascripts %}
     {{ parent() }}

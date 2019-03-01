@@ -43,12 +43,7 @@ Render example :
                                             Profile
                                         </a>
                                     </div>
-                                    <div class="col-md-3 main-btn">
-                                    <a href="{{ path("show_detailed_score", {"username" : user.username}) }}" target="_blank"
-                                        class="btn btn-primary  btn-block btn-edit" aria-label="Left Align">
-                                    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Show Detailed Score
-                                    </a>
-                                    </div>
+
                                 </div>
 
                             </div>
@@ -129,6 +124,12 @@ Render example :
                                 </div>
                             {% endif %}
 
+                            <div class="attr-field">
+                              <p>Total score: </p>
+                              <br>
+                              <p class="totalScore">{{ totalScore }}</p>
+                            </div>
+
                             {% if isAdmin %}
                                 <div class="attr-field">
 
@@ -137,6 +138,14 @@ Render example :
                                     <p class="dietary">{{ user.profile.adminNotes }}</p>
 
                                 </div>
+
+                                <div class="col-md-6 main-btn"><p>
+                                    <a href="{{ path("show_detailed_score", {"username" : user.username}) }}" target="_blank"
+                                        class="btn btn-primary  btn-block btn-edit" aria-label="Left Align">
+                                    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Show Detailed Score
+                                    </a>
+                                    </p>
+                                    </div><br><br><br>
                             {% endif %}
 
                             <h2>Notification Preferences:</h2>

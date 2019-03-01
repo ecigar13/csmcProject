@@ -280,18 +280,23 @@
         });
 
         $(window).on('load', function(){
-          var id = $('.dropzone').attr('id');
-
           $("#profile_preferredName").blur(function(){
+              //2 ajax calls to verify both
+              //do if on client side.
+
+              var id = $('.dropzone').attr('id');
+              var preferredName = $('#profile_preferredName').val();
+
               //alert($('#profile_preferredName').val());
               var path = 'ajaxDuplicatePrefName';
-              var payload = {"id": id, "preferredName" : $('#profile_preferredName').val()};
+              var payload = JSON.stringify({"id": id, "preferredName" : $('#profile_preferredName').val()});
 
               $.ajax({
                   type: "POST",
                   url: path,
                   data: payload,
-                  dataType: "text"
+                  contentType: 'application/json'
+
 
               }).done(function(xhr){
                 console.log(xhr);
@@ -304,8 +309,8 @@
 
               }).fail(function(xhr, status, err){
                   console.log(status);
-                  console.log(err)
-                  console.log(payload);
+                  console.log(err);
+                  console.log(xhr);
               });
             });
 
