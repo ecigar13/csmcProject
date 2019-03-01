@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+{#<div class="page">#}
+{#<form class="page_box" action="{{ path('login') }}"#}
+{#method="post">#}
+{#{% if error %}#}
+{#<div class="message red_message">#}
+{#{{ error.messageKey|trans(error.messageData, 'security') }}#}
+{#</div>#}
+{#{% endif %}#}
+
+{#<label class="page_box_label" for="username">Username:</label>#}
+{#<input class="page_box_input" type="text" id="username" name="_username"#}
+{#value="{{ last_username }}"/>#}
+
+{#<label class="page_box_label" for="password">Password:</label>#}
+{#<input class="page_box_input" type="password" id="password" name="_password"/>#}
+
+{# If you want to control the URL the user is redirected to on success #}
+{#<input type="hidden" name="_target_path" value="/home"/>#}
+
+{#<button class="button bottom green_button" style="width: 100%; margin-bottom: 0;" type="submit">Login</button>#}
+{#</form>#}
+{#</div>#}
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="icon" type="image/png" href="{{ asset('build/images/favicon.png') }}">
+
+    <title>Welcome!</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="{{ asset('build/css/global.css') }}"/>
+</head>
+<body style="background: #FFFFFF url({{ asset('build/images/swipe-background.png') }}) no-repeat right top;">
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <img src="{{ asset("build/images/logo-csmc.png") }}">
+                            </div>
+                        </div>
+                        <div style="height: 15vh"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-3"></div>
+                    <div class="col-xs-6">
+                        <div class="row">
+                            <div class="col-xs-3"></div>
+                            <div class="col-xs-6">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h2>Login</h2>
+                                    </div>
+                                    <div class="panel-body">
+
+                                        <form class="form-horizontal form-label-left" action="{{ path('login') }}"
+                                              method="post">
+                                            {% if error %}
+                                                <div class="message red_message">
+                                                    {{ error.messageKey|trans(error.messageData, 'security') }}
+                                                </div>
+                                            {% endif %}
+
+                                            <label class="control-label" for="username">Username:</label>
+                                            <input class="form-control" type="text" id="username" name="_username"
+                                                   value="{{ last_username }}" autocomplete="off"/>
+
+                                            <label class="control-label" for="password">Password:</label>
+                                            <input class="form-control" type="password" id="password"
+                                                   name="_password" autocomplete="off"/>
+
+                                            {#If you want to control the URL the user is redirected to on success#}
+                                            <input type="hidden" name="_target_path" value="/home"/>
+
+                                            <button class="btn btn-success"
+                                                    style="width: 100%; margin-bottom: 0;" type="submit">Login
+                                            </button>
+                                        </form>
+                                        {##}
+                                        {#{{ form_start(swipe_form, {'attr': {'class': 'form-horizontal form-label-left'}}) }}#}
+                                        {#{{ form_errors(swipe_form) }}#}
+                                        {#<div id="success" class="alert alert-success" style="display: none;"></div>#}
+                                        {#<div class="form-group">#}
+                                        {#<div class="control-label">#}
+                                        {#{{ form_label(form.scancode) }}#}
+                                        {#</div>#}
+                                        {#{{ form_errors(swipe_form.scancode) }}#}
+                                        {#<div>#}
+                                        {#<div id="loader" class="text-center" style="display: none;">#}
+                                        {#<img src="{{ asset('build/images/ajax-loader.gif') }}">#}
+                                        {#</div>#}
+                                        {#{{ form_widget(swipe_form.scancode, {'attr': {'class': 'form-control', 'placeholder': 'Please swipe your Comet Card'}}) }}#}
+                                        {#</div>#}
+                                        {#</div>#}
+                                        {#{{ form_end(swipe_form) }}#}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-3"></div>
+                        </div>
+                        <div class="col-xs-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+            integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+</body>
+</html>

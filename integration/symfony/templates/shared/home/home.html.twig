@@ -1,0 +1,36 @@
+{# Data Needed: User Announcements Hours Rooms #}
+{% extends 'shared/base.html.twig' %}
+{% block body %}
+    {% if successMessage is defined and successMessage is not null %}
+        <div class="flash-message alert alert-success" role="alert">
+            {{ successMessage }}
+        </div>
+    {% endif %}
+
+    <div class="content_head">
+        <h1>Home</h1>
+        <div class="content_options">
+            <h2>{{ "now"|date('F j, Y') }}</h2>
+        </div>
+    </div>
+    <hr/>
+    {#{{ include('shared/component/flash_messages.html.twig') }}#}
+
+    {# Announcements #}
+    {{ include('shared/home/announcements.html.twig') }}
+
+    {# Opperation Hours #}
+    {{ include('shared/home/hours.html.twig') }}
+
+    {# Locations #}
+    {{ include('shared/home/locations.html.twig') }}
+
+    {# Contact #}
+    <h2 class="content_title">Contact Information</h2>
+    <div class="content_list">
+        <div class="content_list_label">Email</div>
+        <div class="content_list_info">
+            <a href="mailto:csmc@utdallas.edu" target="_top">csmc@utdallas.edu</a>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>CSMC Display</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
+          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flipclock/0.7.8/flipclock.css">
+ 
+    <link href="{{ asset('build/css/display.css') }}" rel="stylesheet" />
+</head>
+<body>
+    <div id="mentor_image" data-path="{{ asset('build/images/user.png') }}"></div>
+
+    <div id="general-content" class="panel panel-default">
+        <div class="middle-header">
+            <h2><b>We will be with you shortly</b></h2>
+            <h3 id="timer"></h3><br>
+        </div>
+        <div class="clock"></div>
+
+        <div class="container">
+            <table id="wait-list" class="table table-striped table-bordered">
+                <thead class="table-header">
+                <tr>
+                    <th>Number</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Activity</th>
+                    <th>Time In</th>
+                </tr>
+                </thead>
+                <tbody id="wait-list-body"></tbody>
+            </table>
+        </div>
+
+        <div class="pagination-container">
+            <ul id="wait-list-pagination" class="pagination"></ul>
+        </div>
+    </div>
+
+    <div id="mentors-container-header" class="panel panel-default">
+        <p><b>Mentors on duty</b></p>
+    </div>
+
+    <div id="mentors-container">
+        <div id="mentors-content" class="panel panel-default"></div>
+    </div>
+
+    <div id="sessions-container" class="panel panel-default">
+
+        <div id="sessions-title" class="ui-widget-header">
+            <p><b>Sessions</b></p>
+        </div>
+
+        <div id="sessions-content"></div>
+
+        <div id="quiz-bar" class="panel panel-default">
+            <!--
+            <div style="width: 100%; height: 50%; text-align: center;">
+                <p style="font-size: 25px; margin: 0px;"><b>3305 Morales Quiz 6</b></p>
+            </div>
+            <div style="width: 100%; height: 40%;">
+                <p style="font-size: 20px; margin: 0px; float: left;"><b>Date:</b> May 22 - May 26</p>
+                <p style="font-size: 20px; margin: 0px; float: right;"><b>Location:</b> ECSS 4.415</p>
+            </div>-->
+        </div>
+
+    </div>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"
+            integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"
+            integrity="sha256-VazP97ZCwtekAsvgPBSUwPFKdrwD3unUfSGVYrahUqU="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flipclock/0.7.8/flipclock.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquerykeyframes/0.0.9/jquery.keyframes.min.js"></script>
+    <script type="text/javascript">
+
+        var buildQuizzes = function (response) {
+            $("#quiz-bar").empty();
+
+            for (i in response) {
+                var quiz = response[i];
+
+                var topicDiv = $("<div style='width: 100%; height: 50%; text-align: center;'></div>");
+                topicDiv.append($("<p style='font-size: 25px; margin: 0px;'><b>"+quiz.topic+"</b></p>"));
+
+                var infoDiv = $("<div style='width: 100%; height: 40%;'>");
+                infoDiv.append($("<p style='font-size: 20px; margin: 0px; float: left;'><b>Date:</b> "+quiz.date+"</p>"));
+                infoDiv.append($("<p style='font-size: 20px; margin: 0px; float: right;'><b>Location:</b> "+quiz.location+"</p>"));
+
+                $("#quiz-bar").append(topicDiv);
+                $("#quiz-bar").append(infoDiv);
+            }
+        }
+
+        var buildMentors = function (response) {
+
+            $("#mentors-content").empty();
+
+            if (response.length == 0) {
+                $("#mentors-content").append($("<h3 style='text-align: center;'>Are you a <b>mentor</b>?</h3><br>"));
+                $("#mentors-content").append($("<h4 style='text-align: center;'>Please <b>sign-in</b> if you do not see yourself on this list.</h4><br><br>"));
+                $("#mentors-content").append($("<h3 style='text-align: center;'>Are you a <b>student</b>?</h3><br>"));
+                $("#mentors-content").append($("<h4 style='text-align: center;'>No one here to help you? Please contact: <b>csmc@utdallas.edu</b></h4><br>"));
+            }
+
+            var adaptContainer = false;
+
+            if (response.length > 4) {
+                adaptContainer = true;
+
+                $.keyframe.define({
+                    name: 'slidementor',
+                    from: {
+                        'transform': 'translate3d(0,0,0)'
+                    },
+                    to: {
+                        'transform': 'translate3d(0,-' + (136.04 * response.length) + 'px,0)' /* if over 4 mentors, transform -136.04(mentor-size + margin-top) for each mentor */
+                    }
+                });
+            }
+
+            for (i in response) {
+                var mentor = response[i];
+
+                var mentorName = mentor.name;
+
+                if (mentorName.length > 17) {
+                    mentorName = mentor.name.substring(0, 16).trim() + '.';
+                }
+
+                var mentorImageDiv = $("<div class='mentor-image-div'></div>");
+
+                if(mentor.isShiftLeader) {
+                    mentorImageDiv.append($("<p style='position: absolute; font-size: 17.5px; font-weight: bold; background-color: goldenrod;'>SHIFT LEADER</p>"));
+                }
+
+                mentorImageDiv.append($("<span class='helper'></span>" +
+                    "<img id='image_" + mentor.username + "' alt='" + mentorName + "' src='/profile/" + mentor.username + "/image" + "' class='mentor-image' onerror='this.onerror=null; this.src=\"" + $('#mentor_image').data('path') + "\"'>"));
+
+
+
+                var mentorNameContainer = $("<h1>" + mentorName + "</h1>");
+                var badgesContainer = $("<h3></h3>");
+
+                mentor.specialties.forEach(function (specialty) {
+                    badgesContainer.append("<span class='label label-default label-badge' style='background-color: " + specialty.topic.color + "!important'>" + specialty.topic.abbreviation + "</span>");
+                });
+
+                var mentorDiv = $("<div class='ui-widget-content ui-corner-tr mentor'></div>");
+
+                mentorDiv.append(mentorImageDiv);
+                mentorDiv.append(mentorNameContainer);
+                mentorDiv.append(badgesContainer);
+
+                if (adaptContainer)
+                    mentorDiv.css('animation', 'slidementor ' + (5 * response.length) + 's linear infinite');
+
+                $("#mentors-content").append(mentorDiv);
+            }
+
+            if (($("#mentors-content div.mentor").length) > 4) {
+                var mentorAux = $("#mentors-content div.mentor")[0].outerHTML;
+                $("#mentors-content").append(mentorAux);
+                var mentorAux = $("#mentors-content div.mentor")[1].outerHTML;
+                $("#mentors-content").append(mentorAux);
+                var mentorAux = $("#mentors-content div.mentor")[2].outerHTML;
+                $("#mentors-content").append(mentorAux);
+                var mentorAux = $("#mentors-content div.mentor")[3].outerHTML;
+                $("#mentors-content").append(mentorAux);
+            }
+
+            $("#mentors-content").append("<br>");
+
+            // mentorPagination();
+        };
+
+        var buildSessions = function (response) {
+            var cardsPerPage = 4;
+            var numberOfPages = Math.ceil(response.length / cardsPerPage);
+
+            var sessionContents = [];
+            for (var pageNumber = 0; pageNumber < numberOfPages; pageNumber++) {
+                sessionContents[pageNumber] = new Array();
+            }
+
+            var currentPage = 0;
+            var currentCard = 0;
+            for (i in response) {
+                var session = response[i];
+
+                currentPage = Math.ceil(++currentCard / cardsPerPage);
+
+                var sessionTitle = $("<div class='session-header'><p>" + session.topic + "</p></div>");
+                var sessionSubtitle = $("<div class='session-sub-header'></div>");
+                var sessionTime = $("<div class='session-field'></div>");
+
+                var scheduledDate = new Date(session.full_date);
+                var currentDate = new Date();
+
+                //Check card's subtitle
+                if (currentDate > scheduledDate) {
+                    //Started sessions (or at least they were supposed to be started
+                    sessionSubtitle.append($("<p><i class='fa fa-circle' style='font-size:10px;color: red;vertical-align: middle;'></i> Today - Started</p>"));
+                    sessionTime.append("<p><b>Time:</b> " + session.time + "</p>");
+                } else {
+                    var twoHoursRange = new Date(scheduledDate);
+                    twoHoursRange.setHours(twoHoursRange.getHours() - 2);
+
+                    if (currentDate > twoHoursRange) {
+                        //Starts Soon! sessions
+                        sessionSubtitle.append($("<p> Today - Starts Soon!</p>"));
+                        sessionTime.append("<p><b>Time:</b> " + session.time + "</p>");
+                    } else {
+                        if (currentDate.getDay() == scheduledDate.getDay()) {
+                            //later today
+                            sessionSubtitle.append($("<p>Later Today</p>"));
+                            sessionTime.append("<p><b>Time:</b> " + session.time + "</p>");
+                        } else {
+                            //upcoming
+                            sessionSubtitle.append($("<p>" + session.weekday + "</p>"));
+                            sessionTime.append("<p><b>Time:</b> " + session.time + " (" + session.date + ")</p>");
+                        }
+                    }
+                }
+
+                var sessionLocation = $("<div class='session-field'><p><b>Location:</b> " + session.room + "</p></div>");
+                var sessionAvailability = $("<div class='session-field'><p><b>Availability:</b> " + session.capacity + "</p></div>");
+
+                //Build mentors string
+                var mentors = '';
+                for(var j=0; j < session.mentors.length; j++) {
+                    mentors = mentors + session.mentors[j] + ', ';
+                }
+                mentors = mentors.substring(0, mentors.length-2);
+
+                var sessionMentors = $("<div class='session-field'><p><b>Mentors: </b>"+mentors+"</p></div>");
+
+
+                //Create new session card and add all info
+                var sessionDiv = $("<div class='session panel panel-default'></div>");
+                sessionDiv.append(sessionTitle);
+                sessionDiv.append(sessionSubtitle);
+                sessionDiv.append(sessionTime);
+                sessionDiv.append(sessionLocation);
+                sessionDiv.append(sessionAvailability);
+                sessionDiv.append(sessionMentors);
+
+                sessionContents[(currentPage - 1)].push(sessionDiv);
+            }
+
+            var firstSessions = sessionContents[0];
+            for (i in firstSessions) {
+                var session = firstSessions[i];
+
+                $("#sessions-content").append(session);
+            }
+
+            $("#sessions-title").empty();
+            $("#sessions-title").append("<p><b>Sessions (Page 1 of " + numberOfPages + ")</b></p>")
+
+            var showPage = 1;
+            setInterval(function () {
+                if (showPage == numberOfPages) {
+                    showPage = 1;
+                } else {
+                    showPage++;
+                }
+
+                $("#sessions-content").hide("fade", {}, 800, function () {
+                    $("#sessions-content").empty();
+
+                    for (i in sessionContents[(showPage - 1)]) {
+                        var session = sessionContents[(showPage - 1)][i];
+                        $("#sessions-content").append(session);
+                    }
+
+                    $("#sessions-title").empty();
+                    $("#sessions-title").append("<p><b>Sessions (Page " + showPage + " of " + numberOfPages + ")</b></p>")
+
+                    $("#sessions-content").show("fade", {}, 800);
+                });
+            }, 8000);
+
+        };
+
+        var updatePagination = function (currentPage) {
+            var number = 1;
+            $("#wait-list-pagination li").each(function (id, li) {
+                var pageItem = $(li);
+
+                if (number == currentPage)
+                    pageItem.addClass("active");
+                else
+                    pageItem.removeClass("active");
+
+                number++;
+            });
+        };
+
+        var createStudentTable = function (currentPage, studentsPerPage, students) {
+            var start = (currentPage * studentsPerPage) - studentsPerPage;
+
+            $("#wait-list-body").empty();
+            for (var i = start; i < start + studentsPerPage; i++) {
+                if (i < students.length) {
+                    $('#wait-list-body').append('<tr>'
+                        + '<td>' + students[i]['number'] + '</td>'
+                        + '<td>' + students[i]['name'] + '</td>'
+                        + '<td>' + students[i]['course'] + '</td>'
+                        + '<td>' + students[i]['activity'] + '</td>'
+                        + '<td>' + students[i]['time'] + '</td>'
+                        + '</tr>'
+                    );
+                } else {
+                    $('#wait-list-body').append('<tr style=""><td> </td><td> </td><td> </td><td> </td><td> </td></tr>');
+                }
+            }
+
+
+        };
+
+        if (!String.format) {
+            String.format = function (format) {
+                var args = Array.prototype.slice.call(arguments, 1);
+                return format.replace(/{(\d+)}/g, function (match, number) {
+                    return typeof args[number] != 'undefined'
+                        ? args[number]
+                        : match
+                        ;
+                });
+            };
+        }
+    </script>
+    <script type="text/javascript">
+        $(function () {
+            var refreshTime = 1000 * 60 * 2.5;
+
+            setTimeout(function () {
+                location.reload(true);
+            }, refreshTime);
+            var refreshMessage = "Refreshing in {0}:{1}";
+            $('#timer').append(String.format(refreshMessage, Math.floor(refreshTime / 60000), ("00" + Math.ceil((refreshTime / 1000) % 60)).substr(-2, 2)));
+
+            var t = refreshTime;
+            setInterval(function () {
+                t -= 1000;
+                $('#timer').empty();
+                $('#timer').append(String.format(refreshMessage, Math.floor(t / 60000), ("00" + Math.ceil((t / 1000) % 60)).substr(-2, 2)));
+            }, 1000);
+
+            var numStudents = {{ students|length }};
+
+            if (numStudents == 0) {
+                // put in a message saying no students
+                var emptyMessage = "<h2>No Students Currently Signed In</h2><br><h3>If you signed in and see this message, don't panic, it will refresh in about {0} {1}</h3>"
+
+                var minutes = Math.ceil(refreshTime / 60000);
+                $("#general-content").empty();
+                $("#general-content").append(String.format(emptyMessage, minutes, "minutes"));
+
+                var time = refreshTime;
+
+                setInterval(function () {
+                    time = time - 1000;
+                    if (time >= 60000) {
+                        if (time % 60000 == 0) {
+                            var minutes = Math.ceil(time / 60000);
+                            $("#general-content").empty();
+                            $("#general-content").append(String.format(emptyMessage, minutes, "minutes"));
+                        }
+                    } else {
+                        var seconds = Math.ceil(time / 1000);
+                        $("#general-content").empty();
+                        $("#general-content").append(String.format(emptyMessage, seconds, "seconds"));
+                    }
+
+
+                }, 1000);
+            } else {
+                var students = [];
+                {% for student in students %}
+                    var index = {{ loop.index0 }};
+                    students[index] = {
+                        'number': index + 1,
+                        'name': '{{ student.user.firstName }}',
+                        'course': '{{ student.course.department.abbreviation }} {{ student.course.number }}',
+                        'activity': '{{ student.activity.name }}',
+                        'time': '{{ student.timeIn|date("g:i A") }}'
+                    };
+                {% endfor %}
+
+                var studentsPerPage = 6;
+                var currentPage = 1;
+                var numberOfPages = Math.ceil(numStudents / studentsPerPage);
+
+                if (numberOfPages > 1) {
+                    {# first page #}
+                    $("#wait-list-pagination").append("<li class=\"active\"><a href=\"#\">1</a></li>");
+                    {# following pages #}
+                    for (var i = 1; i < numberOfPages; i++) {
+                        $("#wait-list-pagination").append("<li><a href=\"#\">" + (i + 1) + "</a></li>");
+                    }
+                }
+                createStudentTable(currentPage, studentsPerPage, students);
+
+                if (numberOfPages > 1) {
+                    setInterval(function () {
+                        {# check if it is the last page #}
+                        if (currentPage == numberOfPages) {
+                            currentPage = 1;
+                        } else {
+                            currentPage++;
+                        }
+
+                        $(".container").hide("drop", {direction: "left"}, 2000, function () {
+                            $(".container").show("drop", {direction: "right"}, 2000);
+                            updatePagination(currentPage);
+                            createStudentTable(currentPage, studentsPerPage, students);
+                        })
+                    }, 14000);
+                }
+            }
+
+            var mentors = [];
+
+            {% for mentor in mentors %}
+                {% set i = loop.index0 %}
+
+                mentors[{{ i }}] = [];
+                mentors[{{ i }}]['name'] = '{{ mentor.preferredName }}';
+                mentors[{{ i }}]['username'] = '{{ mentor.userName }}';
+                mentors[{{ i }}]['specialties'] = [];
+
+                {% if shift_leader.id == mentor.id %}
+                    mentors[{{ i }}]['isShiftLeader'] = true;
+                {% else %}
+                    mentors[{{ i }}]['isShiftLeader'] = false;
+                {% endif %}
+
+                {% set j = 0 %}
+                {% for specialty in mentor.profile.specialties %}
+                    {% if specialty.rating >= 3 and specialty.subject.showOnCalendar %}
+                    mentors[{{ i }}]['specialties'][{{ j }}] = {
+                        'topic': {
+                            'name': '{{ specialty.subject.name }}',
+                            'color': '{{ specialty.subject.color }}',
+                            'abbreviation': '{{ specialty.subject.abbreviation }}'
+                        },
+                    };
+                    {%  set j = j + 1 %}
+                    {% endif %}
+                {% endfor %}
+
+            {% endfor %}
+
+            buildMentors(mentors);
+
+
+            var sessions = [];
+
+            {% for timeslot in sessions %}
+                {% set i = loop.index0 %}
+                sessions[{{ i }}] = [];
+                sessions[{{ i }}]['topic'] = '{{ timeslot.name }}';
+                sessions[{{ i }}]['time'] = '{{ timeslot.startTime|date('h:i A') }}';
+                sessions[{{ i }}]['date'] = '{{ timeslot.startTime|date('F j') }}';
+                sessions[{{ i }}]['room'] = '{{ timeslot.location }}';
+                sessions[{{ i }}]['capacity'] = '{{ timeslot.capacity }}';
+
+                sessions[{{ i }}]['start_time'] = '{{ timeslot.startTime is null ? '' : timeslot.startTime|date('H:i A') }}';
+
+                sessions[{{ i }}]['full_date'] = '{{ timeslot.startTime|date('F d, Y G:i:s') }}';
+
+                sessions[{{ i }}]['weekday'] = '{{ timeslot.startTime()|date('l') }}';
+
+                sessions[{{ i }}]['mentors'] = [];
+                {% for mentor in timeslot.getMentors() %}
+                    {% set j = loop.index0 %}
+                    sessions[{{ i }}]['mentors'][{{ j }}] = '{{ mentor.preferredName }}';
+                {% endfor %}
+
+            {% endfor %}
+
+            buildSessions(sessions);
+
+            var quizzes = [];
+
+            console.log()
+
+            {% for quiz in quizzes %}
+                {% set i = loop.index0 %}
+
+                quizzes[{{ i }}] = [];
+                quizzes[{{ i }}]['topic'] = '{{ quiz.topic }}';
+                quizzes[{{ i }}]['location'] = '{{ quiz.location }}';
+                quizzes[{{ i }}]['date'] = '{{ quiz.startDate|date('F j') }}' + ' - ' + '{{ quiz.endDate|date('F j') }}';
+
+                console.log('{{ quiz.topic }}');
+                console.log('{{ quiz.location }}');
+                {#console.log('{{ quiz.timeSlot.startTime|date('F j') }}' + ' - ' + '{{ quiz.timeSlot.endTime|date('F j') }}');#}
+
+            {% endfor %}
+
+            buildQuizzes(quizzes);
+
+
+            {# CLOCK #}
+            var clock = $('.clock').FlipClock({
+                clockFace: 'TwelveHourClock',
+                showSeconds: false
+            });
+        });
+    </script>
+</body>
+</html>

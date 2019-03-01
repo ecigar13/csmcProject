@@ -278,15 +278,12 @@
             $('.pic-upload-panel').get(0).style.display = 'block';
             $('#upload_new_profile_picture').get(0).style.display = 'none';
         });
-
         $(window).on('load', function(){
           $("#profile_preferredName").blur(function(){
-              //2 ajax calls to verify both
-              //do if on client side.
+              //make 1 ajax call. Logic on the server side.
 
               var id = $('.dropzone').attr('id');
               var preferredName = $('#profile_preferredName').val();
-
               //alert($('#profile_preferredName').val());
               var path = 'ajaxDuplicatePrefName';
               var payload = JSON.stringify({"id": id, "preferredName" : $('#profile_preferredName').val()});
@@ -296,8 +293,6 @@
                   url: path,
                   data: payload,
                   contentType: 'application/json'
-
-
               }).done(function(xhr){
                 console.log(xhr);
 
@@ -348,8 +343,6 @@
                                         {{ form_errors(form.preferredName) }}
                                         {{ form_widget(form.preferredName, {'attr': {'class': 'form-control'}}) }}
                                     </div>
-
-
 
                                     <div class="attr-field">
                                         <span class="field-label">{{ form_label(form.birthDate) }}:</span>
@@ -580,5 +573,4 @@
             </div>
         </div>
     </div>
-
 {% endblock %}

@@ -1,0 +1,246 @@
+{% extends 'shared/base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css" href="{{ asset('build/css/global.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('build/css/mentor_profile.css') }}"/>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.css">
+
+{% endblock %}
+
+{% block body %}
+    <!--
+Render example :
+    <small>{{ user.username }}</small>
+-->
+
+    <div class="">
+        <div class="container">
+            <div class="row pt">
+                <br>
+                <br>
+                <div class="col-md-6">
+
+                    <div class="row">
+                        <div class="col-md-12 info-board">
+                            <div class="main-name">
+                                <div class="row">
+                                    <div class="col-md-6 align-middle  ">
+                                        <!--
+                                            ***
+                                            Todo: Render your user."property" here
+                                            ***
+                                        -->
+                                        <h2>{{ user.firstName }} {{ user.lastName }}</h2>
+
+                                    </div>
+
+                                    <div class="col-md-3 main-btn">
+                                        <a href="{{ path("profile", {"username" : user.username}) }}"
+                                           class="btn btn-info btn-block btn-edit" aria-label="Left Align">
+                                            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Profile
+                                        </a>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <h2>Detailed Score Table:</h2>
+                            <div class="row"><h2>Pending</h2></div>
+
+                    <div class="row table-outer">
+                        <table class="table table-hover" id="pendingTable">
+                            <thead>
+                            <tr>
+                                <th hidden>ID</th>
+                                <th hidden>FilterType</th>
+
+                                <th>Submitted</th>
+                                <th>By</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Subject</th>
+                                <th>Date Occurred</th>
+                                <th>Points</th>
+                                <th>Notes</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for occurrence in pendingOccurrences %}
+                                <tr>
+                                    <td hidden>{{ occurrence.id }}</td>
+                                    <td hidden>{{ occurrence | occurrenceFilter }}</td>
+                                    <td>{{ occurrence.creationDate | date("m/d/Y") }}</td>
+                                    <td>{{ occurrence | occurrenceSubmitter }}</td>
+                                    <td>
+                                        <span class="occurrence-type{% if occurrence | occurrenceCanEditType %} editable-cell{% endif %}">
+                                            <span {% if occurrence | occurrenceCanEditType %} class="{{ occurrence | occurrenceEditClass }}" {% endif %}>
+                                                {{ occurrence | occurrenceType }}
+                                            </span>
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence | occurrenceDescription }}</td>
+                                    <td>{{ occurrence.subject.preferredName }}</td>
+                                    <td>{{ occurrence | occurrenceDate | date("m/d/Y") }}</td>
+                                    <td>
+                                        <span class="occurrence-points editable-cell">
+                                            <span class="points-text">{{ occurrence | occurrencePoints }}</span>
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence.adminNotes }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="row"><h2>Closed</h2></div>
+                    <div class="row table-outer">
+                        <table class="table table-hover" id="closedTable">
+                            <thead>
+                            <tr>
+                                <th hidden>ID</th>
+                                <th hidden>FilterType</th>
+                                <th>Submitted</th>
+                                <th>By</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Subject</th>
+                                <th>Date Occurred</th>
+                                <th>Points</th>
+                                <th>Notes</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for occurrence in closedOccurrences %}
+                                <tr>
+                                    <td hidden>{{ occurrence.id }}</td>
+                                    <td hidden>{{ occurrence | occurrenceFilter }}</td>
+
+                                    <td>{{ occurrence.creationDate | date("m/d/Y") }}</td>
+                                    <td>{{ occurrence | occurrenceSubmitter }}</td>
+                                    <td>
+                                        <span class="occurrence-type{% if occurrence | occurrenceCanEditType %} editable-cell{% endif %}">
+                                            <span {% if occurrence | occurrenceCanEditType %} class="{{ occurrence | occurrenceEditClass }}" {% endif %}>
+                                                {{ occurrence | occurrenceType }}
+                                            </span>
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence | occurrenceDescription }}</td>
+                                    <td>{{ occurrence.subject.preferredName }}</td>
+                                    <td>{{ occurrence | occurrenceDate | date("m/d/Y") }}</td>
+                                    <td>
+                                        <span class="occurrence-points editable-cell">
+                                            <span class="points-text">{{ occurrence | occurrencePoints }}</span>
+                                        </span>
+                                    </td>
+                                    <td>{{ occurrence.adminNotes }}</td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                        </table>
+                        </div>
+                        </div>
+                    </div>
+
+
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+    {% dump user %}
+
+
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+
+        <script type="text/javascript"
+                src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.js"></script>
+        <script type="text/javascript"
+                src="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.js"></script>
+        <script>
+            $('#crop_current_profile_picture').on('click', function () {
+                var dropzone = $('.dropzone').get(0).dropzone;
+                let originalPictureURL = '{{ path('origin_requested_image', {'username': user.username}) }}';
+                var file = {name: "file", dataURL: originalPictureURL};
+
+                if (dropzone.previewsContainer) {
+                    file.previewElement = Dropzone.createElement(dropzone.options.previewTemplate.trim());
+
+                    dropzone.previewsContainer.appendChild(file.previewElement);
+
+                    if (dropzone.options.addRemoveLinks) {
+                        file._removeLink = Dropzone.createElement("<a class=\"dz-remove\" href=\"javascript:undefined;\" data-dz-remove>" + dropzone.options.dictRemoveFile + "</a>");
+                        file.previewElement.appendChild(file._removeLink);
+                    }
+                }
+                $('#admin-modal-image').data('active', dropzone.element.id);
+                $('#admin-modal-image').cropper('replace', file.dataURL);
+                $('#admin-modal').modal('show');
+            });
+
+            var minWidth = window.innerWidth < 500 ? window.innerWidth * 0.8 : window.innerWidth * 0.6;
+            var minHeight = window.innerHeight < 500 ? window.innerHeight * 0.8 : window.innerHeight * 0.6;
+
+            $('#admin-modal-image').cropper({
+                aspectRatio: 1,
+                viewMode: 2,
+                minContainerWidth: minWidth,
+                minContainerHeight: minHeight,
+                responsive: true,
+                ready: function () {
+                    $('.cropper-container').css('margin', 'auto');
+                    $('.modal-content').css('width', minWidth + 30);
+                    $('#admin-modal .btn-success').off('click').on('click', function (event) {
+                        var active = $('#admin-modal-image').data('active');
+
+                        var crop = JSON.stringify($('#admin-modal-image').cropper('getCropBoxData'));
+                        var canvas = JSON.stringify($('#admin-modal-image').cropper('getCanvasData'));
+                        var image = JSON.stringify($('#admin-modal-image').cropper('getImageData'));
+                        $('#' + active).data('crop', crop);
+                        $('#' + active).data('canvas', canvas);
+                        $('#' + active).data('image', image);
+
+                        $('#admin-modal').modal('hide');
+
+                        $.ajax({
+                            type: 'POST',
+                            url: "{{ path('update_profile_image', {'username': user.username}) }}",
+                            data: {
+                                'user': active,
+                                'crop': crop,
+                                'canvas': canvas,
+                                'image': image
+                            },
+                            complete: function (response) {
+                                if (response.responseText) {
+                                    location.reload();
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+
+            $('#admin-modal').on('show.bs.modal', function (event) {
+                var active = $('#admin-modal-image').data('active');
+
+                var crop = $('#' + active).data('crop');
+                var canvas = $('#' + active).data('canvas');
+                var image = $('#' + active).data('image');
+                if (crop && canvas && image) {
+                    $('#admin-modal-image').cropper('setCropBoxData', JSON.parse(crop));
+                    $('#admin-modal-image').cropper('setCanvasData', JSON.parse(canvas));
+                    $('#admin-modal-image').cropper('setImageData', JSON.parse(image));
+                }
+            });
+            $('#admin-modal').on('hidden.bs.modal', function (event) {
+                $('#admin-modal').data('bs.modal', null);
+            });
+        </script>
+{% endblock %}
