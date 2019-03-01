@@ -1,0 +1,124 @@
+{# For use with admins/mentors #}
+{% extends 'shared/base.html.twig' %}
+{% block body %}
+    {{ include('shared/component/flash_messages.html.twig') }}
+    <h2>Quizzes</h2>
+    <table id="quizzes" class="table table-bordered table-striped">
+        <thead>
+        <tr>
+            <th>Topic</th>
+            <th>Dates</th>
+            <th>Room</th>
+            <th>Description</th>
+            <th>Details</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for quiz in quizzes %}
+            <tr>
+                <td>{{ quiz.topic }}</td>
+                <td>{{ quiz.startDate|date('m/d/y') }}
+                    - {{ quiz.endDate|date('m/d/y') }}</td>
+                <td>{{ quiz.location }}</td>
+                <td>{{ quiz.description }}</td>
+                <td>
+                    <a href="{{ path('session_view', {'id': quiz.id}) }}" class="btn btn-success">
+                        Details
+                    </a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    <h2>Sessions</h2>
+    <table id="sessions" class="table table-bordered table-striped">
+        <thead>
+        <tr>
+            <th>Topic</th>
+            <th>Date and Time</th>
+            <th>Mentor(s)</th>
+            <th>Room</th>
+            <th>Course(s)</th>
+            <th>Instructor(s)</th>
+            <th>Description</th>
+            <th>Details</th>
+            <th>Start</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for timeslot in timeslots %}
+            <tr>
+                <td>{{ timeslot.session.topic }}</td>
+                <td>{{ timeslot.startTime|date('m/d/y g:i A') }}</td>
+                <td>
+                    {% for mentor in timeslot.mentors %}
+                        {{ mentor }}
+                        {% if not loop.last %}
+                            {{ ", " }}
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td>{{ timeslot.location }}</td>
+                <td>
+                    {% for section in timeslot.session.sections %}
+                        {{ section }}
+                        {% if not loop.last %}
+                            {{ ", " }}
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for instructor in timeslot.session.instructors %}
+                        {{ instructor.firstName }} {{ instructor.lastName }}
+                        {% if not loop.last %}
+                            {{ ", " }}
+                        {% endif %}
+                    {% endfor %}
+                </td>
+                <td>{{ timeslot.session.description }}</td>
+                <td>
+                    <a href="{{ path('session_timeslot_view', {'tid': timeslot.id}) }}">
+                        <div class="btn btn-success">Details</div>
+                    </a>
+                </td>
+                <td>
+                    {% if timeslot.endTime is not defined %}
+                        <div class="btn btn-default">
+                            Ended
+                        </div>
+                    {% else %}
+                        <a href="{{ path('swipe_session', {'id': timeslot.id}) }}">
+                            <div class="btn btn-success">
+                                {% if timeslot.startTime is defined %}
+                                    Start
+                                {% else %}
+                                    Continue
+                                {% endif %}
+                            </div>
+                        </a>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        $(function () {
+            $('#quizzes').DataTable({
+                ordering: true,
+                searching: true,
+                paging: false,
+            });
+
+            $('#sessions').DataTable({
+                ordering: true,
+                order: [1, 'asc'],
+                searching: true,
+                paging: false,
+            });
+        });
+    </script>
+{% endblock %}

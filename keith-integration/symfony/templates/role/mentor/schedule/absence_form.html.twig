@@ -1,0 +1,61 @@
+{% extends 'shared/base.html.twig' %}
+{% block body %}
+    {{ form_start(form, { 'attr': {'class': 'bt-flabels js-flabels'} }) }}
+    <div class="form-group">
+        <div class="control-label">
+            {{ form_label(form.date) }}
+        </div>
+        {{ form_errors(form.date) }}
+        <div class="bt-flabels__wrapper">
+            {{ form_widget(form.date, {'attr': {'class': 'form-control'}}) }}
+            <span class="bt-flabels__error-desc">Required</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="control-label">
+            {{ form_label(form.shift) }}
+        </div>
+        {{ form_errors(form.shift) }}
+        <div class="bt-flabels__wrapper">
+            {{ form_widget(form.shift, {'attr': {'class': 'form-control'}}) }}
+            <span class="bt-flabels__error-desc">Required</span>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="control-label">
+            {{ form_label(form.reason) }}
+        </div>
+        {{ form_errors(form.reason) }}
+        <div class="bt-flabels__wrapper">
+            {{ form_widget(form.reason, {'attr': {'class': 'form-control'}}) }}
+            <span class="bt-flabels__error-desc">Required</span>
+        </div>
+    </div>
+    {{ form_widget(form.submit) }}
+    {{ form_end(form) }}
+{% endblock %}
+{% block javascripts %}
+    {{ parent() }}
+    <script type="application/javascript">
+        $(function () {
+            $('#absence_shift').empty();
+
+            $('#absence_date').on('change', function () {
+                $('#absence_shift').empty();
+                $.ajax({
+                    url: '{{ path('shift_time_feed') }}',
+                    data: {
+                        'user': '{{ app.user.id }}',
+                        'date': $('#absence_date').val()
+                    },
+                    type: 'GET',
+                }).done(function (data, textStatus, jqXHR) {
+                    $('#absence_shift').append('<option></option>');
+                    for(var i in data) {
+                        $('#absence_shift').append('<option value="' + data[i].id + '">' + data[i].scheduledShift + '</option>');
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

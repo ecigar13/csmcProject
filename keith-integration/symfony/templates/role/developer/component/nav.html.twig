@@ -1,0 +1,50 @@
+{% extends 'shared/component/nav.html.twig' %}
+{% block title %}
+    <i class="fas fa-desktop"></i> <span>CSMC Admin!</span>
+{% endblock %}
+{% block links %}
+    <li>
+        <a href="{{ path('home') }}"><i class="fas fa-home"></i> Home</a>
+    </li>
+
+    <li>
+        <a href="{{ path('admin_home') }}"><i class="fas fa-clipboard"></i> Admin Dashboard</a>
+    </li>
+
+    <li>
+        <a href="{{ path('dev_files') }}"><i class="fas fa-file-archive"></i> Files</a>
+    </li>
+
+    <li>
+        <a href="{{ path('dev_swipes') }}"><i class="fas fa-credit-card"></i> Swipes</a>
+    </li>
+{% endblock %}
+{% block top_nav %}
+    <li class="">
+        <a href="javascript:;" class="user-profile dropdown-toggle" data-toggle="dropdown"
+           aria-expanded="false">
+            <img src="images/img.jpg" alt="">{{ app.user.preferredName }}
+            <span class=" fas fa-angle-down"></span>
+        </a>
+        <ul class="dropdown-menu dropdown-usermenu pull-right">
+            <li><a href="javascript:;">Help</a></li>
+            <li>
+                <a href="{{ path('user_logout') }}"><i class="fas fa-sign-out pull-right"></i> Log Out</a>
+            </li>
+        </ul>
+    </li>
+{% endblock %}
+{% block footer %}
+    <a data-toggle="tooltip" data-placement="top" title="Settings">
+        <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+    </a>
+    <a data-toggle="tooltip" data-placement="top" title="FullScreen">
+        <span class="glyphicon glyphicon-fullscreen" aria-hidden="true"></span>
+    </a>
+    <a data-toggle="tooltip" data-placement="top" title="Lock">
+        <span class="glyphicon glyphicon-eye-close" aria-hidden="true"></span>
+    </a>
+    <a data-toggle="tooltip" data-placement="top" title="Logout" href="login.html">
+        <span class="glyphicon glyphicon-off" aria-hidden="true"></span>
+    </a>
+{% endblock %}

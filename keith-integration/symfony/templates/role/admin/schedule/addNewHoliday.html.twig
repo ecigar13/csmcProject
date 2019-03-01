@@ -1,0 +1,115 @@
+{% extends "role/admin/base.html.twig" %}
+{% block body %}
+    <div class="center_col" role="main">
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-xs-12">
+                <div class="x_panel">
+                    <div class="x_title">
+                        <h2> Create Holiday</h2>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="x_content">
+                        {# Checking for form errors and displaying them#}
+                        {% if not form.vars.valid %}
+                            <div class="alert alert-danger" id="errorDiv">
+                                {{ form_errors(form) }}
+                            </div>
+                        {% endif %}
+                        <br/>
+                        {{ form_start(form,{'attr':{'class':'form-horizontal form-label-left input_mask'}}) }}
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                                   for="first-name">{{ form_label(form.holidayDate) }}
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.holidayDate, {'attr': {'class': 'form-control col-md-7 col-xs-12'}} ) }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                                   for="first-name">{{ form_label(form.StartTime) }}
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.StartTime, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                                   for="first-name">{{ form_label(form.EndTime) }}
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.EndTime, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                                   for="first-name">{{ form_label(form.closed) }}
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.closed, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-3 col-sm-3 col-xs-12"
+                                   for="first-name">{{ form_label(form.description,null ,{ 'label_attr': {'style': 'font-weight:200'}}) }}
+                            </label>
+                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                {{ form_widget(form.description, {'attr': {'class': 'form-control col-md-7 col-xs-12'}}) }}
+                            </div>
+                        </div>
+                        <div class="col-md-9 col-sm-9 col-xs-12 col-md-offset-5">
+                            <button type="button" class="btn btn-secondary" onclick="location.href='./list_holidays'">
+                                Cancel
+                            </button>
+                            {{ form_widget(form.submit,{'attr':{'class':'btn btn-success'}}) }}
+                        </div>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% block javascripts %}
+        {{ parent() }}
+        <script type="text/javascript">
+
+            $("#form_closed").change(function () {
+                // this function will get executed every time the #home element is clicked (or tab-spacebar changed)
+                if ($(this).is(":checked")) // "this" refers to the element that fired the event
+                {
+                    $("#form_EndTime").attr('readonly', true);
+                    $("#form_StartTime").attr('readonly', true);
+                    $("#form_EndTime").val("12:00");
+                    $("#form_StartTime").val("00:00");
+                    // $("#form_EndTime").val(display.toUTCString());
+                }
+                else {
+                    $("#form_EndTime").attr('readonly', false);
+                    $("#form_StartTime").attr('readonly', false);
+                }
+            });
+            $("#form_StartTime").change(function () {
+
+                $start_time = "00:00";
+                // this function will get executed every time the #home element is clicked (or tab-spacebar changed)
+                if (($(this).val()) != $start_time) // "this" refers to the element that fired the event
+                {
+                    $('#form_closed').prop('checked', false);
+                    // $("#form_EndTime").val(display.toUTCString());
+                }
+            });
+            $("#form_EndTime").change(function () {
+
+                $end_time = "12:00";
+                // this function will get executed every time the #home element is clicked (or tab-spacebar changed)
+                if (($(this).val()) != $end_time) // "this" refers to the element that fired the event
+                {
+                    $('#form_closed').prop('checked', false);
+                    // $("#form_EndTime").val(display.toUTCString());
+                }
+            });
+
+        </script>
+    {% endblock %}
+{% endblock %}
