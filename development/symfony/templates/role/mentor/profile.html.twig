@@ -126,7 +126,6 @@ Render example :
 
                             <div class="attr-field">
                               <p>Total score: </p>
-                              <br>
                               <p class="totalScore">{{ totalScore }}</p>
                             </div>
 
@@ -139,14 +138,14 @@ Render example :
 
                                 </div>
 
-                                <div class="col-md-6 main-btn"><p>
-                                    <a href="{{ path("show_detailed_score", {"username" : user.username}) }}" target="_blank"
-                                        class="btn btn-primary  btn-block btn-edit" aria-label="Left Align">
-                                    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Show Detailed Score
-                                    </a>
-                                    </p>
-                                    </div><br><br><br>
                             {% endif %}
+                            <div class="col-md-6 main-btn"><p>
+                                <a href="{{ path("show_detailed_score", {"username" : user.username}) }}" target="_blank"
+                                    class="btn btn-primary  btn-block btn-edit" aria-label="Left Align">
+                                <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Show Detailed Score
+                                </a>
+                              </p>
+                            </div><br><br><br>
 
                             <h2>Notification Preferences:</h2>
                             {% set prefs = user.notificationPreferences %}
