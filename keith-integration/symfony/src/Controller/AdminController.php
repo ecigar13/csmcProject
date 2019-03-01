@@ -21,6 +21,7 @@ use Doctrine\ORM\EntityManager;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
@@ -28,19 +29,43 @@ use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 /**
  * @Route("/admin", name="admin_")
  */
-class AdminController extends Controller {
+class AdminController extends Controller
+{
+    /**
+     * Retrieves associated EntityManager.
+     *
+     * @return \Doctrine\Common\Persistence\ObjectManager
+     */
+    public function getEntityManager()
+    {
+        return $this->getDoctrine()->getManager();
+    }
+
     /**
      * @Route("/", name="home")
      * @param Request $request
      *
      * @return Response
      */
-    public function homeAction(Request $request) {
-        return $this->render('role/admin/base.html.twig');
+    public function homeAction()
+    {
+        $session = $this->get('session');
+
+        $successMessage = null;
+        // get message if there is one
+        foreach ($session->getFlashBag()->get('success', array()) as $message) {
+            $successMessage = $message;
+        }
+
+        return $this->render('role/admin/base.html.twig', array(
+            'successMessage' => $successMessage
+        ));
     }
 
     /**
      * @Route("/cropper", name="cropper")
+     *
+     * @return Response
      */
     public function cropperAction(Request $request) {
         $mentors = $this->getDoctrine()
@@ -54,6 +79,9 @@ class AdminController extends Controller {
 
     /**
      * @Route("/ajax/image_upload", name="image_upload")
+     *
+     * @param Request $request
+     * @return Response
      */
     public function mentorFileUpload(Request $request) {
         if (!$request->isXmlHttpRequest()) {

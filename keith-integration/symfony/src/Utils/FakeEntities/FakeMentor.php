@@ -26,8 +26,5 @@ class FakeMentor extends User
         return $this->preferredName;
     }
 
-    public function getNotificationPreferences(): NotificationPreferences
-    {
-        return new FakeNotificationPreferences($this, $this->address);
-    }
+    
 }

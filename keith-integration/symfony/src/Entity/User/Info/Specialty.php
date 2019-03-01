@@ -3,6 +3,7 @@
 namespace App\Entity\User\Info;
 
 use App\Entity\Misc\Subject;
+use App\Form\Data\SpecialtyFormData;
 use Doctrine\ORM\Mapping as Orm;
 
 /**
@@ -11,7 +12,9 @@ use Doctrine\ORM\Mapping as Orm;
  *     @ORM\UniqueConstraint(name="UQ_specialty_user_topic", columns={"info_id", "specialty_topic_id"})
  * }))
  */
-class Specialty {
+class Specialty
+{
+    const DEFAULT_SUBJECT_RATING = 1;
     /**
      * @ORM\Id()
      * @ORM\Column(type="guid")
@@ -51,9 +54,10 @@ class Specialty {
     /**
      * Get id
      *
-     * @return guid
+     * @return String
      */
-    public function getId() {
+    public function getId()
+    {
         return $this->id;
     }
 
@@ -62,8 +66,17 @@ class Specialty {
      *
      * @return integer
      */
-    public function getRating() {
+    public function getRating()
+    {
         return $this->rating;
+    }
+
+    /**
+     * @param mixed $rating
+     */
+    public function setRating($rating)
+    {
+        $this->rating = $rating;
     }
 
     /**
@@ -71,7 +84,16 @@ class Specialty {
      *
      * @return \App\Entity\Misc\Subject
      */
-    public function getSubject() {
+    public function getSubject()
+    {
         return $this->topic;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getProfile()
+    {
+        return $this->profile;
     }
 }

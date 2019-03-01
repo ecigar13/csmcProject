@@ -1,6 +1,22 @@
 {% extends 'shared/base.html.twig' %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" type="text/css" href="{{ asset('build/css/global.css') }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('build/css/mentor_profile.css') }}"/>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.4.0/min/dropzone.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.css">
+
+{% endblock %}
+
 {% block body %}
-    <div class="jumbotron">
+    <!--
+Render example :
+    <small>{{ user.username }}</small>
+-->
+
+    <div class="">
         <div class="container">
             <div class="row">
                 <div class="col-sm-3">
@@ -122,7 +138,7 @@
                 <div class="row">
                     <div class="col-xs-12">
                         <ul class="list-unstyled">
-                            {% for subject in subjects %}
+                            {#% for subject in subjects %}
                                 <li>{{ subject.name }}
                                     {% set rating = 0 %}
                                     {% for specialty in user.info.specialties %}
@@ -138,7 +154,7 @@
                                         {% endif %}
                                     {% endfor %}
                                 </li>
-                            {% endfor %}
+                            {% endfor %#}
                         </ul>
                     </div>
                 </div>
@@ -181,7 +197,7 @@
                         <p>Choose your comfort/knowledge level in the following topics. 1 the least
                             comfortable/knowledgeable and 5 the most comfortable/knowledgeable</p>
                         <form name="specialties" method="post">
-                            {% for subject in subjects %}
+                            <!--{#{% for subject in subjects %}
                                 <label>{{ subject.name }}</label>
                                 {% for i in 1..5 %}
                                     <label class="radio-inline">
@@ -190,6 +206,7 @@
                                 {% endfor %}
                                 <br>
                             {% endfor %}
+                            #}-->
                         </form>
                     </div>
                     <div class="modal-footer">

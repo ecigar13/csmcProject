@@ -18,25 +18,15 @@ class CourseFixture extends Fixture implements DependentFixtureInterface {
     const CS = 'cs';
     const SE = 'se';
 
-    const CS_1336 = 'cs-1336';
-    const CS_1337 = 'cs-1337';
-    const CS_2305 = 'cs-2305';
-    const CS_2336 = 'cs-2336';
-    const CS_3305 = 'cs-3305';
-    const CS_3340 = 'cs-3340';
+    const CS_1336 = '1336';
+    const CS_1337 = '1337';
+    const CS_2305 = '2305';
+    const CS_2336 = '2336';
+    const CS_3305 = '3305';
+    const CS_3340 = '3340';
 
     public function load(ObjectManager $manager) {
-        // load departments
-        $cs = new Department('Computer Science', 'CS');
-        $manager->persist($cs);
-
-        $se = new Department('Software Engineering', 'SE');
-        $manager->persist($se);
-
-
-        // load courses
-        $courses = array();
-
+        $cs = $this->getReference(DepartmentFixture::CS);
         $pf = new Course($cs, '1336', 'Programming Fundamentals', true);
         $courses[] = $pf;
         $manager->persist($pf);
@@ -62,28 +52,28 @@ class CourseFixture extends Fixture implements DependentFixtureInterface {
         $manager->persist($ca);
 
 
-        $semester = $this->getReference(SemesterFixture::ACTIVE);
-        foreach($courses as $course) {
-            $j = 0;
-            for($i = 1; $i <= 5; $i++, $j += 10) {
-                $n = str_pad($i - 1, 3, '0', STR_PAD_LEFT);
-                $instructor = $this->getReference(UserFixture::INSTRUCTOR . '000' . $n);
-                $section = new Section($course, $n, $semester, $instructor);
+        // $semester = $this->getReference(SemesterFixture::ACTIVE);
+        // foreach($courses as $course) {
+        //     $j = 0;
+        //     for($i = 1; $i <= 5; $i++, $j += 10) {
+        //         $n = str_pad($i - 1, 3, '0', STR_PAD_LEFT);
+        //         $instructor = $this->getReference(UserFixture::INSTRUCTOR . '000' . $n);
+        //         $section = new Section($course, $n, $semester, $instructor);
 
-                $manager->persist($section);
+        //         $manager->persist($section);
 
-                for($s = $j; $s <= $j + 10; $s++) {
-                    $p = str_pad($s, 6, '0', STR_PAD_LEFT);
-                    $student = $this->getReference(UserFixture::STUDENT . $p);
-                    $section->enroll($student);
-                }
-            }
-        }
+        //         for($s = $j; $s <= $j + 10; $s++) {
+        //             $p = str_pad($s, 6, '0', STR_PAD_LEFT);
+        //             $student = $this->getReference(UserFixture::STUDENT . $p);
+        //             $section->enroll($student);
+        //         }
+        //     }
+        // }
 
         $manager->flush();
 
-        $this->addReference(self::CS, $cs);
-        $this->addReference(self::SE, $se);
+        //$this->addReference(self::CS, $cs);
+        //$this->addReference(self::SE, $se);
         $this->addReference(self::CS_1336, $pf);
         $this->addReference(self::CS_1337, $cs1);
         $this->addReference(self::CS_2305, $dm1);
@@ -94,8 +84,9 @@ class CourseFixture extends Fixture implements DependentFixtureInterface {
 
     public function getDependencies() {
         return array(
-            SemesterFixture::class,
-            UserFixture::class
+		DepartmentFixture::class
+            //SemesterFixture::class,
+            //UserFixture::class
         );
     }
 }

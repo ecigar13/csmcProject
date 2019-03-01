@@ -4,12 +4,12 @@ services:
         container_name: web_keith_integrate
         build: docker/web
         ports:
-            - "8080:80"
+            - "8082:80"
         volumes:
             - ./symfony/:/code
         links:
             - php
-            
+
     php:
         container_name: php_keith_integrate
         build: docker/php
@@ -17,12 +17,12 @@ services:
             - ./symfony/:/code
         links:
             - db
-            
+
     db:
         container_name: db_keith_integrate
         build: docker/db
         ports:
-            - "3306:3306"
+            - "3307:3307"
         environment:
             MYSQL_ROOT_PASSWORD: "password"
         volumes:
@@ -32,4 +32,4 @@ services:
         container_name: phpmyadmin_keith_integrate
         image: phpmyadmin/phpmyadmin
         ports:
-            - "8081:80"
+            - "8083:80"
