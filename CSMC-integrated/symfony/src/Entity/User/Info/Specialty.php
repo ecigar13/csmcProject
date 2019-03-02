@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as Orm;
 /**
  * @ORM\Entity
  * @ORM\Table(name="user_specialty",  uniqueConstraints={
- *     @ORM\UniqueConstraint(name="UQ_specialty_user_topic", columns={"info_id", "specialty_topic_id"})
+ *     @ORM\UniqueConstraint(name="UQ_specialty_user_topic", columns={"profile_info_id", "specialty_topic_id"})
  * }))
  */
 class Specialty
@@ -24,13 +24,13 @@ class Specialty
 
     /**
      * @ORM\ManyToOne(targetEntity="Profile", inversedBy="specialties")
-     * @ORM\JoinColumn(name="profile_id", referencedColumnName="user_id")
+     * @ORM\JoinColumn(name="profile_info_id", referencedColumnName="user_id")
      */
     private $profile;
 
     /**
-     * @ORM\ManyToOne(targetEntity="info", inversedBy="specialties")
-     * @ORM\JoinColumn(name="info_id", referencedColumnName="user_id")
+     * @ORM\ManyToOne(targetEntity="Info", inversedBy="specialties")
+     * @ORM\JoinColumn(name="profile_info_id", referencedColumnName="user_id")
      */
     private $info;
 
@@ -45,21 +45,22 @@ class Specialty
      */
     private $rating;
 
-//    public function __construct(Info $info, Subject $subject, int $rating = Specialty::DEFAULT_SUBJECT_RATING) {
-//        $this->info = $info;
-//       $this->topic = $subject;
-//        $this->rating = $rating;
-//    }
-
-    public function __construct(Profile $profile, Subject $subject, int $rating = Specialty::DEFAULT_SUBJECT_RATING)
-    {
-        $this->profile = $profile;
+    public function __construct(Info $info, Subject $subject, int $rating = Specialty::DEFAULT_SUBJECT_RATING) {
+        $this->info = $info;
+        $this->profile = $info->getUser()->getProfile();
         $this->topic = $subject;
         $this->rating = $rating;
     }
 
+//    public function __construct(Profile $profile, Subject $subject, int $rating = Specialty::DEFAULT_SUBJECT_RATING)
+//    {
+//        $this->profile = $profile;
+//        $this->topic = $subject;
+//        $this->rating = $rating;
+//    }
+
     public static function createFromFormData(SpecialtyFormData $formData) {
-        return new Specialty($formData->getProfile(), $formData->getTopic(), $formData->getRating());
+        return new Specialty($formData->getProfile()->getUser()->getInfo(), $formData->getTopic(), $formData->getRating());
     }
 
     public function updateRating(int $rating) {

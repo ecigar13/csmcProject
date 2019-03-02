@@ -151,7 +151,7 @@ class ProfileFormData
         foreach ($objectManager->getRepository(Subject::class)->findAll() as $subject) {
             if (!in_array($subject->getId(), $ratedSubjectIDs)) {
                 // The subject is not rated: create a new specialty data object for it using the default rating
-                $specialtyForms[] = SpecialtyFormData::createFromSpecialty(new Specialty($profile, $subject));
+                $specialtyForms[] = SpecialtyFormData::createFromSpecialty(new Specialty($profile->getUser()->getInfo(), $subject));
             }
         }
 
