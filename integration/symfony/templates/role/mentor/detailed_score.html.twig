@@ -47,9 +47,11 @@ Render example :
                                 </div>
 
                             </div>
-
-                            <h2>Detailed Score Table:</h2>
-                            <div class="row"><h2>Pending</h2></div>
+                        </div>
+                    </div>
+          <h2>Detailed Score Table:</h2>
+              {% if isAdmin %}
+                  <div class="row"><h2>Pending</h2></div>
 
                     <div class="row table-outer">
                         <table class="table table-hover" id="pendingTable">
@@ -57,9 +59,8 @@ Render example :
                             <tr>
                                 <th hidden>ID</th>
                                 <th hidden>FilterType</th>
-
-                                <th>Submitted</th>
                                 <th>By</th>
+                                <th>Submitted</th>
                                 <th>Type</th>
                                 <th>Description</th>
                                 <th>Subject</th>
@@ -96,6 +97,8 @@ Render example :
                             </tbody>
                         </table>
                     </div>
+              {% endif %}
+
                     <div class="row"><h2>Closed</h2></div>
                     <div class="row table-outer">
                         <table class="table table-hover" id="closedTable">
@@ -104,13 +107,13 @@ Render example :
                                 <th hidden>ID</th>
                                 <th hidden>FilterType</th>
                                 <th>Submitted</th>
-                                <th>By</th>
+                                {% if isAdmin %}<th>By</th>{% endif %}
                                 <th>Type</th>
                                 <th>Description</th>
-                                <th>Subject</th>
+                                <th>Mentor Name</th>
                                 <th>Date Occurred</th>
                                 <th>Points</th>
-                                <th>Notes</th>
+                                {% if isAdmin %}<th>Notes</th>{% endif %}
                             </tr>
                             </thead>
                             <tbody>
@@ -120,7 +123,7 @@ Render example :
                                     <td hidden>{{ occurrence | occurrenceFilter }}</td>
 
                                     <td>{{ occurrence.creationDate | date("m/d/Y") }}</td>
-                                    <td>{{ occurrence | occurrenceSubmitter }}</td>
+                                    {% if isAdmin %}<td>{{ occurrence | occurrenceSubmitter }}</td>{% endif %}
                                     <td>
                                         <span class="occurrence-type{% if occurrence | occurrenceCanEditType %} editable-cell{% endif %}">
                                             <span {% if occurrence | occurrenceCanEditType %} class="{{ occurrence | occurrenceEditClass }}" {% endif %}>
@@ -136,7 +139,7 @@ Render example :
                                             <span class="points-text">{{ occurrence | occurrencePoints }}</span>
                                         </span>
                                     </td>
-                                    <td>{{ occurrence.adminNotes }}</td>
+                                    {% if isAdmin %}<td>{{ occurrence.adminNotes }}</td>{% endif %}
                                 </tr>
                                 {% endfor %}
                                 </tbody>

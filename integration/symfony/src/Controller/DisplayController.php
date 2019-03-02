@@ -81,7 +81,9 @@ class DisplayController extends Controller {
         $query = $qb->getQuery();
 
         $shift = $query->getOneOrNullResult();
-        $shift_leader = $shift->getShiftLeader();
+        if(!empty($shift)){
+          $shift_leader = $shift->getShiftLeader();
+        } else $shift_leader = null;
 
         //Get quizzes
         $repo = $em->getRepository(Quiz::class);

@@ -23,6 +23,7 @@ use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
+use Psr\Log\LoggerInterface;
 
 class ShiftController extends Controller {
 
@@ -234,19 +235,22 @@ class ShiftController extends Controller {
     /**
      * @Route("/schedule/shift/time/feed", name="shift_time_feed")
      */
-    public function shiftTimeFeed(Request $request, \App\Utils\Serializer $serializer) {
+    public function shiftTimeFeed(Request $request, \App\Utils\Serializer $serializer,LoggerInterface $l) {
         // if (!$request->isXmlHttpRequest()) {
         //     throw new MethodNotAllowedHttpException([]);
         // }
-
+        // $l->error("DDDDDDDDDDDDDDDDDD");
         $user = $this->getDoctrine()
             ->getRepository(User::class)
             ->find($request->query->get('user'));
         $date = new \DateTime($request->query->get('date'));
-
+        // $l->error("DDDDDDDDDDDDDDDDDD");
+        // $l->debug($user);
+        //$l->critical($date);
         $shifts = $this->getDoctrine()
             ->getRepository(ShiftAssignment::class)
-            ->findByUserAndDate($user, $date);
+            ->findSessionsForMentorAndDate($user, $date);
+            
 
         $callback = function ($shift) {
             return $shift instanceof ScheduledShift

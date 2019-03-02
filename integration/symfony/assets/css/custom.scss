@@ -167,6 +167,10 @@
   text-align: right !important;
   margin-right: 4px;
 }
+.active a span.fa {
+  text-align: right !important;
+  margin-right: 4px;
+}
 .nav-sm .menu_section {
   margin: 0;
 }
@@ -174,7 +178,14 @@
 .nav-sm .menu_section h3 {
   display: none;
 }
+.nav-sm span.fa,
+.nav-sm .menu_section h3 {
+  display: none;
+}
 .nav-sm li li span.fas {
+  display: inline-block;
+}
+.nav-sm li li span.fa {
   display: inline-block;
 }
 .nav_menu {
@@ -1722,6 +1733,17 @@ h4.graph_title {
   margin-right: 10px;
 }
 .main_menu .fas {
+  width: 26px;
+  opacity: .99;
+  display: inline-block;
+  font-family: FontAwesome;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 18px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.main_menu .fa {
   width: 26px;
   opacity: .99;
   display: inline-block;

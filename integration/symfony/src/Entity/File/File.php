@@ -142,16 +142,10 @@ class File extends VirtualFile {
 
         $return[] = new FileMetadata('extension', $ext);
 
-        if($metadata != null) {
-            foreach ($metadata as $key => $value) {
-                $return[] = new FileMetadata($key, $value);
-            }
+        foreach ($metadata as $key => $value) {
+             $return[] = new FileMetadata($key, $value);
         }
 
         return $return;
-    }
-
-    public function getName() {
-        return parent::getName() . '.' . $this->get('extension');
     }
 }

@@ -50,20 +50,11 @@ class VirtualFile {
 
     }
 
-    public function getName() {
-        return $this->name;
-    }
-
     /**
      * @return mixed
      */
     public function getId()
     {
         return $this->id;
-    }
-
-
-    public function __toString() {
-        return $this->getName();
     }
 }

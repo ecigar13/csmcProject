@@ -48,6 +48,7 @@ class FileMetadata {
     public function getValue() {
         return $this->value;
     }
+
     /**
      * @param mixed $value
      */

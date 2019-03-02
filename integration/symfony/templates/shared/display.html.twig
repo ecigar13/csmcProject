@@ -13,7 +13,7 @@
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flipclock/0.7.8/flipclock.css">
- 
+
     <link href="{{ asset('build/css/display.css') }}" rel="stylesheet" />
 </head>
 <body>
@@ -444,7 +444,9 @@
                 mentors[{{ i }}]['username'] = '{{ mentor.userName }}';
                 mentors[{{ i }}]['specialties'] = [];
 
-                {% if shift_leader.id == mentor.id %}
+                {% if shift_leader is null %}
+                    mentors[{{ i }}]['isShiftLeader'] = false;
+                {% elseif shift_leader.id == mentor.id %}
                     mentors[{{ i }}]['isShiftLeader'] = true;
                 {% else %}
                     mentors[{{ i }}]['isShiftLeader'] = false;
