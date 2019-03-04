@@ -20,7 +20,7 @@ use Doctrine\Common\Persistence\ObjectManager;
  */
 class HolidaysController extends Controller {
     /**
-     * @Route("/create", name="create")
+     * @Route("/addNewHoliday", name="create")
      * @param Request $request
      *
      * @return \Symfony\Component\HttpFoundation\Response
@@ -68,7 +68,7 @@ class HolidaysController extends Controller {
             $entityManager->flush();
             return $this->redirectToRoute('admin_holiday_list');
         }
-        return $this->render('role/admin/holiday/add.html.twig', array(
+        return $this->render('role/admin/holiday/addNewHoliday.html.twig', array(
             'form' => $form->createView(),
         ));
     }
@@ -83,7 +83,7 @@ class HolidaysController extends Controller {
         $holidays = $this->getDoctrine()
             ->getRepository(Holidays::class)
             ->findAll();
-        return $this->render('role/admin/schedule/listHolidays.html.twig', array(
+        return $this->render('role/admin/holiday/listHolidays.html.twig', array(
             'holidays' => $holidays
         ));
     }

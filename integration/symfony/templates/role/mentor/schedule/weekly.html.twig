@@ -89,19 +89,25 @@
             </tr>
             </thead>
             <tbody>
-            {% for timeslot in sessions[date|date('w')] %}
+            {# {% for timeslot in sessions[date|date('w')] %}
                 <tr>
                     <td>{{ timeslot.startTime|date('g:i A') }}</td>
                     <td>{{ timeslot.location }}</td>
-                    <td>{{ timeslot.session.topic }}</td>
                     <td>
-                        {% for assignment in timeslot.assignments %}
-                            {{ assignment.mentor }}
-                            {% if not loop.last %}
-                                {{ ", " }}
-                            {% endif %}
-                        {% else %}
-                        {% endfor %}
+                    {% if timeslot.session is not empty %}
+                        {{ timeslot.session.topic }}
+                    {% endif %}
+                    </td>
+                    <td>
+                        {% if timeslot.assignments is not empty %}
+                            {% for assignment in timeslot.assignments %}
+                                {{ assignment.mentor }}
+                                {% if not loop.last %}
+                                    {{ ", " }}
+                                {% endif %}
+                            {% else %}
+                            {% endfor %}
+                        {% endif %}
                     </td>
                     <td>
                         {% for file in timeslot.session.files %}
@@ -117,11 +123,11 @@
                         </a>
                     </td>
                 </tr>
-            {% else %}
+            {% else %} #}
                 <tr>
                     <td colspan="6">No sessions!</td>
                 </tr>
-            {% endfor %}
+            {# {% endfor %} #}
             </tbody>
         </table>
         <h3>Quizzes</h3>
