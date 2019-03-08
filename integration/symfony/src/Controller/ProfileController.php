@@ -207,16 +207,16 @@ class ProfileController extends Controller
      */
     public function saveImageAction(Request $request,LoggerInterface $l)
     {
-        
-        $l->debug("im in 1");
+
+        //$l->debug("im in 1");
         // $l->debug($request->getContent());
         if (!$request->isXmlHttpRequest()) {
             throw new MethodNotAllowedException();
         }
-        $l->debug("im in 2");
+        //$l->debug("im in 2");
         $file = new
         FileData();
-        $l->debug("im in 3");
+        //$l->debug("im in 3");
         $file->file = $request->files->get('file');
         $crop = $request->request->get('crop');
         $canvas = $request->request->get('canvas');
@@ -225,13 +225,13 @@ class ProfileController extends Controller
         $this->get('logger')->debug($crop);
 
         $em = $this->getDoctrine()->getManager();
-        $l->debug("im in 4");
+        //$l->debug("im in 4");
         $file = File::fromUploadData($file, $em, array(
             'crop' => $crop,
             'canvas' => $canvas,
             'image' => $image
         ));
-        $l->debug("im in 5");
+        //$l->debug("im in 5");
 
         $em->persist($file);
 
@@ -239,9 +239,9 @@ class ProfileController extends Controller
         $user = $this->getDoctrine()->getRepository(User::class)->find($user_id);
 
         $isAdmin = $this->isGranted('admin');
-        $l->debug("im in 6");
+        //$l->debug("im in 6");
         $user->updateProfilePicture($file, $isAdmin);
-        $l->debug("im in 7");
+        //$l->debug("im in 7");
         $em->flush();
 
         return new Response('success', 200);

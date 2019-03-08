@@ -33,7 +33,7 @@
                     <thead>
                         <tr>
 <!--                         <th colspan="4" class="thead-notes"></th>
- -->                        <th class="col-md-1" rowspan="2" ></th>
+ -->                        <th class="col-md-1" rowspan="2" >Profile Picture</th>
                             <th rowspan="2">Name</th>
                             <th rowspan="2">Preferred Name</th>
                             <th class="thead-notes" rowspan="2">Notes</th>
@@ -55,7 +55,7 @@
                     {% for mentor in mentors %}
                         <tr>
                             <td class="align-middle">
-                                    <div class="col-md-1"> 
+                                    <div class="col-md-1">
                                     {% if mentor.profile.profilePictureModificationRequest %}
                                         <div class="pending-review pending-profile-picture">
                                             <a href="{{ path('profile', {'username': mentor.username}) }}">
@@ -64,7 +64,7 @@
                                         </div>
                                     {% endif %}
                                     </div>
-                                    <div class="col-md-11"> 
+                                    <div class="col-md-11">
 
                                     {% if mentor.profile.profilePicture is not null %}
                                         <img src="{{ path('profile_image', {'username': mentor.username }) }}"
@@ -74,7 +74,7 @@
                                              class="rounded float-left" alt="...">
                                     {% endif %}
                                     </div>
-                                
+
                             </td>
                             <td>
                                 {{ mentor.firstName }} {{ mentor.lastName }}

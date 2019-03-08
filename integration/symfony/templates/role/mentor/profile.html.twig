@@ -220,6 +220,18 @@ Render example :
                             {% endif %}
                         </div>
                     {% endif %}
+                    {% if isAdmin %}
+                      <div class="change-req-btn-row">
+                          <a href="{{ path('admin_reject_mod_request', {'id': prefNameReq.id}) }}"
+                              class="btn btn-default btn-reject">
+                              <span class="glyphicon glyphicon-remove "></span> Reject All
+                          </a>
+                          <a href="{{ path('admin_approve_mod_request', {'id': prefNameReq.id}) }}"
+                              class="btn btn-approve">
+                              <span class="glyphicon glyphicon-ok"></span> Approve All
+                          </a>
+                      </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
