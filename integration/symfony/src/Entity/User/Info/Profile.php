@@ -201,11 +201,12 @@ class Profile
     public function approveModificationRequest(ProfileModificationRequest $request)
     {
         if ($request instanceof PreferredNameModificationRequest) {
-            $this->preferredName = $request->getValue();
+            $this->preferredName = $request->getValue();    //if changes are made to preferred name
         } elseif ($request instanceof ProfilePictureModificationRequest) {
-            $this->image = $request->getValue();
+            $this->image = $request->getValue();            //if changes are made to image
         }
 
+        //delete request persistence
         $this->modificationRequests->removeElement($request);
     }
 

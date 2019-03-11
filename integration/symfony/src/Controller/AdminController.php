@@ -25,6 +25,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
+use Psr\Log\LoggerInterface;
 
 /**
  * @Route("/admin", name="admin_")
@@ -556,7 +557,7 @@ class AdminController extends Controller
      * @param ProfileModificationRequest $request
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      */
-    public function approveProfileModificationRequest(ProfileModificationRequest $request)
+    public function approveProfileModificationRequest(ProfileModificationRequest $request, LoggerInterface $l)
     {
         $request->approve();
 
@@ -564,7 +565,8 @@ class AdminController extends Controller
         $this->getDoctrine()->getManager()->flush();
 
         // TODO: maybe add a flash message
-        return $this->redirectToRoute('admin_view_mentor_summary');
+        return new Response('DONE');
+        //return $this->redirectToRoute('admin_view_mentor_summary');
     }
 
     /**
@@ -573,14 +575,15 @@ class AdminController extends Controller
      * @param ProfileModificationRequest $request
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      */
-    public function rejectProfileModificationRequest(ProfileModificationRequest $request)
+    public function rejectProfileModificationRequest(ProfileModificationRequest $request, LoggerInterface $l)
     {
         $request->reject();
 
         $this->getDoctrine()->getManager()->flush();
 
         // TODO: maybe add a flash message
-        return $this->redirectToRoute('admin_view_mentor_summary');
+        return new Response('DONE');
+        //return $this->redirectToRoute('admin_view_mentor_summary');
     }
 
     /**

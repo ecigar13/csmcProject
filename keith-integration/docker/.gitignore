@@ -4,13 +4,13 @@
 *~
 
 ### Docker ###
-**/docker/*
-!**/docker/db
-**/docker/db/*
-!**/docker/db/Dockerfile
-**/docker/db/data/*
-!**/docker/php
-!**/docker/web
+/docker/*
+!/docker/db
+/docker/db/*
+!/docker/db/Dockerfile
+/docker/db/data/*
+!/docker/php
+!/docker/web
 
 ### Symfony ###
 /symfony/.env
@@ -30,4 +30,3 @@
 # can be a security issue
 *~.DS_Store
 **/node_modules/**
-**/symfony/build/**

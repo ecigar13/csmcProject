@@ -55,7 +55,39 @@ Render example :
 
                             {#Change requested alert for preferred name#}
                             {% set prefNameReq = user.profile.preferredNameModificationRequest %}
-                            {% if prefNameReq %}
+                            {% if prefNameReq is not null %}
+                              <script>                
+                                var prefNameReqId = "{{prefNameReq.id}}";
+                                console.log(prefNameReqId);
+                                var prefNameRequestResult;
+
+                                //use this for approve/reject prefName
+                                $(window).load(function(){
+                                  $(".rejectPrefName").click(function(){
+                                    $.ajax(function(){
+                                      type: 'POST',
+                                      url: "{{ path('admin_reject_mod_request', {'id': prefNameReq.id}) }}"
+                                    }).done(function(data, text, xhr){
+                                      console.log(data);
+                                      if(data === "DONE"){
+                                        $(location).reload(true);
+                                      }
+                                    });
+                                  });
+
+                                  $(".approvePrefName").click(function(){
+                                    $.ajax(function(){
+                                      type: 'POST',
+                                      url: "{{ path('admin_approve_mod_request', {'id': prefNameReq.id}) }}"
+                                    }).done(function(data, text, xhr){
+                                      console.log(data);
+                                      if(data === "DONE"){
+                                        $(location).reload(true);
+                                      }
+                                    });
+                                  });
+                                });
+                              </script>
                                 <div class="panel panel-default change-req-panel">
                                     <p class="change-req-label">Pending Approval:</p>
                                     <div class="attr-field change-req-field">
@@ -64,12 +96,12 @@ Render example :
                                     </div>
                                     {% if isAdmin %}
                                         <div class="change-req-btn-row">
-                                            <a href="{{ path('admin_reject_mod_request', {'id': prefNameReq.id}) }}"
-                                               class="btn btn-default btn-reject">
+                                            <a href=""
+                                               class="btn btn-default btn-reject rejectPrefName">
                                                 <span class="glyphicon glyphicon-remove "></span> Reject
                                             </a>
-                                            <a href="{{ path('admin_approve_mod_request', {'id': prefNameReq.id}) }}"
-                                               class="btn btn-approve">
+                                            <a href=""
+                                               class="btn btn-approve approvePrefName">
                                                 <span class="glyphicon glyphicon-ok"></span> Approve
                                             </a>
                                         </div>
@@ -199,40 +231,87 @@ Render example :
                     {#Change requested alert for profile picture#}
                     {% set pictureRequest = user.profile.profilePictureModificationRequest %}
                     {% if pictureRequest is not null %}
+                        <script>
+                          //href="{{ path('admin_reject_mod_request', {'id': prefNameReq.id}) }}"
+                          //href="{{ path('admin_approve_mod_request', {'id': prefNameReq.id}) }}"
+                          var pictureRequestId = "{{pictureRequest.id}}";
+                          var pictureRequestResult;
+                          console.log(pictureRequestId);
+
+                          //use this for approve/reject picture request
+                          $(window).load(function(){
+                            $(".rejectPicture").click(function(){
+                              $.ajax(function(){
+                                type: 'POST',
+                                url: "{{ path('admin_reject_mod_request', {'id': pictureRequest.id}) }}"
+                              }).done(function(data, text, xhr){
+                                console.log(data);
+                                if(data === "DONE"){
+                                  $(location).reload(true);
+                                }
+                              });
+                            });
+
+                            $(".approvePicture").click(function(){
+                              $.ajax(function(){
+                                type: 'POST',
+                                url: "{{ path('admin_approve_mod_request', {'id': pictureRequest.id}) }}"
+                              }).done(function(data, text, xhr){
+                                console.log(data);
+                                if(data === "DONE"){
+                                  $(location).reload(true);
+                                }
+                              });
+                            });
+                          });
+                        </script>
                         <div class="panel panel-default change-req-panel">
                             <p class="change-req-label">Pending Approval:</p>
                             <img class="profile-picture"
                                  src="{{ path('profile_requested_image', {'username': user.username}) }}">
                             {% if isAdmin %}
                                 <div class="change-req-btn-row">
-                                    <a href="{{ path('admin_reject_mod_request', {'id': pictureRequest.id}) }}"
-                                       class="btn btn-default btn-reject">
+                                    <a href=""
+                                       class="btn btn-default btn-reject rejectPicture">
                                         <span class="glyphicon glyphicon-remove "></span> Reject
                                     </a>
                                     <div id="crop_current_profile_picture" class="btn btn-default btn-crop">
                                         <span class="glyphicon glyphicon-scissors"></span> Crop
                                     </div>
-                                    <a href="{{ path('admin_approve_mod_request', {'id': pictureRequest.id}) }}"
-                                       class="btn btn-approve">
+                                    <a href=""
+                                       class="btn btn-approve approvePicture">
                                         <span class="glyphicon glyphicon-ok"></span> Approve
                                     </a>
                                 </div>
                             {% endif %}
                         </div>
                     {% endif %}
-                    {% if isAdmin %}
-                      <div class="change-req-btn-row">
-                          <a href="{{ path('admin_reject_mod_request', {'id': prefNameReq.id}) }}"
-                              class="btn btn-default btn-reject">
-                              <span class="glyphicon glyphicon-remove "></span> Reject All
-                          </a>
-                          <a href="{{ path('admin_approve_mod_request', {'id': prefNameReq.id}) }}"
-                              class="btn btn-approve">
-                              <span class="glyphicon glyphicon-ok"></span> Approve All
-                          </a>
-                      </div>
-                    {% endif %}
                 </div>
+                    {% if isAdmin  and (pictureRequest or prefNameReq) %}
+                      {% if prefNameReq is not null %}
+                        <div id="prefNameId">{{prefNameReq.id}}</div>
+                        
+                      {% endif %}
+                      {% if pictureRequest is not null %}
+                        <div id="pictureId">{{pictureRequest.id}}</div>
+                      {% endif %}
+
+
+                        <div class="change-req-btn-row">
+                            <a href=""
+                                class="btn btn-default btn-reject rejectAll">
+                                <span class="glyphicon glyphicon-remove "></span> Reject All
+                            </a>
+                            <a href=""
+                                class="btn btn-approve approveAll">
+                                <span class="glyphicon glyphicon-ok"></span> Approve All
+                            </a>
+                        </div>
+                        <script>
+                        //implementent quadruple ajax above. But instead of straight reload, just set variable and wait until the end.
+                        </script>
+                    {% endif %}
+
             </div>
         </div>
     </div>
@@ -324,6 +403,8 @@ Render example :
         <script type="text/javascript"
                 src="https://cdnjs.cloudflare.com/ajax/libs/cropper/3.1.6/cropper.min.js"></script>
         <script>
+            Dropzone.autoDiscover = false;
+
             $('#crop_current_profile_picture').on('click', function () {
                 var dropzone = $('.dropzone').get(0).dropzone;
                 let originalPictureURL = '{{ path('origin_requested_image', {'username': user.username}) }}';
