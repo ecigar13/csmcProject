@@ -42,6 +42,12 @@ Render example :
                                             <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Edit
                                             Profile
                                         </a>
+                                        <a href="{{ path('admin_view_mentor_summary') }}"
+                                           class="btn btn-info btn-block btn-edit" aria-label="Left Align">
+                                            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>Mentor Summary
+                                        </a>
+
+
                                     </div>
                                 </div>
 
@@ -56,37 +62,12 @@ Render example :
                             {#Change requested alert for preferred name#}
                             {% set prefNameReq = user.profile.preferredNameModificationRequest %}
                             {% if prefNameReq is not null %}
-                              <script>                
-                                var prefNameReqId = "{{prefNameReq.id}}";
-                                console.log(prefNameReqId);
-                                var prefNameRequestResult;
-
-                                //use this for approve/reject prefName
-                                $(window).load(function(){
-                                  $(".rejectPrefName").click(function(){
-                                    $.ajax(function(){
-                                      type: 'POST',
-                                      url: "{{ path('admin_reject_mod_request', {'id': prefNameReq.id}) }}"
-                                    }).done(function(data, text, xhr){
-                                      console.log(data);
-                                      if(data === "DONE"){
-                                        $(location).reload(true);
-                                      }
-                                    });
-                                  });
-
-                                  $(".approvePrefName").click(function(){
-                                    $.ajax(function(){
-                                      type: 'POST',
-                                      url: "{{ path('admin_approve_mod_request', {'id': prefNameReq.id}) }}"
-                                    }).done(function(data, text, xhr){
-                                      console.log(data);
-                                      if(data === "DONE"){
-                                        $(location).reload(true);
-                                      }
-                                    });
-                                  });
-                                });
+                              <script>
+                              var urlRejectPrefNameReq = "{{ path('admin_reject_mod_request', {'id': prefNameReq.id}) }}";
+                              var urlApprovePrefNameReq = "{{ path('admin_approve_mod_request', {'id': prefNameReq.id}) }}";
+                              //console.log(urlRejectPrefNameReq);
+                              //console.log(urlApprovePrefNameReq);
+                              var prefNameRequestResult;
                               </script>
                                 <div class="panel panel-default change-req-panel">
                                     <p class="change-req-label">Pending Approval:</p>
@@ -96,12 +77,10 @@ Render example :
                                     </div>
                                     {% if isAdmin %}
                                         <div class="change-req-btn-row">
-                                            <a href=""
-                                               class="btn btn-default btn-reject rejectPrefName">
+                                            <a class="btn btn-default btn-reject rejectPrefName">
                                                 <span class="glyphicon glyphicon-remove "></span> Reject
                                             </a>
-                                            <a href=""
-                                               class="btn btn-approve approvePrefName">
+                                            <a class="btn btn-approve approvePrefName">
                                                 <span class="glyphicon glyphicon-ok"></span> Approve
                                             </a>
                                         </div>
@@ -232,38 +211,13 @@ Render example :
                     {% set pictureRequest = user.profile.profilePictureModificationRequest %}
                     {% if pictureRequest is not null %}
                         <script>
-                          //href="{{ path('admin_reject_mod_request', {'id': prefNameReq.id}) }}"
-                          //href="{{ path('admin_approve_mod_request', {'id': prefNameReq.id}) }}"
-                          var pictureRequestId = "{{pictureRequest.id}}";
+                          var urlRejectPicRequestId = "{{ path('admin_reject_mod_request', {'id': pictureRequest.id}) }}";
+                          var urlApprovePicRequestId = "{{ path('admin_approve_mod_request', {'id': pictureRequest.id}) }}";
                           var pictureRequestResult;
-                          console.log(pictureRequestId);
+                          //console.log(urlRejectPicRequestId);
+                          //console.log(urlApprovePicRequestId);
 
-                          //use this for approve/reject picture request
-                          $(window).load(function(){
-                            $(".rejectPicture").click(function(){
-                              $.ajax(function(){
-                                type: 'POST',
-                                url: "{{ path('admin_reject_mod_request', {'id': pictureRequest.id}) }}"
-                              }).done(function(data, text, xhr){
-                                console.log(data);
-                                if(data === "DONE"){
-                                  $(location).reload(true);
-                                }
-                              });
-                            });
 
-                            $(".approvePicture").click(function(){
-                              $.ajax(function(){
-                                type: 'POST',
-                                url: "{{ path('admin_approve_mod_request', {'id': pictureRequest.id}) }}"
-                              }).done(function(data, text, xhr){
-                                console.log(data);
-                                if(data === "DONE"){
-                                  $(location).reload(true);
-                                }
-                              });
-                            });
-                          });
                         </script>
                         <div class="panel panel-default change-req-panel">
                             <p class="change-req-label">Pending Approval:</p>
@@ -271,15 +225,13 @@ Render example :
                                  src="{{ path('profile_requested_image', {'username': user.username}) }}">
                             {% if isAdmin %}
                                 <div class="change-req-btn-row">
-                                    <a href=""
-                                       class="btn btn-default btn-reject rejectPicture">
+                                    <a class="btn btn-default btn-reject rejectPicture">
                                         <span class="glyphicon glyphicon-remove "></span> Reject
                                     </a>
                                     <div id="crop_current_profile_picture" class="btn btn-default btn-crop">
                                         <span class="glyphicon glyphicon-scissors"></span> Crop
                                     </div>
-                                    <a href=""
-                                       class="btn btn-approve approvePicture">
+                                    <a class="btn btn-approve approvePicture">
                                         <span class="glyphicon glyphicon-ok"></span> Approve
                                     </a>
                                 </div>
@@ -288,28 +240,14 @@ Render example :
                     {% endif %}
                 </div>
                     {% if isAdmin  and (pictureRequest or prefNameReq) %}
-                      {% if prefNameReq is not null %}
-                        <div id="prefNameId">{{prefNameReq.id}}</div>
-                        
-                      {% endif %}
-                      {% if pictureRequest is not null %}
-                        <div id="pictureId">{{pictureRequest.id}}</div>
-                      {% endif %}
-
-
                         <div class="change-req-btn-row">
-                            <a href=""
-                                class="btn btn-default btn-reject rejectAll">
+                            <a class="btn btn-default btn-reject rejectAll">
                                 <span class="glyphicon glyphicon-remove "></span> Reject All
                             </a>
-                            <a href=""
-                                class="btn btn-approve approveAll">
+                            <a class="btn btn-approve approveAll">
                                 <span class="glyphicon glyphicon-ok"></span> Approve All
                             </a>
                         </div>
-                        <script>
-                        //implementent quadruple ajax above. But instead of straight reload, just set variable and wait until the end.
-                        </script>
                     {% endif %}
 
             </div>
@@ -450,7 +388,7 @@ Render example :
                         $('#admin-modal').modal('hide');
 
                         $.ajax({
-                            type: 'POST',
+                            type: "POST",
                             url: "{{ path('update_profile_image', {'username': user.username}) }}",
                             data: {
                                 'user': active,
@@ -482,6 +420,120 @@ Render example :
             });
             $('#admin-modal').on('hidden.bs.modal', function (event) {
                 $('#admin-modal').data('bs.modal', null);
+            });
+
+              //put this code down here because somehow Jquery doesn't load fast enough.
+            $(document).ready(function(){
+              //use this for approve/reject prefName
+              $('.rejectPrefName').click(function(){
+                $.ajax({
+                  type: "POST",
+                  url: urlRejectPrefNameReq
+                }).done(function(data, text, xhr){
+                  //console.log(data);
+                  if(data === "DONE"){
+                    location.reload(true);
+                  }
+                });
+              });
+
+              $(".approvePrefName").click(function(){
+                $.ajax({
+                  type: "POST",
+                  url: urlApprovePrefNameReq,
+                }).done(function(data, text, xhr){
+                  //console.log(data);
+                  if(data === "DONE"){
+                    location.reload(true);
+                  }
+                });
+              });
+
+              //use this for approve/reject picture request
+              $(".rejectPicture").click(function(){
+                $.ajax({
+                  type: "POST",
+                  url: urlRejectPicRequestId,
+                }).done(function(data, text, xhr){
+                  //console.log(data);
+                  if(data === "DONE"){
+                    location.reload(true);
+                  }
+                });
+              });
+
+              $(".approvePicture").click(function(){
+                $.ajax({
+                  type: "POST",
+                  url: urlApprovePicRequestId,
+                }).done(function(data, text, xhr){
+                  //console.log(data);
+                  if(data === "DONE"){
+                    location.reload(true);
+                  }
+                });
+              });
+
+              //use this for approve/reject ALL
+              $(".rejectAll").click(function(){
+                if(typeof urlRejectPicRequestId !== 'undefined'){
+                  $.ajax({
+                    type: "POST",
+                    url: urlRejectPicRequestId,
+                  }).done(function(data, text, xhr){
+                    //console.log(data);
+                    if(data !== "DONE"){
+                      console.log("Fail to update DB.");
+                    }
+                  });
+                }
+
+                if(typeof urlRejectPrefNameReq !== 'undefined'){
+                  $.ajax({
+                    type: "POST",
+                    url: urlRejectPrefNameReq,
+                  }).done(function(data, text, xhr){
+                    //console.log(data);
+                    if(data !== "DONE"){
+                      console.log("Fail to update DB.");
+                    }
+                  });
+                }
+
+                $(document).ajaxComplete(function() {
+                  location.reload(true);
+                });
+              });
+
+              $(".approveAll").click(function(){
+                if(typeof urlApprovePrefNameReq !== 'undefined'){
+                  $.ajax({
+                    type: "POST",
+                    url: urlApprovePrefNameReq,
+                  }).done(function(data, text, xhr){
+                    //console.log(data);
+                    if(data !== "DONE"){
+                      console.log("Fail to update DB.");
+                    }
+                  });
+                }
+
+                if(typeof urlApprovePicRequestId !== 'undefined'){
+                  $.ajax({
+                    type: "POST",
+                    url: urlApprovePicRequestId,
+                  }).done(function(data, text, xhr){
+                    //console.log(data);
+                    if(data !== "DONE"){
+                      console.log("Fail to update DB.");
+                    }
+                  });
+                }
+
+                $(document).ajaxComplete(function() {
+                  location.reload(true);
+                });
+              });
             });
         </script>
     {% endif %}
