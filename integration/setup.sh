@@ -5,6 +5,9 @@ docker-compose exec php php bin/console doctrine:schema:update --force
 docker-compose exec php php bin/console doctrine:fixtures:load
 docker-compose exec php yarn run encore dev
 
+docker-compose exec php composer require symfony/filesystem
+docker-compose exec php composer require symfony/finder
+
 #Note to self: run sudo docker-compose build on Linux. Make sure to start docker service.
 #Change the entire folder to chmod 755.
 

@@ -21,6 +21,7 @@ class DeveloperController extends Controller {
         return $this->render('role/developer/home.html.twig');
     }
 
+
     /**
      * @Route("/files", name="files")
      */

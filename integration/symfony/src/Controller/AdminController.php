@@ -25,6 +25,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
+
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -40,6 +43,22 @@ class AdminController extends Controller
     public function getEntityManager()
     {
         return $this->getDoctrine()->getManager();
+    }
+
+    /**
+     * @Route("/fileSystem", name="file_system")
+     * Practice creating files and folders
+     */
+    public function fileSystem(Request $request, LoggerInterface $l) {
+      $fileSystem = new Filesystem();
+      try {
+        $l->error("DDDDDDDDDD");
+        $l->error(sys_get_temp_dir());
+        $fileSystem->mkdir('DDDDD'.'/'."DDDDDDDDDD");
+      } catch (IOExceptionInterface $exception) {
+          echo "An error occurred while creating your directory at ".$exception->getPath();
+      }
+      return $this->redirectToRoute('admin_view_mentor_summary');
     }
 
     /**
