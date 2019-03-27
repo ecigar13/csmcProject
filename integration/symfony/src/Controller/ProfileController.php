@@ -32,6 +32,37 @@ use Psr\Log\LoggerInterface;
 class ProfileController extends Controller
 {
     /**
+     * @Route("/profile/{username}/fms", name="file_management")
+     * Open a page to access file management system.
+     */
+    public function fms(Request $request, User $user, LoggerInterface $l)
+    {
+      $isAdmin = $this->isGranted('admin');
+
+      // Protect against non-admin user trying to view someone else's profile
+      if ($this->getUser() != $user && !$isAdmin) {
+          // Redirect to home instead of displaying a forbidden message
+          return $this->redirectToRoute('home');
+      }
+
+      $occurrences = $this->getDoctrine()->getRepository(Occurrence::class)->findAll();
+
+      //find accummulated score of approved occurrences.
+      $totalScore = 0;
+      $userId = $user->getId();
+      foreach ($occurrences as $occurrence) {
+        if ($occurrence->getSubject()->getId() == $userId && $occurrence->getStatus() == "approved") {
+          $totalScore += $occurrence->getPoints();
+        }
+      }
+
+      return $this->render('role/mentor/file_system.html.twig', array(
+        'totalScore' => $totalScore,
+        'user' => $user,
+        'isAdmin' => $isAdmin
+      ));
+    }
+    /**
      * @Route("/profile/{username}/mkdir", name="mkdir")
      * Current user shall create a folder with the given name. Intended to use with Javascript on front end ajax.
      *
@@ -101,9 +132,9 @@ class ProfileController extends Controller
       }
     }
 
-    /**
-     * @Route("/profile/{username}", name="profile")
-     */
+  /**
+   * @Route("/profile/{username}", name="profile")
+   */
   public function viewProfile(Request $request, User $user, LoggerInterface $l)
   {
     $isAdmin = $this->isGranted('admin');
