@@ -46,22 +46,6 @@ class AdminController extends Controller
     }
 
     /**
-     * @Route("/fileSystem", name="file_system")
-     * Practice creating files and folders
-     */
-    public function fileSystem(Request $request, LoggerInterface $l) {
-      $fileSystem = new Filesystem();
-      try {
-        $l->error("DDDDDDDDDD");
-        $l->error(sys_get_temp_dir());
-        $fileSystem->mkdir('DDDDD'.'/'."DDDDDDDDDD");
-      } catch (IOExceptionInterface $exception) {
-          echo "An error occurred while creating your directory at ".$exception->getPath();
-      }
-      return $this->redirectToRoute('admin_view_mentor_summary');
-    }
-
-    /**
      * @Route("/", name="home")
      *
      * @return Response

@@ -24,10 +24,83 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Exception\ResourceNotFoundException;
+
+use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Psr\Log\LoggerInterface;
 
 class ProfileController extends Controller
 {
+    /**
+     * @Route("/profile/{username}/mkdir", name="mkdir")
+     * Current user shall create a folder with the given name. Intended to use with Javascript on front end ajax.
+     *
+     * Path shall contain the full path to the folder, not current directory. Filesystem can handle it. Don't worry.
+     */
+    public function mkdir(Request $request, LoggerInterface $l) {
+      $fileSystem = new Filesystem();
+      try {
+        $folderPath = $request->getContent(); //also contain folder name
+        $fileSystem->mkdir($folderPath);
+        $l->info("Created folder ".$folderPath);
+        return new Response("SUCCESS");
+      } catch (IOExceptionInterface $exception) {
+        return new Response("Fail:".$exception->getPath());
+      }
+    }
+
+    /**
+     * @Route("/profile/{username}/touch", name="touch")
+     * Current user shall create a file with the given name. Intended to use with Javascript on front end ajax.
+     *
+     * Path shall contain the full path to the file, not current directory. Filesystem can handle it. Don't worry.
+     */
+    public function touch(Request $request, LoggerInterface $l) {
+      $fileSystem = new Filesystem();
+      try {
+        $filePath = $request->getContent(); //also contain folder name
+        $fileSystem->touch($filePath);
+        $l->info("Created file ".$filePath);
+        return new Response("SUCCESS");
+      } catch (IOExceptionInterface $exception) {
+        return new Response("Fail:".$exception->getPath());
+      }
+    }
+
+    /**
+     * @Route("/profile/{username}/remove", name="remove")
+     * Current user shall remove a file/folder with a fully qualified path. Intended to use with Javascript on front end ajax.
+     */
+    public function remove(Request $request, LoggerInterface $l) {
+      $fileSystem = new Filesystem();
+      try {
+        $path = $request->getContent(); //also contain folder name
+        $fileSystem->touch($path);
+        $l->info("Deleted ".$path);
+        return new Response("SUCCESS");
+      } catch (IOExceptionInterface $exception) {
+        return new Response("Fail:".$exception->getPath());
+      }
+    }
+
+    /**
+     * @Route("/profile/{username}/rename", name="rename")
+     * Current user shall rename a file/folder with a fully qualified path. Intended to use with Javascript on front end ajax.
+     */
+    public function rename(Request $request, LoggerInterface $l) {
+      $fileSystem = new Filesystem();
+      try {
+        $content = $request->getContent(); //contains old path and new path
+        $paths = json_decode($content, true);  //decode to associative array
+        $fileSystem->touch($paths['oldName'], $paths['newName']);
+        $l->info("Old name: ".$paths['oldName']);
+        $l->info("New name: ".$paths['newName']);
+        return new Response("SUCCESS");
+      } catch (IOExceptionInterface $exception) {
+        return new Response("Fail:".$exception->getPath());
+      }
+    }
+
     /**
      * @Route("/profile/{username}", name="profile")
      */
