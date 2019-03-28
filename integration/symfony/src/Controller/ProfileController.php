@@ -71,9 +71,10 @@ class ProfileController extends Controller
     public function mkdir(Request $request, LoggerInterface $l) {
       $fileSystem = new Filesystem();
       try {
-        $folderPath = $request->getContent(); //also contain folder name
-        $fileSystem->mkdir($folderPath);
-        $l->info("Created folder ".$folderPath);
+        $folderPath = json_decode($request->getContent(),true); //also contain folder name
+        //$l->error(var_dump($folderPath));
+        $l->info("Created folder ".$folderPath["input1"]);
+        $fileSystem->mkdir($folderPath["input1"]);
         return new Response("SUCCESS");
       } catch (IOExceptionInterface $exception) {
         return new Response("Fail:".$exception->getPath());
@@ -89,10 +90,46 @@ class ProfileController extends Controller
     public function touch(Request $request, LoggerInterface $l) {
       $fileSystem = new Filesystem();
       try {
-        $filePath = $request->getContent(); //also contain folder name
-        $fileSystem->touch($filePath);
-        $l->info("Created file ".$filePath);
+        $folderPath = json_decode($request->getContent(),true); //also contain folder name
+        $l->info("Created file ".$folderPath["input1"]);
+        $fileSystem->touch($folderPath["input1"]);
         return new Response("SUCCESS");
+      } catch (IOExceptionInterface $exception) {
+        return new Response("Fail:".$exception->getPath());
+      }
+    }
+
+    /**
+     * @Route("/profile/{username}/copy", name="copy")
+     * Copy from one place to another. Overwrite destination.
+     */
+    public function copy(Request $request, LoggerInterface $l) {
+      $fileSystem = new Filesystem();
+      try {
+        $folderPath = json_decode($request->getContent(),true); //also contain folder name
+        $l->info("Copy from ".$folderPath['input1']);
+        $l->info("Copy to ".$folderPath['input2']);
+        $fileSystem->copy($folderPath['input1'],$folderPath['input2'],true);
+        return new Response("SUCCESS");  //it exists
+      } catch (IOExceptionInterface $exception) {
+        return new Response("Fail:".$exception->getPath());
+      }
+    }
+
+    /**
+     * @Route("/profile/{username}/exists", name="exists")
+     * Current user shall create a file with the given name. Intended to use with Javascript on front end ajax.
+     *
+     * Path shall contain the full path to the file, not current directory. Filesystem can handle it. Don't worry.
+     */
+    public function exists(Request $request, LoggerInterface $l) {
+      $fileSystem = new Filesystem();
+      try {
+        $folderPath = json_decode($request->getContent(),true); //also contain folder name
+        $l->info("Check exist ".$folderPath["input1"]);
+        if($fileSystem->touch($folderPath["input1"]))
+          return new Response("SUCCESS");  //it exists
+        else return new Response("NOT_EXISTS");
       } catch (IOExceptionInterface $exception) {
         return new Response("Fail:".$exception->getPath());
       }
@@ -105,9 +142,9 @@ class ProfileController extends Controller
     public function remove(Request $request, LoggerInterface $l) {
       $fileSystem = new Filesystem();
       try {
-        $path = $request->getContent(); //also contain folder name
-        $fileSystem->touch($path);
-        $l->info("Deleted ".$path);
+        $folderPath = json_decode($request->getContent(),true); //also contain folder name
+        $l->info("Deleted ".$folderPath["input1"]);
+        $fileSystem->remove($folderPath["input1"]);
         return new Response("SUCCESS");
       } catch (IOExceptionInterface $exception) {
         return new Response("Fail:".$exception->getPath());
@@ -121,12 +158,45 @@ class ProfileController extends Controller
     public function rename(Request $request, LoggerInterface $l) {
       $fileSystem = new Filesystem();
       try {
-        $content = $request->getContent(); //contains old path and new path
-        $paths = json_decode($content, true);  //decode to associative array
-        $fileSystem->touch($paths['oldName'], $paths['newName']);
-        $l->info("Old name: ".$paths['oldName']);
-        $l->info("New name: ".$paths['newName']);
+        $folderPath = json_decode($request->getContent(),true); //also contain folder name
+        $l->info("Old name: ".$folderPath['input1']);
+        $l->info("New name: ".$folderPath['input2']);
+        $fileSystem->touch($folderPath['input1'], $folderPath['input2']);
         return new Response("SUCCESS");
+      } catch (IOExceptionInterface $exception) {
+        return new Response("Fail:".$exception->getPath());
+      }
+    }
+
+    /**
+     * @Route("/profile/{username}/mirror", name="mirror")
+     * Current user shall rename a file/folder with a fully qualified path. Intended to use with Javascript on front end ajax.
+     */
+    public function mirror(Request $request, LoggerInterface $l) {
+      $fileSystem = new Filesystem();
+      try {
+        $folderPath = json_decode($request->getContent(),true); //also contain folder name
+        $l->info("Origin mirror: ".$folderPath['input1']);
+        $l->info("Target mirror: ".$folderPath['input2']);
+        $fileSystem->mirror($folderPath['input1'], $folderPath['input2']);
+        return new Response("SUCCESS");
+      } catch (IOExceptionInterface $exception) {
+        return new Response("Fail:".$exception->getPath());
+      }
+    }
+
+    /**
+     * @Route("/profile/{username}/makePathRelative", name="makePathRelative")
+     * Current user shall rename a file/folder with a fully qualified path. Intended to use with Javascript on front end ajax.
+     */
+    public function makePathRelative(Request $request, LoggerInterface $l) {
+      $fileSystem = new Filesystem();
+      try {
+        $folderPath = json_decode($request->getContent(),true); //also contain folder name
+        $l->info("Longer path: ".$folderPath['input1']);
+        $l->info("Longer path: ".$folderPath['input2']);
+        $relativePath = $fileSystem->makePathRelative($folderPath['input1'], $folderPath['input2']);
+        return new Response($relativePath);
       } catch (IOExceptionInterface $exception) {
         return new Response("Fail:".$exception->getPath());
       }
