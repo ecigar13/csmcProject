@@ -47,7 +47,6 @@ Render example :
                                             <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>Mentor Summary
                                         </a>
 
-
                                     </div>
                                 </div>
 
@@ -147,12 +146,17 @@ Render example :
 
                                 </div>
                             {% endif %}
-                            <div class="col-md-6 main-btn"><p>
+                            <div class="col-md-6 main-btn">
+                              <p>
                                 <a href="{{ path("show_detailed_score", {"username" : user.username}) }}" target="_blank"
                                     class="btn btn-primary  btn-block btn-edit" aria-label="Left Align">
                                 <span class="glyphicon glyphicon-edit" aria-hidden="true"></span> Show Detailed Score
                                 </a>
                               </p>
+                              <a href="{{ path('touch', {"username" : user.username}) }}" class="btn btn-approve"><span class="glyphicon glyphicon-ok"></span> Create Folder (testing out FMS)
+                                        </a>
+
+
                             </div><br><br><br>
 
                             <h2>Notification Preferences:</h2>

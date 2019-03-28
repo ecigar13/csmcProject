@@ -128,6 +128,7 @@
                             {% if is_granted('mentor') %}
                                 <li><a href="{{ path('profile', {'username': app.user.username}) }}">Profile</a></li>
                             {% endif %}
+                                <li><a href="{{ path('file_management', {'username': app.user.username}) }}">File Management</a></li>
                             {#<li><a href="javascript:;"> Profile</a></li>#}
                             {#<li>#}
                             {#<a href="javascript:;">#}
