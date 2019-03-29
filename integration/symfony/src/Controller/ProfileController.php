@@ -161,7 +161,7 @@ class ProfileController extends Controller
         $folderPath = json_decode($request->getContent(),true); //also contain folder name
         $l->info("Old name: ".$folderPath['input1']);
         $l->info("New name: ".$folderPath['input2']);
-        $fileSystem->touch($folderPath['input1'], $folderPath['input2']);
+        $fileSystem->rename($folderPath['input1'], $folderPath['input2']);
         return new Response("SUCCESS");
       } catch (IOExceptionInterface $exception) {
         return new Response("Fail:".$exception->getPath());
@@ -170,7 +170,7 @@ class ProfileController extends Controller
 
     /**
      * @Route("/profile/{username}/mirror", name="mirror")
-     * Current user shall rename a file/folder with a fully qualified path. Intended to use with Javascript on front end ajax.
+     * Copy content of one folder to the other.
      */
     public function mirror(Request $request, LoggerInterface $l) {
       $fileSystem = new Filesystem();
@@ -187,7 +187,7 @@ class ProfileController extends Controller
 
     /**
      * @Route("/profile/{username}/makePathRelative", name="makePathRelative")
-     * Current user shall rename a file/folder with a fully qualified path. Intended to use with Javascript on front end ajax.
+     * Extract a relative path from an absolute path.
      */
     public function makePathRelative(Request $request, LoggerInterface $l) {
       $fileSystem = new Filesystem();

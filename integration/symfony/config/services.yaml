@@ -3,6 +3,11 @@
 parameters:
     locale: 'en'
     dir.uploads: '%kernel.project_dir%/public/uploads'
+    artgris_file_manager:
+        web_dir: public                 # set your public Directory (not required, default value: web)
+        conf:
+            default:
+                dir: "../public/uploads"
 
 services:
     # default configuration for services in *this* file
