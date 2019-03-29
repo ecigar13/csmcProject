@@ -33,3 +33,5 @@ artgris_file_manager:
         default:
             dir: "../public/uploads"
 
+#Browse the /manager/?conf=default URL and you'll get access to your file manager
+
