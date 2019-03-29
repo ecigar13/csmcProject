@@ -29,3 +29,4 @@ framework:
 
     validation:
         enable_annotations: true
+    translator: { fallbacks: [ "en" ] }
