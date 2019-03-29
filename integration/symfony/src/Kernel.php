@@ -8,6 +8,7 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\RouteCollectionBuilder;
+use Artgris\Bundle\FileManagerBundle\ArtgrisFileManagerBundle;
 
 class Kernel extends BaseKernel {
     use MicroKernelTrait;
@@ -29,6 +30,7 @@ class Kernel extends BaseKernel {
                 yield new $class();
             }
         }
+        yield new ArtgrisFileManagerBundle();
     }
 
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader) {
