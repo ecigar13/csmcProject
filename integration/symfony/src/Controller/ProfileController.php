@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Controller;
+use Artgris\Bundle\FileManagerBundle\Controller\ManagerController as BaseController;
 
 use App\Entity\Occurrence\AbsenceOccurrence;
 use App\Entity\Occurrence\BehaviorOccurrence;
@@ -29,7 +30,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Psr\Log\LoggerInterface;
 
-class ProfileController extends Controller
+class ProfileController extends BaseController
 {
     /**
      * @Route("/profile/{username}/fms", name="file_management")
@@ -44,23 +45,7 @@ class ProfileController extends Controller
           // Redirect to home instead of displaying a forbidden message
           return $this->redirectToRoute('home');
       }
-
-      $occurrences = $this->getDoctrine()->getRepository(Occurrence::class)->findAll();
-
-      //find accummulated score of approved occurrences.
-      $totalScore = 0;
-      $userId = $user->getId();
-      foreach ($occurrences as $occurrence) {
-        if ($occurrence->getSubject()->getId() == $userId && $occurrence->getStatus() == "approved") {
-          $totalScore += $occurrence->getPoints();
-        }
-      }
-
-      return $this->render('role/mentor/file_system.html.twig', array(
-        'totalScore' => $totalScore,
-        'user' => $user,
-        'isAdmin' => $isAdmin
-      ));
+      return $this->indexAction($request);
     }
     /**
      * @Route("/profile/{username}/mkdir", name="mkdir")
