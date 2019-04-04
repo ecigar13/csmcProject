@@ -30,7 +30,6 @@ class Kernel extends BaseKernel {
                 yield new $class();
             }
         }
-        yield new ArtgrisFileManagerBundle();
     }
 
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader) {
