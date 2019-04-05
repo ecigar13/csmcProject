@@ -19,6 +19,9 @@ class FileUploader {
         $this->tokenStorage = $tokenStorage;
     }
 
+    /**
+     * Create a new Filesystem, make hash of the file. Then make directory for the file and move it. It's not a direct upload.
+     */
     public function upload(File $entity) {
         $uploadedFile = $entity->getUploadedFile();
 
