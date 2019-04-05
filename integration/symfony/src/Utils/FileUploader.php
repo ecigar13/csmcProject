@@ -19,7 +19,7 @@ class FileUploader {
         $this->tokenStorage = $tokenStorage;
     }
 
-    public function upload($entity) {
+    public function upload(File $entity) {
         $uploadedFile = $entity->getUploadedFile();
 
         $fileSystem = new Filesystem();
