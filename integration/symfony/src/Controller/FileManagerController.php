@@ -5,6 +5,7 @@ use Artgris\Bundle\FileManagerBundle\Controller\ManagerController;
 use Artgris\Bundle\FileManagerBundle\Event\FileManagerEvents;
 use Artgris\Bundle\FileManagerBundle\Helpers\File;
 use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
+//use App\Helpers\FileManager;
 use Artgris\Bundle\FileManagerBundle\Helpers\UploadHandler;
 use Artgris\Bundle\FileManagerBundle\Twig\OrderExtension;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -43,6 +44,8 @@ class FileManagerController extends ManagerController
     public function indexAction(Request $request)
     {
         $queryParameters = $request->query->all();
+
+        $queryParameters['conf'] = "default";
         $translator = $this->get('translator');
         $isJson = $request->get('json') ? true : false;
         if ($isJson) {
@@ -203,7 +206,7 @@ class FileManagerController extends ManagerController
         }
         $webDir = $this->getParameter('artgris_file_manager')['web_dir'];
 
-        $this->fileManager = new FileManager($queryParameters, $this->getBasePath($queryParameters), $this->getKernelRoute(), $this->get('router'), $webDir);
+        $this->fileManager = new FileManager($queryParameters,$this->getBasePath(), $this->getKernelRoute(), $this->get('router'), $webDir);
 
         return $this->fileManager;
     }
@@ -211,9 +214,10 @@ class FileManagerController extends ManagerController
     /*
      * Base Path
      */
-    protected function getBasePath($queryParameters)
+    protected function getBasePath()
     {
-        $conf = $queryParameters['conf'];
+        //$conf = $queryParameters['conf'];
+        $conf = "default";
         $managerConf = $this->getParameter('artgris_file_manager')['conf'];
         if (isset($managerConf[$conf]['dir'])) {
             return $managerConf[$conf];

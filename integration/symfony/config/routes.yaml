@@ -3,4 +3,9 @@
 #    defaults: { _controller: 'App\Controller\DefaultController::index' }
 user_logout:
     path: /logout
-
+    
+fms:
+    path:       /profile/{username}/fms/{conf}
+    controller: App\Controller\FileManagerController::indexAction
+    defaults:
+        conf: "default"
