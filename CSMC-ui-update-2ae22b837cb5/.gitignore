@@ -15,7 +15,6 @@
 /symfony/var/cache/
 /symfony/var/log/
 /symfony/var/sessions/
-/symfony/vendor/
 /symfony/node_modules/
 /symfony/public/build/
 /symfony/public/uploads/
