@@ -38,7 +38,7 @@ class FileManagerController extends Controller
      */
     public function indexAction(Request $request, LoggerInterface $l)
     {
-        $userId = $this->getUser()->getId();
+        $userId = $this->getUser()->getUsername();
         $queryParameters = $request->query->all();
         $translator      = $this->get('translator');
         $isJson          = $request->get('json') ? true : false;
@@ -397,7 +397,7 @@ class FileManagerController extends Controller
             $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
             $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
 
-            $userId = $this->getUser()->getId();
+            $userId = $this->getUser()->getUsername();
             $directoriesList[] = [
                 'text'     => $directory->getFilename() . $fileSpan,
                 'icon'     => 'far fa-folder-open',
@@ -405,8 +405,8 @@ class FileManagerController extends Controller
                 'a_attr'   => [
 
                   //insert username here
-                  //'href' => $fileName ? $this->generateUrl('file_manager', ['username' => $userId, 'queryParameters' => $queryParameters]) : $this->generateUrl('file_manager', ['username' => $userId, $queryParametersRoute]),
-                    'href' => $fileName ? $this->generateUrl('file_manager', $queryParameters) : $this->generateUrl('file_manager', $queryParametersRoute),
+                  'href' => $fileName ? $this->generateUrl('file_manager', ['username' => $userId, 'queryParameters' => $queryParameters]) : $this->generateUrl('file_manager', ['username' => $userId, $queryParametersRoute]),
+                    //'href' => $fileName ? $this->generateUrl('file_manager', $queryParameters) : $this->generateUrl('file_manager', $queryParametersRoute),
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
                     'opened'   => true,
@@ -508,9 +508,9 @@ class FileManagerController extends Controller
 
             if (!$fileManager->getImagePath()) {
                 //insert username here.
-                $userId = $this->getUser()->getId();
-                //$file->url = $this->generateUrl('file_manager_file', array_merge(['username' => $userId], $fileManager->getQueryParameters(), ['fileName' => $file->url]));
-                $file->url = $this->generateUrl('file_manager_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
+                $userId = $this->getUser()->getUsername();
+                $file->url = $this->generateUrl('file_manager_file', array_merge(['username' => $userId], $fileManager->getQueryParameters(), ['fileName' => $file->url]));
+                //$file->url = $this->generateUrl('file_manager_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
             }
         }
 
