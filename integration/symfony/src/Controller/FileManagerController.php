@@ -129,7 +129,7 @@ class FileManagerController extends Controller
             'fileManager' => $fileManager,
             'fileArray'   => $fileArray,
             'formDelete'  => $formDelete,
-            'user'        => $userId,
+            'username'    => $userId,
         ];
 
         if ($isJson) {
@@ -397,11 +397,15 @@ class FileManagerController extends Controller
             $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
             $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
 
+            $userId = $this->getUser()->getId();
             $directoriesList[] = [
                 'text'     => $directory->getFilename() . $fileSpan,
                 'icon'     => 'far fa-folder-open',
                 'children' => $this->retrieveSubDirectories($fileManager, $directory->getPathname(), $fileName . DIRECTORY_SEPARATOR),
                 'a_attr'   => [
+
+                  //insert username here
+                  //'href' => $fileName ? $this->generateUrl('file_manager', ['username' => $userId, 'queryParameters' => $queryParameters]) : $this->generateUrl('file_manager', ['username' => $userId, $queryParametersRoute]),
                     'href' => $fileName ? $this->generateUrl('file_manager', $queryParameters) : $this->generateUrl('file_manager', $queryParametersRoute),
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
@@ -479,7 +483,7 @@ class FileManagerController extends Controller
      */
     public function uploadFileAction(Request $request)
     {
-        $fileSystem  = new Filesystem();
+        $fileSystem  = new Filesystem();  //use this for hash and moving files around
         $fileManager = $this->newFileManager($request->query->all());
 
         $options = [
@@ -503,6 +507,9 @@ class FileManagerController extends Controller
             }
 
             if (!$fileManager->getImagePath()) {
+                //insert username here.
+                $userId = $this->getUser()->getId();
+                //$file->url = $this->generateUrl('file_manager_file', array_merge(['username' => $userId], $fileManager->getQueryParameters(), ['fileName' => $file->url]));
                 $file->url = $this->generateUrl('file_manager_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
             }
         }

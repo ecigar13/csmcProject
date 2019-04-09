@@ -35,3 +35,6 @@ artgris_file_manager:
 
 #Browse the /manager/?conf=default URL and you'll get access to your file manager
 
+#remove the bundle. Need to clean up some configurations.
+docker-compose exec php composer remove artgris/filemanager-bundle --update-with-dependencies
+
