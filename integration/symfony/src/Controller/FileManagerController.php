@@ -7,9 +7,12 @@ use Artgris\Bundle\FileManagerBundle\Helpers\File;
 use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
 use Artgris\Bundle\FileManagerBundle\Helpers\UploadHandler;
 use Artgris\Bundle\FileManagerBundle\Twig\OrderExtension;
+use App\Entity\File\FileHash;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
@@ -22,6 +25,7 @@ use Symfony\Component\Form\Form;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\MimeType\ExtensionGuesser;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 class FileManagerController extends Controller
@@ -38,7 +42,6 @@ class FileManagerController extends Controller
      */
     public function indexAction(Request $request, LoggerInterface $l)
     {
-        $userId = $this->getUser()->getUsername();
         $queryParameters = $request->query->all();
         $translator      = $this->get('translator');
         $isJson          = $request->get('json') ? true : false;
@@ -129,7 +132,7 @@ class FileManagerController extends Controller
             'fileManager' => $fileManager,
             'fileArray'   => $fileArray,
             'formDelete'  => $formDelete,
-            'username'    => $userId,
+            'username'    => $this->getUser()->getUsername(),
         ];
 
         if ($isJson) {
@@ -472,9 +475,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/profile/{username}/upload/", name="file_manager_upload")
-     *
-     * Using /profile/{username}/upload/ will crash the page because symfony doesn't maintain the username parameter.
+     * @Route("/fms/upload/", name="fms_upload")
      *
      * Get the configuration from URL (acceptable types, dir)
      * @param Request $request
@@ -505,12 +506,11 @@ class FileManagerController extends Controller
             if (isset($file->error)) {
                 $file->error = $this->get('translator')->trans($file->error);
             }
-
+            //$entityManager = $this->getDoctrine();
+            //$file->hash = $this->createHash($file, $entityManager);
             if (!$fileManager->getImagePath()) {
-                //insert username here.
-                $userId = $this->getUser()->getUsername();
-                $file->url = $this->generateUrl('file_manager_file', array_merge(['username' => $userId], $fileManager->getQueryParameters(), ['fileName' => $file->url]));
-                //$file->url = $this->generateUrl('file_manager_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
+                //$file->url = $this->generateUrl('file_manager_file', array_merge(['username' => $userId], $fileManager->getQueryParameters(), ['fileName' => $file->url]));
+                $file->url = $this->generateUrl('file_manager_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
             }
         }
 
@@ -519,4 +519,35 @@ class FileManagerController extends Controller
         return new JsonResponse($response);
     }
 
+    protected function dispatch($eventName, array $arguments = [])
+    {
+        $arguments = array_replace([
+            'filemanager' => $this->fileManager,
+        ], $arguments);
+
+        $subject = $arguments['filemanager'];
+        $event = new GenericEvent($subject, $arguments);
+        $this->get('event_dispatcher')->dispatch($eventName, $event);
+    }
+
+    private function createHash($file, $entityManager) {
+        $file_path = '../public' . $file->url;
+        $file_path = utf8_encode($file_path);
+        $hash = sha1_file($file_path);
+        $size = filesize($file_path);
+        $extension = $this->guessExtension($file);
+        $fileHash = $entityManager->getRepository(FileHash::class)
+            ->findOneByPath($hash . '.' . $extension);
+        if ($fileHash == null) {
+            $fileHash = new FileHash($hash, $extension, $size);
+        }
+
+        return $fileHash;
+    }
+
+    public function guessExtension($file)
+    {
+        $guesser = ExtensionGuesser::getInstance();
+        return $guesser->guess($file->type);
+    }
 }

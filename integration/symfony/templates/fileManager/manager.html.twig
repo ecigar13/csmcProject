@@ -44,7 +44,7 @@
                     <span class="far fa-file"></span>
                     <span>{{ 'button.add.files'|trans }}</span>
                         <input id="fileupload" type="file"
-                               data-url="{{ path('file_manager_upload', fileManager.queryParameters) }}"
+                               data-url="{{ path('fms_upload', fileManager.queryParameters) }}"
                                name="files[]" multiple=""
                                accept="{{ fileManager.configuration.accept is defined ? fileManager.configuration.accept : (fileManager.type ? accept(fileManager.type)) }}">
                 </span>
