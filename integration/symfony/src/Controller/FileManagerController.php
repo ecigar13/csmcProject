@@ -179,7 +179,7 @@ class FileManagerController extends Controller
                 $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
             }
 
-            return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
+            return $this->redirectToRoute('file_manager', $fileManager->getQueryParameters());
         }
         $parameters['form']       = $form->createView();
         $parameters['formRename'] = $formRename->createView();
@@ -303,11 +303,11 @@ class FileManagerController extends Controller
                     unset($queryParameters['route']);
                 }
 
-                return $this->redirectToRoute('file_management', $queryParameters);
+                return $this->redirectToRoute('file_manager', $queryParameters);
             }
         }
 
-        return $this->redirectToRoute('file_management', $queryParameters);
+        return $this->redirectToRoute('file_manager', $queryParameters);
     }
 
     /**
@@ -405,8 +405,8 @@ class FileManagerController extends Controller
                 'a_attr'   => [
 
                   //insert username here
-                  'href' => $fileName ? $this->generateUrl('file_management', ['username' => $userId, 'queryParameters' => $queryParameters]) : $this->generateUrl('file_management', ['username' => $userId, $queryParametersRoute]),
-                    //'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                  'href' => $fileName ? $this->generateUrl('file_manager', ['username' => $userId, 'queryParameters' => $queryParameters]) : $this->generateUrl('file_manager', ['username' => $userId, $queryParametersRoute]),
+                    //'href' => $fileName ? $this->generateUrl('file_manager', $queryParameters) : $this->generateUrl('file_manager', $queryParametersRoute),
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
                     'opened'   => true,
