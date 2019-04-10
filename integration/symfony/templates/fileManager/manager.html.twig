@@ -52,7 +52,7 @@
                     <span class="far fa-folder-open"></span>
                     <span>{{ 'button.add.folder'|trans }}</span>
                 </button>
-                {% if fileManager.parent %}
+                {# {% if fileManager.parent %} #}
                     <button type="button"
                             class="btn btn-sm btn-danger btn-action js-delete-modal"
                             data-trigger="click"
@@ -65,7 +65,7 @@
                         <span class="far fa-trash-alt"></span>
                         <span>{{ 'button.delete.current'|trans }}</span>
                     </button>
-                {% endif %}
+                {# {% endif %} #}
                 <a id="js-delete-multiple-modal"
                    class="btn btn-sm btn-danger btn-action disabled"
                    type="button"

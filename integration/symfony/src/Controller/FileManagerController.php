@@ -31,6 +31,7 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 class FileManagerController extends Controller
 {
     /**
+     * @Route("/fms/")
      * @Route("/fms", name="file_management")
      * Open a page to access file management system.
      *
@@ -191,7 +192,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/rename/{fileName}", name="file_management_rename")
+     * @Route("/fms/rename/{fileName}", name="file_management_rename")
      *
      * @param Request $request
      * @param $fileName
@@ -236,7 +237,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/file/{fileName}", name="file_management_file")
+     * @Route("/fms/file/{fileName}", name="file_management_file")
      *
      * @param Request $request
      * @param $fileName
@@ -253,7 +254,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/delete/", name="file_management_delete", methods={"DELETE"})
+     * @Route("/fms/delete/", name="file_management_delete", methods={"DELETE"})
      *
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
@@ -350,6 +351,7 @@ class FileManagerController extends Controller
         }
 
         if (isset($managerConf[$conf]['service'])) {
+            echo $managerConf[$conf]['service'];
             $extra = isset($queryParameters['extra']) ? $queryParameters['extra'] : [];
             $conf  = $this->get($managerConf[$conf]['service'])->getConf($extra);
 
