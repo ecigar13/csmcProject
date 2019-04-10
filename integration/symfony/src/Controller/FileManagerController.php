@@ -31,7 +31,7 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 class FileManagerController extends Controller
 {
     /**
-     * @Route("/profile/{username}/fms", name="file_management")
+     * @Route("/fms", name="file_management")
      * Open a page to access file management system.
      *
      * @param Request $request
@@ -182,7 +182,7 @@ class FileManagerController extends Controller
                 $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
             }
 
-            return $this->redirectToRoute('file_manager', $fileManager->getQueryParameters());
+            return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
         }
         $parameters['form']       = $form->createView();
         $parameters['formRename'] = $formRename->createView();
@@ -191,7 +191,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/profile/{username}/rename/{fileName}", name="file_manager_rename")
+     * @Route("/rename/{fileName}", name="file_manager_rename")
      *
      * @param Request $request
      * @param $fileName
@@ -236,7 +236,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/profile/{username}/file/{fileName}", name="file_manager_file")
+     * @Route("/file/{fileName}", name="file_manager_file")
      *
      * @param Request $request
      * @param $fileName
@@ -253,10 +253,9 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/profile/{username}/delete/", name="file_manager_delete", methods={"DELETE"})
+     * @Route("/delete/", name="file_manager_delete", methods={"DELETE"})
      *
      * @param Request $request
-     *
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      *
      * @throws \Exception
@@ -306,11 +305,11 @@ class FileManagerController extends Controller
                     unset($queryParameters['route']);
                 }
 
-                return $this->redirectToRoute('file_manager', $queryParameters);
+                return $this->redirectToRoute('file_management', $queryParameters);
             }
         }
 
-        return $this->redirectToRoute('file_manager', $queryParameters);
+        return $this->redirectToRoute('file_management', $queryParameters);
     }
 
     /**
@@ -400,16 +399,12 @@ class FileManagerController extends Controller
             $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
             $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
 
-            $userId = $this->getUser()->getUsername();
             $directoriesList[] = [
                 'text'     => $directory->getFilename() . $fileSpan,
                 'icon'     => 'far fa-folder-open',
                 'children' => $this->retrieveSubDirectories($fileManager, $directory->getPathname(), $fileName . DIRECTORY_SEPARATOR),
                 'a_attr'   => [
-
-                  //insert username here
-                  'href' => $fileName ? $this->generateUrl('file_manager', ['username' => $userId, 'queryParameters' => $queryParameters]) : $this->generateUrl('file_manager', ['username' => $userId, $queryParametersRoute]),
-                    //'href' => $fileName ? $this->generateUrl('file_manager', $queryParameters) : $this->generateUrl('file_manager', $queryParametersRoute),
+                    'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
                     'opened'   => true,
@@ -509,7 +504,6 @@ class FileManagerController extends Controller
             //$entityManager = $this->getDoctrine();
             //$file->hash = $this->createHash($file, $entityManager);
             if (!$fileManager->getImagePath()) {
-                //$file->url = $this->generateUrl('file_manager_file', array_merge(['username' => $userId], $fileManager->getQueryParameters(), ['fileName' => $file->url]));
                 $file->url = $this->generateUrl('file_manager_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
             }
         }

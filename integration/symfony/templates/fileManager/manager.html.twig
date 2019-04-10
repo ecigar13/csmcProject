@@ -44,7 +44,7 @@
                     <span class="far fa-file"></span>
                     <span>{{ 'button.add.files'|trans }}</span>
                         <input id="fileupload" type="file"
-                               data-url="{{ path('fms_upload', fileManager.queryParameters) }}"
+                               data-url="{{ path('file_manager_upload', fileManager.queryParameters) }}"
                                name="files[]" multiple=""
                                accept="{{ fileManager.configuration.accept is defined ? fileManager.configuration.accept : (fileManager.type ? accept(fileManager.type)) }}">
                 </span>
@@ -61,7 +61,7 @@
                             data-target="#js-confirm-delete"
                             data-placement="left"
                             data-html="true"
-                            data-href='{{ path('delete', fileManager.queryParameters) }}'>
+                            data-href='{{ path('file_manager_delete', fileManager.queryParameters) }}'>
                         <span class="far fa-trash-alt"></span>
                         <span>{{ 'button.delete.current'|trans }}</span>
                     </button>
@@ -113,13 +113,13 @@
                     {% endif %}
                     {% block content %}
                         <form id="form-multiple-delete">
-                            {% include 'fileManager/views/_manager_view.html.twig' with {'fileManager' :fileManager,  'fileArray' : fileArray, 'formDelete' : formDelete} only %}
+                            {% include '@ArtgrisFileManager/views/_manager_view.html.twig' with {'fileManager' :fileManager,  'fileArray' : fileArray, 'formDelete' : formDelete} only %}
                         </form>
                     {% endblock %}
                 </div>
             </div>
         </div>
-        {% include 'fileManager/views/_modals.html.twig' %}
+        {% include '@ArtgrisFileManager/views/_modals.html.twig' %}
     </div>
 {% endblock %}
 {% block javascripts %}
