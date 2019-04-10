@@ -191,7 +191,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/rename/{fileName}", name="file_manager_rename")
+     * @Route("/rename/{fileName}", name="file_management_rename")
      *
      * @param Request $request
      * @param $fileName
@@ -236,7 +236,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/file/{fileName}", name="file_manager_file")
+     * @Route("/file/{fileName}", name="file_management_file")
      *
      * @param Request $request
      * @param $fileName
@@ -253,7 +253,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/delete/", name="file_manager_delete", methods={"DELETE"})
+     * @Route("/delete/", name="file_management_delete", methods={"DELETE"})
      *
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
@@ -470,7 +470,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/fms/upload/", name="fms_upload")
+     * @Route("/fms/upload/", name="file_management_upload")
      *
      * Get the configuration from URL (acceptable types, dir)
      * @param Request $request
@@ -504,7 +504,7 @@ class FileManagerController extends Controller
             //$entityManager = $this->getDoctrine();
             //$file->hash = $this->createHash($file, $entityManager);
             if (!$fileManager->getImagePath()) {
-                $file->url = $this->generateUrl('file_manager_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
+                $file->url = $this->generateUrl('file_management_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
             }
         }
 
