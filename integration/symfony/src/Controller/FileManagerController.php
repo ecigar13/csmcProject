@@ -43,6 +43,10 @@ class FileManagerController extends Controller
      */
     public function indexAction(Request $request, LoggerInterface $l)
     {
+        //prevent unregistered users from accessing with a link.
+        if(is_null($this->getUser())){
+          return $this->redirectToRoute('home');
+        }
         $queryParameters = $request->query->all();
         $translator      = $this->get('translator');
         $isJson          = $request->get('json') ? true : false;
