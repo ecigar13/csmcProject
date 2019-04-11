@@ -31,6 +31,7 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 class FileManagerController extends Controller
 {
     /**
+     * @Route("/manager")
      * @Route("/fms/")
      * @Route("/fms", name="file_management")
      * Open a page to access file management system.
@@ -43,10 +44,6 @@ class FileManagerController extends Controller
      */
     public function indexAction(Request $request, LoggerInterface $l)
     {
-        //prevent unregistered users from accessing with a link.
-        if(is_null($this->getUser())){
-          return $this->redirectToRoute('home');
-        }
         $queryParameters = $request->query->all();
         $translator      = $this->get('translator');
         $isJson          = $request->get('json') ? true : false;
@@ -507,6 +504,7 @@ class FileManagerController extends Controller
             if (isset($file->error)) {
                 $file->error = $this->get('translator')->trans($file->error);
             }
+            //implement hash between these two events.
             //$entityManager = $this->getDoctrine();
             //$file->hash = $this->createHash($file, $entityManager);
             if (!$fileManager->getImagePath()) {
@@ -550,4 +548,5 @@ class FileManagerController extends Controller
         $guesser = ExtensionGuesser::getInstance();
         return $guesser->guess($file->type);
     }
+
 }

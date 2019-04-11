@@ -37,4 +37,6 @@ security:
                 target: /
     access_control:
         - { path: ^/admin, roles: [ROLE_ADMIN, ROLE_DEVELOPER] }
+        - { path: ^/manager, roles: [ROLE_USER, ROLE_ADMIN]}
+        - { path: ^/fms, roles: [ROLE_USER, ROLE_ADMIN, ROLE_DEVELOPER, ROLE_MENTOR]}
 #        - { path: ^/dev, roles: [ROLE_DEVELOPER] }
