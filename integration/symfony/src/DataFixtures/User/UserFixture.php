@@ -29,7 +29,7 @@ class UserFixture extends Fixture implements DependentFixtureInterface
 
     public function load(ObjectManager $manager)
     {
-        // create mentors
+        // create mentors. These will load when doctrine:fixture:load runs.
         $mentors = array();
 
         $mentor_role = $this->getReference(RoleFixture::ROLE_MENTOR);

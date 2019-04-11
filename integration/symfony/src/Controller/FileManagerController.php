@@ -8,7 +8,6 @@ use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
 use Artgris\Bundle\FileManagerBundle\Helpers\UploadHandler;
 use Artgris\Bundle\FileManagerBundle\Twig\OrderExtension;
 use App\Entity\File\FileHash;
-use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -27,11 +26,11 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\MimeType\ExtensionGuesser;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Bridge\Monolog\Logger;
 
 class FileManagerController extends Controller
 {
     /**
-     * @Route("/manager")
      * @Route("/fms/")
      * @Route("/fms", name="file_management")
      * Open a page to access file management system.
@@ -480,7 +479,7 @@ class FileManagerController extends Controller
      * @return Response
      * @throws \Exception
      */
-    public function uploadFileAction(Request $request)
+    public function uploadFileAction(Request $request, LoggerInterface $l)
     {
         $fileSystem  = new Filesystem();  //use this for hash and moving files around
         $fileManager = $this->newFileManager($request->query->all());
@@ -500,16 +499,21 @@ class FileManagerController extends Controller
         $uploadHandler = new UploadHandler($options);
         $response      = $uploadHandler->response;
 
+        //upload multiple files. 'files' is defined in twig as an array
         foreach ($response['files'] as $file) {
-            if (isset($file->error)) {
-                $file->error = $this->get('translator')->trans($file->error);
-            }
-            //implement hash between these two events.
-            //$entityManager = $this->getDoctrine();
-            //$file->hash = $this->createHash($file, $entityManager);
-            if (!$fileManager->getImagePath()) {
-                $file->url = $this->generateUrl('file_management_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
-            }
+          if (isset($file->error)) {
+            $file->error = $this->get('translator')->trans($file->error);
+          }
+          //implement hash between these two events.
+          //file is saved. Get to that file, hash it and move it to a new folder.
+          if (!$fileManager->getImagePath()) {
+            $file->url = $this->generateUrl('file_management_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
+          }
+
+          //this contains the path to the file. Not fully qualified, but can be extracted. Starts with /uploads/...
+          $l->error("UUUUUUUUUUUUUUUUUUU");
+          $l->error($file->url);
+
         }
 
         $this->dispatch(FileManagerEvents::POST_UPDATE, ['response' => &$response]);
