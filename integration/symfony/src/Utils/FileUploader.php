@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Psr\Log\LoggerInterface;
 
 class FileUploader {
     private $tokenStorage;
@@ -20,9 +21,10 @@ class FileUploader {
     }
 
     /**
-     * Create a new Filesystem, make hash of the file. Then make directory for the file and move it. It's not a direct upload.
+     * File is saved to disk first. Create a new Filesystem, make hash of the file. Then make directory for the file and move it. It's not a direct upload.
+     * The $entity is most likely a File object, but could be other things.
      */
-    public function upload(File $entity) {
+    public function upload($entity) {
         $uploadedFile = $entity->getUploadedFile();
 
         $fileSystem = new Filesystem();
