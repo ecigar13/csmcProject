@@ -10,6 +10,9 @@ use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Events;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Unknown where to use this. This class seems to work when mentor sign in and sign out or log hours.
+ */
 class TimestampableSubscriber implements EventSubscriber {
     private $reader;
     private $logger;
