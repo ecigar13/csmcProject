@@ -5,10 +5,9 @@ namespace App\Controller;
 use Artgris\Bundle\FileManagerBundle\Event\FileManagerEvents;
 use Artgris\Bundle\FileManagerBundle\Helpers\File;
 use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
-use Artgris\Bundle\FileManagerBundle\Helpers\UploadHandler;
 use Artgris\Bundle\FileManagerBundle\Twig\OrderExtension;
 use App\Entity\File\FileHash;
-use App\Entity\File\File as FileUploader;
+use App\Entity\File\File as CSMCFile;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -475,7 +474,7 @@ class FileManagerController extends Controller
     /**
      * @Route("/fms/upload/", name="file_management_upload")
      *
-     * Get the configuration from URL (acceptable types, dir)
+     * Get the configuration from URL (acceptable types, dir), create file hash, move it and insert into database.
      * @param Request $request
      * @return Response
      * @throws \Exception
@@ -492,7 +491,6 @@ class FileManagerController extends Controller
         $uploaded_files = $request->files->get('files');
         $fileData = new FileData();
         $fileData->file = $uploaded_files[0];
-        print_r($uploaded_files[0]);
         $file = FileUploader::fromUploadData($fileData, $em);
         $em->persist($file);
         //get translator service.
@@ -501,6 +499,16 @@ class FileManagerController extends Controller
         }
         $em->flush();
 
+        //need to
+        $response = [
+            'files'=>[
+                [
+                    'name'=>'name',
+                    'size'=>'name',
+                    'type'=>'name',
+                ],
+            ]
+        ];
         return new JsonResponse($response);
     }
 
