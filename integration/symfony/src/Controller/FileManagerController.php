@@ -492,7 +492,6 @@ class FileManagerController extends Controller
         $uploaded_files = $request->files->get('files');
         $fileData = new FileData();
         $fileData->file = $uploaded_files[0];
-        print_r($uploaded_files[0]);
         $file = FileUploader::fromUploadData($fileData, $em);
         $em->persist($file);
         //get translator service.
@@ -500,7 +499,15 @@ class FileManagerController extends Controller
             $file->error = $this->get('translator')->trans($file->error);
         }
         $em->flush();
-
+        $response = [
+            'files'=>[
+                [
+                    'name'=>'name',
+                    'size'=>'name',
+                    'type'=>'name',
+                ],
+            ]
+        ];
         return new JsonResponse($response);
     }
 
