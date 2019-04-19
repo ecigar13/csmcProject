@@ -498,8 +498,11 @@ class FileManagerController extends Controller
             $file->error = $this->get('translator')->trans($file->error);
         }
         $em->flush();
+<<<<<<< HEAD
 
         //need to
+=======
+>>>>>>> c0e98c26d2c28b219bd07e4c1a6516151697d2a4
         $response = [
             'files'=>[
                 [
