@@ -41,10 +41,15 @@ class File extends VirtualFile {
         }
     }
 
-    public static function fromUploadData(FileData $fileData, EntityManagerInterface $entityManager, array $metadata = null) {
+    /**
+     * Get the file info from upload data. Create fie name, hash, get metadata of the file.
+     * Create an entity with these info and return it.
+     */
+    public static function fromUploadData(FileData $fileData, EntityManagerInterface $entityManager, array $metadata = []) {
         $name = self::createName($fileData->file);
         $hash = self::createHash($fileData->file, $entityManager);
-        $metadata = self::extractMetaData($fileData->file, $metadata);
+        if(!empty($metadata))
+            $metadata = self::extractMetaData($fileData->file, $metadata);
 
         $file = new File($name, $fileData->user, $hash, $metadata);
 

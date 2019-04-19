@@ -8,6 +8,7 @@ use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
 use Artgris\Bundle\FileManagerBundle\Helpers\UploadHandler;
 use Artgris\Bundle\FileManagerBundle\Twig\OrderExtension;
 use App\Entity\File\FileHash;
+use App\Entity\File\File as FileUploader;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -26,7 +27,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\MimeType\ExtensionGuesser;
 use Symfony\Component\Validator\Constraints\NotBlank;
-use Symfony\Bridge\Monolog\Logger;
+use App\DataTransferObject\FileData;
 
 class FileManagerController extends Controller
 {
@@ -481,42 +482,24 @@ class FileManagerController extends Controller
      */
     public function uploadFileAction(Request $request, LoggerInterface $l)
     {
-        $fileSystem  = new Filesystem();  //use this for hash and moving files around
-        $fileManager = $this->newFileManager($request->query->all());
-
-        $options = [
-            'upload_dir'        => $fileManager->getCurrentPath() . DIRECTORY_SEPARATOR,
-            'upload_url'        => $fileManager->getImagePath(),
-            'accept_file_types' => $fileManager->getRegex(),
-            'print_response'    => false,
-        ];
-        if (isset($fileManager->getConfiguration()['upload'])) {
-            $options += $fileManager->getConfiguration()['upload'];
+        //only accept httpRequest
+        if (!$request->isXmlHttpRequest()) {
+            throw new MethodNotAllowedException();
         }
 
-        $this->dispatch(FileManagerEvents::PRE_UPDATE, ['options' => &$options]);
+        $em = $this->getDoctrine()->getManager();
 
-        $uploadHandler = new UploadHandler($options);
-        $response      = $uploadHandler->response;
-
-        //upload multiple files. 'files' is defined in twig as an array
-        foreach ($response['files'] as $file) {
-          if (isset($file->error)) {
+        $uploaded_files = $request->files->get('files');
+        $fileData = new FileData();
+        $fileData->file = $uploaded_files[0];
+        print_r($uploaded_files[0]);
+        $file = FileUploader::fromUploadData($fileData, $em);
+        $em->persist($file);
+        //get translator service.
+        if (isset($file->error)) {
             $file->error = $this->get('translator')->trans($file->error);
-          }
-          //implement hash between these two events.
-          //file is saved. Get to that file, hash it and move it to a new folder.
-          if (!$fileManager->getImagePath()) {
-            $file->url = $this->generateUrl('file_management_file', array_merge($fileManager->getQueryParameters(), ['fileName' => $file->url]));
-          }
-
-          //this contains the path to the file. Not fully qualified, but can be extracted. Starts with /uploads/...
-          $l->error("UUUUUUUUUUUUUUUUUUU");
-          $l->error($file->url);
-
         }
-
-        $this->dispatch(FileManagerEvents::POST_UPDATE, ['response' => &$response]);
+        $em->flush();
 
         return new JsonResponse($response);
     }

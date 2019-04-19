@@ -208,19 +208,16 @@ class ProfileController extends BaseController
 
     /**
      * @Route("/profile/{username}/save_image", name="save_profile_image")
+     *
+     * Process request from twig and dropzone front end. Persist and save the file. (just one). The event subscribers fires sometime while this uploader is working.
      */
     public function saveImageAction(Request $request,LoggerInterface $l)
     {
 
-        //$l->debug("im in 1");
-        // $l->debug($request->getContent());
         if (!$request->isXmlHttpRequest()) {
             throw new MethodNotAllowedException();
         }
-        //$l->debug("im in 2");
-        $file = new
-        FileData();
-        //$l->debug("im in 3");
+        $file = new FileData();
         $file->file = $request->files->get('file');
         $crop = $request->request->get('crop');
         $canvas = $request->request->get('canvas');
@@ -229,13 +226,11 @@ class ProfileController extends BaseController
         $this->get('logger')->debug($crop);
 
         $em = $this->getDoctrine()->getManager();
-        //$l->debug("im in 4");
         $file = File::fromUploadData($file, $em, array(
             'crop' => $crop,
             'canvas' => $canvas,
             'image' => $image
         ));
-        //$l->debug("im in 5");
 
         $em->persist($file);
 
@@ -243,9 +238,7 @@ class ProfileController extends BaseController
         $user = $this->getDoctrine()->getRepository(User::class)->find($user_id);
 
         $isAdmin = $this->isGranted('admin');
-        //$l->debug("im in 6");
         $user->updateProfilePicture($file, $isAdmin);
-        //$l->debug("im in 7");
         $em->flush();
 
         return new Response('success', 200);

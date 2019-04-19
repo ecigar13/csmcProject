@@ -11,6 +11,9 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Psr\Log\LoggerInterface;
 
+/**
+ * This is a utility class used for uploading files in FileSubscriber. If an entity has Uploadable annotation, then this class will upload, hash and move the files to the right folder.
+ */
 class FileUploader {
     private $tokenStorage;
     private $uploadDirectory;
