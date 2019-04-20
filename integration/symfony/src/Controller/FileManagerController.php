@@ -491,18 +491,13 @@ class FileManagerController extends Controller
         $uploaded_files = $request->files->get('files');
         $fileData = new FileData();
         $fileData->file = $uploaded_files[0];
-        $file = FileUploader::fromUploadData($fileData, $em);
+        $file = CSMCFile::fromUploadData($fileData, $em);
         $em->persist($file);
         //get translator service.
         if (isset($file->error)) {
             $file->error = $this->get('translator')->trans($file->error);
         }
         $em->flush();
-<<<<<<< HEAD
-
-        //need to
-=======
->>>>>>> c0e98c26d2c28b219bd07e4c1a6516151697d2a4
         $response = [
             'files'=>[
                 [
