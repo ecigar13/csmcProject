@@ -7,6 +7,7 @@ use Artgris\Bundle\FileManagerBundle\Helpers\File;
 use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
 use Artgris\Bundle\FileManagerBundle\Twig\OrderExtension;
 use App\Entity\File\FileHash;
+//need to rename this after gutting all Artgris File usage (if possible)
 use App\Entity\File\File as CSMCFile;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -488,26 +489,37 @@ class FileManagerController extends Controller
 
         $em = $this->getDoctrine()->getManager();
 
-        $uploaded_files = $request->files->get('files');
-        $fileData = new FileData();
-        $fileData->file = $uploaded_files[0];
+        $uploadedFile = $request->files->get('files');
+        $fileData = new FileData($uploadedFile[0], $this->getUser());
+        //create a file object with its hash. Moving file to its folder fires during prePersist.
         $file = CSMCFile::fromUploadData($fileData, $em);
         $em->persist($file);
+
         //get translator service.
         if (isset($file->error)) {
             $file->error = $this->get('translator')->trans($file->error);
         }
         $em->flush();
-        $response = [
+
+        //if the file has been successfully uploaded.
+        if($uploadedFile[0]->isValid()){
+          $response = [
             'files'=>[
-                [
-                    'name'=>'name',
-                    'size'=>'name',
-                    'type'=>'name',
-                ],
+              [
+                'originalName'=> $uploadedFile[0]->getClientOriginalName(),
+                'fileExtension' => $uploadedFile[0]->getClientOriginalExtension(),
+                'size'=> $uploadedFile[0]->getClientSize(),
+                'mimeType'=> $uploadedFile[0]->getClientMimeType()
+              ],
             ]
-        ];
-        return new JsonResponse($response);
+          ];
+          
+          //should respond with name of file
+          return new JsonResponse($response, 200);
+
+        } else{
+          print_r($uploadedFile);
+        }
     }
 
     protected function dispatch($eventName, array $arguments = [])
