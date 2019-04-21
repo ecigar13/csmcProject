@@ -69,7 +69,7 @@ class FileManagerController extends Controller
         switch ($orderBy) {
             case 'name':
                 $finderFiles->sort(function (SplFileInfo $a, SplFileInfo $b) {
-                    return strcmp(strtolower($b->getFilename()), strtolower($a->getFilename()));
+                    return strcmp(strtolower($b->getFileName()), strtolower($a->getFileName()));
                 });
                 break;
             case 'date':
@@ -89,7 +89,7 @@ class FileManagerController extends Controller
         } else {
             $finderFiles->filter(function (SplFileInfo $file) use ($regex) {
                 if ('file' === $file->getType()) {
-                    if (preg_match($regex, $file->getFilename())) {
+                    if (preg_match($regex, $file->getFileName())) {
                         return $file->isReadable();
                     }
 
@@ -193,47 +193,69 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/fms/rename/{fileName}", name="file_management_rename")
+     * @Route("/fms/rename/{oldName}", name="file_management_rename")
      *
+     * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name and extension.
+     * Need to fix this in the future.
+     * 
      * @param Request $request
-     * @param $fileName
+     * @param $oldName
      *
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      *
      * @throws \Exception
      */
-    public function renameFileAction(Request $request, $fileName)
+    public function renameFileAction(Request $request, $oldName)
     {
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
         $formRename = $this->createRenameForm();
+        $em = $this->getDoctrine()->getManager();
         /* @var Form $formRename */
         $formRename->handleRequest($request);
         if ($formRename->isSubmitted() && $formRename->isValid()) {
+            //perform updating database
             $data = $formRename->getData();
-            $extension = $data['extension'] ? '.'.$data['extension'] : '';
-            $newfileName = $data['name'].$extension;
-            if ($newfileName !== $fileName && isset($data['name'])) {
-                $fileManager = $this->newFileManager($queryParameters);
-                $NewfilePath = $fileManager->getCurrentPath().DIRECTORY_SEPARATOR.$newfileName;
-                $OldfilePath = realpath($fileManager->getCurrentPath().DIRECTORY_SEPARATOR.$fileName);
-                if (0 !== strpos($NewfilePath, $fileManager->getCurrentPath())) {
-                    $this->addFlash('danger', $translator->trans('file.renamed.unauthorized'));
-                } else {
-                    $fs = new Filesystem();
-                    try {
-                        $fs->rename($OldfilePath, $NewfilePath);
-                        $this->addFlash('success', $translator->trans('file.renamed.success'));
-                        //File has been renamed successfully
-                    } catch (IOException $exception) {
-                        $this->addFlash('danger', $translator->trans('file.renamed.danger'));
-                    }
+            
+            if(isset($data['newName'])){
+                $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name' => $oldName));  
+                if($file === null){
+                    //TODO: what if file doesn't exist in database?
+                    $this->addFlash('warning', "Can't find the file to rename: ".$oldName);
+                    return $this->redirectToRoute('file_management', $queryParameters);
                 }
-            } else {
-                $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                //update name
+                if ($data['newName'] !== $oldName) {
+                    //can be multiple because files are not unique. Can't fix it for now.
+                    $file->setName($data['newName']);
+                    $em->update($file);
+                } else {
+                    $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                }
+                    
+                //update extension
+                if(isset($data['extension'])){
+                    $fileHash = $this->getDoctrine()->getRepository(FileHash::class)->findOneBy(array('id' => $file->getId()));
+                    if($fileHash === null) {
+
+                        $this->addFlash('warning', "Can't find the file to rename: ".$oldName);
+                        return $this->redirectToRoute('file_management', $queryParameters);
+                    }
+                    $newHash = explode('.', $fileHash->getPath());
+                    
+                    //no extension
+                    if(count($newHash) === 1){
+                        $fileHash->setPath($newHash[0].$data['extension']);
+                    }else{
+                        $newHash[count($newHash) - 1] = $data['extension'];
+                        $fileHash->setPath(implode('.', $newHash)) ;
+                    }
+                    $em->update($fileHash);
+                }
             }
         }
-
+        $em->flush();
+          
         return $this->redirectToRoute('file_management', $queryParameters);
     }
 
@@ -257,6 +279,9 @@ class FileManagerController extends Controller
     /**
      * @Route("/fms/delete/", name="file_management_delete", methods={"DELETE"})
      *
+     * Should expect a file/folder name array to delete. Assumming file names are unique.
+     * TODO: check with Steven. Does recursive delete in database also trigger multiple preRemove event?
+     * 
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      *
@@ -267,49 +292,21 @@ class FileManagerController extends Controller
         $form = $this->createDeleteForm();
         $form->handleRequest($request);
         $queryParameters = $request->query->all();
+
+        $em = $this->getDoctrine()->getManager();
         if ($form->isSubmitted() && $form->isValid()) {
-            // remove file
-            $fileManager = $this->newFileManager($queryParameters);
-            $fs = new Filesystem();
             if (isset($queryParameters['delete'])) {
-                $is_delete = false;
+                //delete from disk is in FileSubscriber, preRemove
+                //delete from database
                 foreach ($queryParameters['delete'] as $fileName) {
-                    $filePath = realpath($fileManager->getCurrentPath().DIRECTORY_SEPARATOR.$fileName);
-                    if (0 !== strpos($filePath, $fileManager->getCurrentPath())) {
-                        $this->addFlash('danger', 'file.deleted.danger');
-                    } else {
-                        $this->dispatch(FileManagerEvents::PRE_DELETE_FILE);
-                        try {
-                            $fs->remove($filePath);
-                            $is_delete = true;
-                        } catch (IOException $exception) {
-                            $this->addFlash('danger', 'file.deleted.unauthorized');
-                        }
-                        $this->dispatch(FileManagerEvents::POST_DELETE_FILE);
-                    }
+                    $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name'=>$fileName));
+                    if($file !== null) $em->remove($file);  //this will remove files/folders inside this one.
                 }
-                if ($is_delete) {
-                    $this->addFlash('success', 'file.deleted.success');
-                }
+                
                 unset($queryParameters['delete']);
-            } else {
-                $this->dispatch(FileManagerEvents::PRE_DELETE_FOLDER);
-                try {
-                    $fs->remove($fileManager->getCurrentPath());
-                    $this->addFlash('success', 'folder.deleted.success');
-                } catch (IOException $exception) {
-                    $this->addFlash('danger', 'folder.deleted.unauthorized');
-                }
-
-                $this->dispatch(FileManagerEvents::POST_DELETE_FOLDER);
-                $queryParameters['route'] = dirname($fileManager->getCurrentRoute());
-                if ($queryParameters['route'] = '/') {
-                    unset($queryParameters['route']);
-                }
-
-                return $this->redirectToRoute('file_management', $queryParameters);
             }
         }
+        $em->flush();
 
         return $this->redirectToRoute('file_management', $queryParameters);
     }
@@ -392,7 +389,7 @@ class FileManagerController extends Controller
 
         foreach ($directories as $directory) {
             /** @var SplFileInfo $directory */
-            $fileName = $baseFolderName ? '' : $parent . $directory->getFilename();
+            $fileName = $baseFolderName ? '' : $parent . $directory->getFileName();
 
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
@@ -403,7 +400,7 @@ class FileManagerController extends Controller
             $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
 
             $directoriesList[] = [
-                'text'     => $directory->getFilename() . $fileSpan,
+                'text'     => $directory->getFileName() . $fileSpan,
                 'icon'     => 'far fa-folder-open',
                 'children' => $this->retrieveSubDirectories($fileManager, $directory->getPathname(), $fileName . DIRECTORY_SEPARATOR),
                 'a_attr'   => [
@@ -476,6 +473,7 @@ class FileManagerController extends Controller
      * @Route("/fms/upload/", name="file_management_upload")
      *
      * Get the configuration from URL (acceptable types, dir), create file hash, move it and insert into database.
+     * Pitfall: what if file upload failed?
      * @param Request $request
      * @return Response
      * @throws \Exception
@@ -501,25 +499,20 @@ class FileManagerController extends Controller
         }
         $em->flush();
 
-        //if the file has been successfully uploaded.
-        if($uploadedFile[0]->isValid()){
-          $response = [
-            'files'=>[
-              [
-                'originalName'=> $uploadedFile[0]->getClientOriginalName(),
-                'fileExtension' => $uploadedFile[0]->getClientOriginalExtension(),
-                'size'=> $uploadedFile[0]->getClientSize(),
-                'mimeType'=> $uploadedFile[0]->getClientMimeType()
-              ],
-            ]
-          ];
-          
-          //should respond with name of file
-          return new JsonResponse($response, 200);
-
-        } else{
-          print_r($uploadedFile);
-        }
+        //by this point, the file should have been successfully uploaded.
+        $response = [
+          'files'=>[
+            [
+              'originalName'=> $uploadedFile[0]->getClientOriginalName(),
+              'fileExtension' => $uploadedFile[0]->getClientOriginalExtension(),
+              'size'=> $uploadedFile[0]->getClientSize(),
+              'mimeType'=> $uploadedFile[0]->getClientMimeType()
+            ],
+          ]
+        ];
+        
+        //should respond with name of file
+        return new JsonResponse($response, 200);
     }
 
     protected function dispatch($eventName, array $arguments = [])

@@ -4,6 +4,7 @@ namespace App\DoctrineEventSubscriber;
 
 use App\Annotation\Uploadable;
 use App\Utils\FileUploader;
+use App\Entity\File\File;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
@@ -32,7 +33,8 @@ class FileSubscriber implements EventSubscriber {
     public function getSubscribedEvents() {
         return [
             'prePersist',
-            'preUpdate'
+            'preUpdate',
+            'preRemove'
         ];
     }
 
@@ -51,7 +53,29 @@ class FileSubscriber implements EventSubscriber {
     }
 
     /**
-     * Not implemented yet.
+     * Happens before removing an entity instance from the database. Remove the file from disk.
+     * Expects a File object. Delete directory and file.
+     * TODO: check for bug once this completes.
+     */
+    public function preRemove(LifecycleEventArgs $args){
+        $entity = $args->getObject();
+
+        if(!$entity instanceof File){
+            return;
+        }
+
+        $em = $this->getDoctrine()->getManager();
+        $hashId = $entity->getHash();
+        $fileHash = $this->getDoctrine()->getRepository(FileHash::class)->findOneBy(array('id' => $hashId));
+        if($fileHash !== null){
+            $fileSystem = new Filesystem();
+            $fileSystem->remove($fileHash->getFullPath());
+        }
+    }
+
+
+    /**
+     * Don't need this because file is hashed. Any update happens in database. 
      */
     public function preUpdate(LifecycleEventArgs $args) {
     }
