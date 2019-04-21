@@ -31,3 +31,4 @@
 *~.DS_Store
 **/node_modules/**
 **/symfony/build/**
+**/public/uploads
