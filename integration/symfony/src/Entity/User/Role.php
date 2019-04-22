@@ -45,12 +45,20 @@ class Role extends \Symfony\Component\Security\Core\Role\Role implements \Serial
      */
     private $users;
 
+     /**
+     * Many role have Many files.
+     * @ORM\ManyToMany(targetEntity="App\Entity\File\VirtualFile", inversedBy="roles")
+     * @ORM\JoinTable(name="role_permissions")
+     */
+    private $vitualFiles;
+
     /**
      * Constructor
      */
     public function __construct(string $name) {
         $this->name = $name;
         $this->users = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->vitualFiles = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**

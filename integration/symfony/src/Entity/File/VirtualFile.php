@@ -3,13 +3,15 @@
 namespace App\Entity\File;
 
 use App\Entity\User\User;
+use App\Entity\User\Role;
+use App\Entity\File\Permission;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity()
  * @ORM\InheritanceType("SINGLE_TABLE")
  * @ORM\DiscriminatorColumn(name="discr", type="string")
- * @ORM\DiscriminatorMap({"virtual" = "VirtualFile", "file" = "File"})
+ * @ORM\DiscriminatorMap({"virtual" = "VirtualFile", "file" = "File","dir" = "Directory","link" = "Link"})
  */
 class VirtualFile {
     /**
@@ -31,9 +33,14 @@ class VirtualFile {
     private $owner;
 
     /**
-     * @ORM\OneToMany(targetEntity="FilePermissions", mappedBy="virtualFile")
+     * @ORM\ManyToMany(targetEntity="App\Entity\User\User",  mappedBy="vitualFiles")
      */
-    private $permissions;
+    private $users;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\User\Role",  mappedBy="vitualFiles")
+     */
+    private $roles;
 
     /**
      * @ORM\ManyToOne(targetEntity="VirtualFile")
@@ -41,12 +48,17 @@ class VirtualFile {
      */
     private $parent;
 
-    public function __construct(string $name, User $owner = null) {
+    public function __construct(string $name, User $owner) {
         $this->name = $name;
         $this->owner = $owner;
+        $this->users = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->roles = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
-    public function givePermission(User $user) {
+    public function giveIndividualPermission(User $user) {
+
+    }
+    public function giveRolePermission(Role $role) {
 
     }
 
