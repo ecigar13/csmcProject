@@ -120,6 +120,12 @@ class User implements UserInterface, \Serializable {
      */
     private $occurrences;
 
+     /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\File\VirtualFile", inversedBy="users")
+     * @ORM\JoinTable(name="user_permissions")
+     */
+    private $vitualFiles;
+
     /**
      * @ORM\OneToOne(targetEntity="App\Entity\User\Info\NotificationPreferences",
      *     mappedBy="user",
@@ -145,6 +151,7 @@ class User implements UserInterface, \Serializable {
 
         $this->roles = new ArrayCollection();
         $this->occurrences = new ArrayCollection();
+        $this->vitualFiles = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     public function addOccurrence(Occurrence $occurrence)

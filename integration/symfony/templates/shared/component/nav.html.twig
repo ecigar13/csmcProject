@@ -44,6 +44,9 @@
                         <li><a href="{{ path('session_schedule') }}"><i class="fas fa-tasks"></i> Register</a></li>
                         <li><a href="{{ path('session_history') }}"><i class="fas fa-check"></i> Grades</a></li>
                     {% endif %}
+                    {% if is_granted('instructor') or is_granted('mentor') or is_granted('student')%}
+                        <li><a href="{{ path('file_management') }}"><i class="fa fa-file"></i> File Management</a></li>
+                    {% endif %}
                     {#<li><a><i class="fa fa-edit"></i> System Set Up <span class="fa fa-chevron-down"></span></a>#}
                     {#<ul class="nav child_menu">#}
                     {#<li><a href="addressShowAll">IP</a></li>#}
@@ -128,7 +131,7 @@
                             {% if is_granted('mentor') %}
                                 <li><a href="{{ path('profile', {'username': app.user.username}) }}">Profile</a></li>
                             {% endif %}
-                                <li><a href="{{ path('file_management') }}">File Management</a></li>
+                                {#<li><a href="{{ path('file_management') }}">File Management</a></li>#}
                             {#<li><a href="javascript:;"> Profile</a></li>#}
                             {#<li>#}
                             {#<a href="javascript:;">#}

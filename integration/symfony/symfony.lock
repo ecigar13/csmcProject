@@ -1,4 +1,7 @@
 {
+    "artgris/filemanager-bundle": {
+        "version": "1.4.3"
+    },
     "beberlei/doctrineextensions": {
         "version": "v1.0.20"
     },
@@ -139,6 +142,9 @@
     },
     "ocramius/proxy-manager": {
         "version": "2.0.4"
+    },
+    "oomphinc/composer-installers-extender": {
+        "version": "v1.1.2"
     },
     "paragonie/random_compat": {
         "version": "v2.0.11"
@@ -436,6 +442,15 @@
     },
     "symfony/yaml": {
         "version": "v3.4.3"
+    },
+    "twig/extensions": {
+        "version": "1.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "master",
+            "version": "1.0",
+            "ref": "ddb2e0a77773b7fd75d8d649545f174e664500ab"
+        }
     },
     "twig/twig": {
         "version": "v2.4.4"

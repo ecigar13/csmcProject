@@ -8,16 +8,16 @@
     "packages": [
         {
             "name": "artgris/filemanager-bundle",
-            "version": "1.4.3",
+            "version": "1.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/artgris/FileManagerBundle.git",
-                "reference": "6f3caf8ea54425e07a451f3a0fca142bc576f04f"
+                "reference": "f93a3b3aeae76c9ca2c1b8a39f1f6272096f9093"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/artgris/FileManagerBundle/zipball/6f3caf8ea54425e07a451f3a0fca142bc576f04f",
-                "reference": "6f3caf8ea54425e07a451f3a0fca142bc576f04f",
+                "url": "https://api.github.com/repos/artgris/FileManagerBundle/zipball/f93a3b3aeae76c9ca2c1b8a39f1f6272096f9093",
+                "reference": "f93a3b3aeae76c9ca2c1b8a39f1f6272096f9093",
                 "shasum": ""
             },
             "require": {
@@ -68,7 +68,7 @@
                 "file manager",
                 "symfony"
             ],
-            "time": "2019-02-20T15:04:10+00:00"
+            "time": "2019-02-26T16:25:17+00:00"
         },
         {
             "name": "beberlei/DoctrineExtensions",
@@ -3785,7 +3785,7 @@
         },
         {
             "name": "symfony/filesystem",
-            "version": "v3.4.23",
+            "version": "v3.4.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/filesystem.git",
@@ -3835,16 +3835,16 @@
         },
         {
             "name": "symfony/finder",
-            "version": "v3.4.23",
+            "version": "v3.4.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/finder.git",
-                "reference": "fcdde4aa38f48190ce70d782c166f23930084f9b"
+                "reference": "61af5ce0b34b942d414fe8f1b11950d0e9a90e98"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/finder/zipball/fcdde4aa38f48190ce70d782c166f23930084f9b",
-                "reference": "fcdde4aa38f48190ce70d782c166f23930084f9b",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/61af5ce0b34b942d414fe8f1b11950d0e9a90e98",
+                "reference": "61af5ce0b34b942d414fe8f1b11950d0e9a90e98",
                 "shasum": ""
             },
             "require": {
@@ -3880,7 +3880,7 @@
             ],
             "description": "Symfony Finder Component",
             "homepage": "https://symfony.com",
-            "time": "2019-02-22T14:44:53+00:00"
+            "time": "2019-04-02T19:54:57+00:00"
         },
         {
             "name": "symfony/flex",
@@ -6503,16 +6503,16 @@
         },
         {
             "name": "vich/uploader-bundle",
-            "version": "1.8.6",
+            "version": "1.8.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dustin10/VichUploaderBundle.git",
-                "reference": "5cd1b931a3acc2fcb5cf51e4a2ff4559b19ab0c6"
+                "reference": "a8fcee81a1903ccb0135c68b80cac4bc0fbd249c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dustin10/VichUploaderBundle/zipball/5cd1b931a3acc2fcb5cf51e4a2ff4559b19ab0c6",
-                "reference": "5cd1b931a3acc2fcb5cf51e4a2ff4559b19ab0c6",
+                "url": "https://api.github.com/repos/dustin10/VichUploaderBundle/zipball/a8fcee81a1903ccb0135c68b80cac4bc0fbd249c",
+                "reference": "a8fcee81a1903ccb0135c68b80cac4bc0fbd249c",
                 "shasum": ""
             },
             "require": {
@@ -6592,7 +6592,7 @@
                 "file uploads",
                 "upload"
             ],
-            "time": "2018-12-21T17:27:08+00:00"
+            "time": "2019-03-29T10:15:19+00:00"
         },
         {
             "name": "webmozart/assert",
