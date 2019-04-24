@@ -48,7 +48,7 @@ class VirtualFile {
      */
     private $parent;
 
-    public function __construct(string $name, User $owner) {
+    public function __construct(string $name, User $owner=null) {
         $this->name = $name;
         $this->owner = $owner;
         $this->users = new \Doctrine\Common\Collections\ArrayCollection();
