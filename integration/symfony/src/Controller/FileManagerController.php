@@ -4,11 +4,16 @@ namespace App\Controller;
 
 use Artgris\Bundle\FileManagerBundle\Event\FileManagerEvents;
 use Artgris\Bundle\FileManagerBundle\Helpers\File;
+use Doctrine\ORM\EntityRepository;
+use App\Entity\File\Directory;
+use App\Entity\File\Link;
 use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
+//use App\Helpers\CSMCFileManager;
 use Artgris\Bundle\FileManagerBundle\Twig\OrderExtension;
 use App\Entity\File\FileHash;
 //need to rename this after gutting all Artgris File usage (if possible)
 use App\Entity\File\File as CSMCFile;
+use App\Entity\File\VirtualFile;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -53,11 +58,13 @@ class FileManagerController extends Controller
         $fileManager = $this->newFileManager($queryParameters);
 
         // Folder search
-        $directoriesArbo = $this->retrieveSubDirectories($fileManager, $fileManager->getDirName(), DIRECTORY_SEPARATOR, $fileManager->getBaseName());
+       $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR);
 
         // File search
+
         $finderFiles = new Finder();
         $finderFiles->in($fileManager->getCurrentPath())->depth(0);
+        //$finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
         $regex = $fileManager->getRegex();
 
         $orderBy   = $fileManager->getQueryParameter('orderby');
@@ -369,69 +376,9 @@ class FileManagerController extends Controller
         return $this->getParameter('kernel.root_dir');
     }
 
-    /**
-     * @param FileManager $fileManager
-     * @param $path
-     * @param string $parent
-     * @param bool   $baseFolderName
-     *
-     * @return array|null
-     */
-    protected function retrieveSubDirectories(FileManager $fileManager, $path, $parent = DIRECTORY_SEPARATOR, $baseFolderName = false)
-    {
-        $directories = new Finder();
-        $directories->in($path)->ignoreUnreadableDirs()->directories()->depth(0)->sortByType()->filter(function (SplFileInfo $file) {
-            return $file->isReadable();
-        });
 
-        if ($baseFolderName) {
-            $directories->name($baseFolderName);
-        }
-        $directoriesList = null;
 
-        foreach ($directories as $directory) {
-            /** @var SplFileInfo $directory */
-            $fileName = $baseFolderName ? '' : $parent . $directory->getFileName();
 
-            $queryParameters          = $fileManager->getQueryParameters();
-            $queryParameters['route'] = $fileName;
-            $queryParametersRoute     = $queryParameters;
-            unset($queryParametersRoute['route']);
-
-            $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
-            $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
-
-            $directoriesList[] = [
-                'text'     => $directory->getFileName() . $fileSpan,
-                'icon'     => 'far fa-folder-open',
-                'children' => $this->retrieveSubDirectories($fileManager, $directory->getPathname(), $fileName . DIRECTORY_SEPARATOR),
-                'a_attr'   => [
-                    'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
-                ], 'state' => [
-                    'selected' => $fileManager->getCurrentRoute() === $fileName,
-                    'opened'   => true,
-                ],
-            ];
-        }
-
-        return $directoriesList;
-    }
-
-    /**
-     * Tree Iterator.
-     *
-     * @param $path
-     * @param $regex
-     *
-     * @return int
-     */
-    protected function retrieveFilesNumber($path, $regex)
-    {
-        $files = new Finder();
-        $files->in($path)->files()->depth(0)->name($regex);
-
-        return iterator_count($files);
-    }
 
     /**
      * @return Form|\Symfony\Component\Form\FormInterface
@@ -549,5 +496,90 @@ class FileManagerController extends Controller
         $guesser = ExtensionGuesser::getInstance();
         return $guesser->guess($file->type);
     }
+
+    /**
+     * @param $path
+     * @param string $parent
+     *
+     * @return array|null
+     */
+    protected function retrieveSubDirectories(FileManager $fileManager, $path, $parent = DIRECTORY_SEPARATOR)
+    {
+        //Find parent from id and children from parent
+        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+        $parent=$directoryClass->findByPath($path);
+        $directories = $directoryClass->findByParent($parent);
+
+        //List for tree
+        $directoriesList = null;
+
+        foreach ($directories as $directory) {
+            $fileName = $parent . $directory->getName();
+            $queryParameters          = $this->getQueryParameters();
+            $queryParameters['route'] = $fileName;
+            $queryParametersRoute     = $queryParameters;
+            unset($queryParametersRoute['route']);
+
+            // $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
+            // $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
+
+            $directoriesList[] = [
+                'text'     => $directory->getName(),
+                'icon'     => 'far fa-folder-open',
+                'children' => $this->retrieveSubDirectories($fileManager,$fileName, $fileName . DIRECTORY_SEPARATOR),
+                'a_attr'   => [
+                    'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                ], 'state' => [
+                    'selected' => $fileManager->getCurrentRoute() === $fileName,
+                    'opened'   => true,
+                ],
+            ];
+        }
+
+        return $directoriesList;
+    }
+
+    /**
+     * @param $path
+     * @param string $parent
+     *
+     * @return array|null
+     */
+    protected function retrieveFiles(FileManager $fileManager, $path)
+    {
+        //Find parent from id and children from parent
+        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+        $FileClass=$this->getDoctrine()->getRepository(CSMCFile::class);
+        $parent=$directoryClass->findByPath($path);
+        $files = $FileClass->findByParent($parent);
+
+        $FileList = null;
+
+        foreach ($files as $file) {
+            $info = new SplFileInfo($fileManager->getBasePath . '/' . $file->getPhysicalDirectory());
+            array_push($FileList,$info);
+
+        }
+
+        return $FileList;
+    }
+
+    /**
+     * Tree Iterator.
+     *
+     * @param $path
+     * @param $regex
+     *
+     * @return int
+     */
+    protected function retrieveFilesNumber($path, $regex)
+    {
+        $files = new Finder();
+        $files->in($path)->files()->depth(0)->name($regex);
+
+        return iterator_count($files);
+    }
+
+
 
 }
