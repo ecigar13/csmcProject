@@ -197,7 +197,9 @@ class FileManagerController extends Controller
      *
      * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name and extension.
      * Need to fix this in the future.
-     * 
+     *
+     * TODO: check if the person who initiated is admin or the owner.
+     *
      * @param Request $request
      * @param $oldName
      *
@@ -216,9 +218,9 @@ class FileManagerController extends Controller
         if ($formRename->isSubmitted() && $formRename->isValid()) {
             //perform updating database
             $data = $formRename->getData();
-            
+
             if(isset($data['newName'])){
-                $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name' => $oldName));  
+                $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name' => $oldName));
                 if($file === null){
                     //TODO: what if file doesn't exist in database?
                     $this->addFlash('warning', "Can't find the file to rename: ".$oldName);
@@ -232,7 +234,7 @@ class FileManagerController extends Controller
                 } else {
                     $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
                 }
-                    
+
                 //update extension
                 if(isset($data['extension'])){
                     $fileHash = $this->getDoctrine()->getRepository(FileHash::class)->findOneBy(array('id' => $file->getId()));
@@ -242,7 +244,7 @@ class FileManagerController extends Controller
                         return $this->redirectToRoute('file_management', $queryParameters);
                     }
                     $newHash = explode('.', $fileHash->getPath());
-                    
+
                     //no extension
                     if(count($newHash) === 1){
                         $fileHash->setPath($newHash[0].$data['extension']);
@@ -255,7 +257,7 @@ class FileManagerController extends Controller
             }
         }
         $em->flush();
-          
+
         return $this->redirectToRoute('file_management', $queryParameters);
     }
 
@@ -281,7 +283,7 @@ class FileManagerController extends Controller
      *
      * Should expect a file/folder name array to delete. Assumming file names are unique.
      * TODO: check with Steven. Does recursive delete in database also trigger multiple preRemove event?
-     * 
+     *
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      *
@@ -302,7 +304,7 @@ class FileManagerController extends Controller
                     $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name'=>$fileName));
                     if($file !== null) $em->remove($file);  //this will remove files/folders inside this one.
                 }
-                
+
                 unset($queryParameters['delete']);
             }
         }
@@ -489,6 +491,7 @@ class FileManagerController extends Controller
 
         $uploadedFile = $request->files->get('files');
         $fileData = new FileData($uploadedFile[0], $this->getUser());
+
         //create a file object with its hash. Moving file to its folder fires during prePersist.
         $file = CSMCFile::fromUploadData($fileData, $em);
         $em->persist($file);
@@ -510,7 +513,7 @@ class FileManagerController extends Controller
             ],
           ]
         ];
-        
+
         //should respond with name of file
         return new JsonResponse($response, 200);
     }
