@@ -69,6 +69,14 @@ class VirtualFile {
     {
         return $this->id;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
     /**
      * @return mixed
      */

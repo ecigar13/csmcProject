@@ -15,6 +15,7 @@ use App\Entity\File\File as CSMCFile;
 use App\Entity\File\VirtualFile;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
@@ -59,7 +60,7 @@ class FileManagerController extends Controller
         $logger->info($fileManager->getDirName());
         $logger->info($fileManager->getBaseName());
         // Folder search
-       $directoriesArbo = $this->retrieveSubDirectories($fileManager, $fileManager->getDirName(), DIRECTORY_SEPARATOR,$fileManager->getBaseName());
+       $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,$fileManager->getBaseName());
        
         // File search
 
@@ -177,34 +178,43 @@ class FileManagerController extends Controller
         $form->handleRequest($request);
         /** @var Form $formRename */
         $formRename = $this->createRenameForm();
+        
 
+        //Uploading Folder---------------------------------------->
         if ($form->isSubmitted() && $form->isValid()) {
             $data      = $form->getData();
-            $fs        = new Filesystem();
+
+            // Get Name and Parent Path
             $directoryName = $data['name'];
-            $logger->info("directory");
-            $logger->info($directoryName);
-
-
-            $parentPath = $fileManager->getCurrentRoute();
-            if($parentPath=null)
-                $logger->info("No parent");
+            $logger->info("UploadDirectory");
+            $parentPath = $fileManager->getQueryParameters()['route'];
             $logger->info("parent");
+            //$logger->info($fileManager->getQueryParameters()['route']);
             $logger->info($parentPath);
+            $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
 
-            $directory = $directorytmp = $fileManager->getCurrentPath() . DIRECTORY_SEPARATOR . $data['name'];
-            $i         = 1;
-
-            while ($fs->exists($directorytmp)) {
-                $directorytmp = "{$directory} ({$i})";
-                ++$i;
+            //Search for Directory in Table
+            $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+            $directory=$directoryClass->findByPath($directoryPath);
+            if($directory){
+                $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
             }
-            $directory = $directorytmp;
 
-            try {
-                $fs->mkdir($directory);
+            //Get Parent, create directory, set parent
+            
+            $parent=$directoryClass->findOneBy(array('path' => $parentPath));
+            if (!$parent) {
+                throw new HttpException(Response::HTTP_INTERNAL_SERVER_ERROR, 'Parent folder does not exist.');
+            }
+            try{
+                $directory  = new Directory($directoryName,$directoryPath,$this->getUser());
+                $directory->setParent($parent);
+                $entityManager = $this->getDoctrine()->getManager();
+                $entityManager->persist($directory);
+                $entityManager->flush();
                 $this->addFlash('success', $translator->trans('folder.add.success'));
-            } catch (IOExceptionInterface $e) {
+            }
+            catch (IOExceptionInterface $e) {
                 $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
             }
 
@@ -515,9 +525,12 @@ class FileManagerController extends Controller
      * 
      * 
      */
-    protected function retrieveSubDirectories(FileManager $fileManager, $parentPath = DIRECTORY_SEPARATOR,$baseFolderName = false)
+    protected function retrieveSubDirectories(FileManager $fileManager, $parentPath = DIRECTORY_SEPARATOR,LoggerInterface $logger,$baseFolderName = false)
     {
         $directoriesList = null;
+        $logger->info("RetrieveDirectory");
+        $logger->info($parentPath);
+
         //Find parent from id and children from parent
         if($baseFolderName){
             $fileName = DIRECTORY_SEPARATOR . $fileManager->getBaseName();
@@ -534,7 +547,7 @@ class FileManagerController extends Controller
                 //'text'     => 'root',
                 'text'     => $fileManager->getBaseName(),
                 'icon'     => 'far fa-folder-open',
-                'children' => $this->retrieveSubDirectories($fileManager, $fileName . DIRECTORY_SEPARATOR),
+                'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                 'a_attr'   => [
                     'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
                 ], 'state' => [
@@ -547,14 +560,17 @@ class FileManagerController extends Controller
         }
             
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $parent=$directoryClass->findByPath($parentPath);
+        $parent=$directoryClass->findOneBy(array('path' => $parentPath));
+            if (!$parent) {
+                throw new HttpException(Response::HTTP_INTERNAL_SERVER_ERROR, 'Parent folder does not exist.');
+            }
         $directories = $directoryClass->findByParent($parent);
 
         //List for tree
        
 
         foreach ($directories as $directory) {
-            $fileName = $parentPath . $directory->getName();
+            $fileName = $parentPath . '/' . $directory->getName();
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
             $queryParametersRoute     = $queryParameters;
@@ -566,7 +582,7 @@ class FileManagerController extends Controller
             $directoriesList[] = [
                 'text'     => $directory->getName(),
                 'icon'     => 'far fa-folder-open',
-                'children' => $this->retrieveSubDirectories($fileManager, $fileName . DIRECTORY_SEPARATOR),
+                'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                 'a_attr'   => [
                     'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
                 ], 'state' => [

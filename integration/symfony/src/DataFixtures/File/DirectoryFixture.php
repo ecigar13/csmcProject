@@ -24,10 +24,11 @@ class DirectoryFixture extends Fixture implements DependentFixtureInterface
     public function load(ObjectManager $manager)
     {
         $user = $this->getReference(UserFixture::INSTRUCTOR_00);
-        $directory1  = new Directory("SE6301",$user);
-        $directory2 = new Directory("SE6387",$user);
-        $directory1->setParent($this->getReference(ParentFixture::ROOT));
-        $directory2->setParent($this->getReference(ParentFixture::ROOT));
+        $directory1  = new Directory("SE6301","/uploads/SE6301",$user);
+        $directory2 = new Directory("SE6387","/uploads/SE6387",$user);
+        $directory1->setParent($this->getReference(ParentFixture::UPLOADS));
+        $directory2->setParent($this->getReference(ParentFixture::UPLOADS));
+
         $manager->persist($directory1);
         $manager->persist($directory2);
         $manager->flush();

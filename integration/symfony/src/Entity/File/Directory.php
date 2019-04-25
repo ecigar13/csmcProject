@@ -20,8 +20,9 @@ class Directory extends VirtualFile {
      */
     private $path;
 
-    public function __construct(string $name, User $owner) {
+    public function __construct(string $name, string $path,User $owner) {
         parent::__construct($name, $owner);
+        $this->path=$path;
     }
 
     
