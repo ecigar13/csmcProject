@@ -104,3 +104,22 @@ services:
               port: 389                   # port
               version: 3                  # version
               referrals: false
+
+    # app.file_type_extension:
+    #     class: App\Twig\FileTypeExtension
+    #     tags:
+    #         - { name: twig.extension }
+    #     arguments: ['@app.file_type_service']
+    #     public: true
+
+    app.file_type_service:
+        class: App\Service\FileTypeService
+        arguments: ['@router']
+        public: true
+
+    # app.order_extension:
+    #     class: App\Twig\OrderExtension
+    #     tags:
+    #         - { name: twig.extension }
+    #     arguments: ['@router']
+    #     public: true

@@ -82,10 +82,10 @@
             {% block display %}
                 <div class="btn-group pull-right">
                     {% if fileManager.view != "list" %}
-                        {{ order(fileManager, 'name') }}
-                        {{ order(fileManager, 'date') }}
-                        {{ order(fileManager, 'size') }}
-                        {{ order(fileManager, 'dimension') }}
+                        {{ CSMCorder(fileManager, 'name') }}
+                        {{ CSMCorder(fileManager, 'date') }}
+                        {{ CSMCorder(fileManager, 'size') }}
+                        {{ CSMCorder(fileManager, 'dimension') }}
                     {% endif %}
                     <a type="button" href="{{ path('file_management', fileManager.queryParameters|merge({'view':"list"})) }}"
                        class="btn btn-sm btn-default {{ fileManager.view == 'list' ? 'active' }}">
@@ -113,13 +113,13 @@
                     {% endif %}
                     {% block content %}
                         <form id="form-multiple-delete">
-                            {% include '@ArtgrisFileManager/views/_manager_view.html.twig' with {'fileManager' :fileManager,  'fileArray' : fileArray, 'formDelete' : formDelete} only %}
+                            {% include 'fileManager/views/_manager_view.html.twig' with {'fileManager' :fileManager,  'fileArray' : fileArray, 'formDelete' : formDelete} only %}
                         </form>
                     {% endblock %}
                 </div>
             </div>
         </div>
-        {% include '@ArtgrisFileManager/views/_modals.html.twig' %}
+        {% include 'fileManager/views/_modals.html.twig' %}
     </div>
 {% endblock %}
 {% block javascripts %}

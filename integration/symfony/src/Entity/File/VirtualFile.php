@@ -69,12 +69,30 @@ class VirtualFile {
     {
         return $this->id;
     }
-    
-    public function setName(string $name){
-        $this->name = $name;
-    }
 
-    public function getName(){
+    /**
+     * @return mixed
+     */
+    public function getName()
+    {
         return $this->name;
+    }
+    /**
+     * @return mixed
+     */
+    public function getParent()
+    {
+        return $this->parent;
+    }
+    /**
+     * @param mixed $parent
+     * 
+     * @return self
+     */
+    public function setParent($parent)
+    {
+        $this->parent = $parent;
+
+        return $this;
     }
 }

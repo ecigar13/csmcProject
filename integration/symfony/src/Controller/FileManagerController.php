@@ -3,19 +3,20 @@
 namespace App\Controller;
 
 use Artgris\Bundle\FileManagerBundle\Event\FileManagerEvents;
-use Artgris\Bundle\FileManagerBundle\Helpers\File;
+use App\Helpers\File;
 use Doctrine\ORM\EntityRepository;
 use App\Entity\File\Directory;
 use App\Entity\File\Link;
-use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
-//use App\Helpers\CSMCFileManager;
-use Artgris\Bundle\FileManagerBundle\Twig\OrderExtension;
+//use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
+use App\Helpers\FileManager;
+use App\Twig\CSMCOrderExtension;
 use App\Entity\File\FileHash;
 //need to rename this after gutting all Artgris File usage (if possible)
 use App\Entity\File\File as CSMCFile;
 use App\Entity\File\VirtualFile;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\EventDispatcher\GenericEvent;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
@@ -47,7 +48,7 @@ class FileManagerController extends Controller
      *
      * @throws \Exception
      */
-    public function indexAction(Request $request, LoggerInterface $l)
+    public function indexAction(Request $request, LoggerInterface $logger)
     {
         $queryParameters = $request->query->all();
         $translator      = $this->get('translator');
@@ -56,22 +57,27 @@ class FileManagerController extends Controller
             unset($queryParameters['json']);
         }
         $fileManager = $this->newFileManager($queryParameters);
-
+        $logger->info("Logging");
+        $logger->info($fileManager->getDirName());
+        $logger->info($fileManager->getBaseName());
         // Folder search
-       $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR);
-
+       $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,$fileManager->getBaseName());
+       
         // File search
 
-        $finderFiles = new Finder();
-        $finderFiles->in($fileManager->getCurrentPath())->depth(0);
-        //$finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
+        
+        $logger->info($fileManager->getCurrentRoute());
+        // $finderFiles = new Finder();
+        // $finderFiles->in($fileManager->getCurrentPath())->depth(0);
+        $finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
+        $logger->info(print_r($finderFiles,true));
         $regex = $fileManager->getRegex();
 
         $orderBy   = $fileManager->getQueryParameter('orderby');
-        $orderDESC = OrderExtension::DESC === $fileManager->getQueryParameter('order');
-        if (!$orderBy) {
-            $finderFiles->sortByType();
-        }
+        $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
+        // if (!$orderBy) {
+        //     $finderFiles->sortByType();
+        // }
 
         switch ($orderBy) {
             case 'name':
@@ -89,23 +95,25 @@ class FileManagerController extends Controller
                 break;
         }
 
-        if ($fileManager->getTree()) {
-            $finderFiles->files()->name($regex)->filter(function (SplFileInfo $file) {
-                return $file->isReadable();
-            });
-        } else {
-            $finderFiles->filter(function (SplFileInfo $file) use ($regex) {
-                if ('file' === $file->getType()) {
-                    if (preg_match($regex, $file->getFileName())) {
-                        return $file->isReadable();
-                    }
+        //to be enabled while using regex for file type matching
 
-                    return false;
-                }
+        // if ($fileManager->getTree()) {
+        //     $finderFiles->files()->name($regex)->filter(function (SplFileInfo $file) {
+        //         return $file->isReadable();
+        //     });
+        // } else {
+        //     $finderFiles->filter(function (SplFileInfo $file) use ($regex) {
+        //         if ('file' === $file->getType()) {
+        //             if (preg_match($regex, $file->getFilename())) {
+        //                 return $file->isReadable();
+        //             }
 
-                return $file->isReadable();
-            });
-        }
+        //             return false;
+        //         }
+
+        //         return $file->isReadable();
+        //     });
+        // }
 
         $formDelete = $this->createDeleteForm()->createView();
         $fileArray  = [];
@@ -171,23 +179,43 @@ class FileManagerController extends Controller
         $form->handleRequest($request);
         /** @var Form $formRename */
         $formRename = $this->createRenameForm();
+        
 
+        //Uploading Folder---------------------------------------->
         if ($form->isSubmitted() && $form->isValid()) {
             $data      = $form->getData();
-            $fs        = new Filesystem();
-            $directory = $directorytmp = $fileManager->getCurrentPath() . DIRECTORY_SEPARATOR . $data['name'];
-            $i         = 1;
 
-            while ($fs->exists($directorytmp)) {
-                $directorytmp = "{$directory} ({$i})";
-                ++$i;
+            // Get Name and Parent Path
+            $directoryName = $data['name'];
+            $logger->info("UploadDirectory");
+            $parentPath = $fileManager->getQueryParameters()['route'];
+            $logger->info("parent");
+            //$logger->info($fileManager->getQueryParameters()['route']);
+            $logger->info($parentPath);
+            $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
+
+            //Search for Directory in Table
+            $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+            $directory=$directoryClass->findByPath($directoryPath);
+            if($directory){
+                $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
             }
-            $directory = $directorytmp;
 
-            try {
-                $fs->mkdir($directory);
+            //Get Parent, create directory, set parent
+            
+            $parent=$directoryClass->findOneBy(array('path' => $parentPath));
+            if (!$parent) {
+                throw new HttpException(Response::HTTP_INTERNAL_SERVER_ERROR, 'Parent folder does not exist.');
+            }
+            try{
+                $directory  = new Directory($directoryName,$directoryPath,$this->getUser());
+                $directory->setParent($parent);
+                $entityManager = $this->getDoctrine()->getManager();
+                $entityManager->persist($directory);
+                $entityManager->flush();
                 $this->addFlash('success', $translator->trans('folder.add.success'));
-            } catch (IOExceptionInterface $e) {
+            }
+            catch (IOExceptionInterface $e) {
                 $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
             }
 
@@ -502,20 +530,56 @@ class FileManagerController extends Controller
      * @param string $parent
      *
      * @return array|null
+     * 
+     * 
      */
-    protected function retrieveSubDirectories(FileManager $fileManager, $path, $parent = DIRECTORY_SEPARATOR)
+    protected function retrieveSubDirectories(FileManager $fileManager, $parentPath = DIRECTORY_SEPARATOR,LoggerInterface $logger,$baseFolderName = false)
     {
+        $directoriesList = null;
+        $logger->info("RetrieveDirectory");
+        $logger->info($parentPath);
+
         //Find parent from id and children from parent
+        if($baseFolderName){
+            $fileName = DIRECTORY_SEPARATOR . $fileManager->getBaseName();
+            //$fileName = '/root';
+            $queryParameters          = $fileManager->getQueryParameters();
+            $queryParameters['route'] = $fileName;
+            $queryParametersRoute     = $queryParameters;
+            unset($queryParametersRoute['route']);
+
+            // $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
+            // $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
+
+            $directoriesList[] = [
+                //'text'     => 'root',
+                'text'     => $fileManager->getBaseName(),
+                'icon'     => 'far fa-folder-open',
+                'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
+                'a_attr'   => [
+                    'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                ], 'state' => [
+                    'selected' => $fileManager->getCurrentRoute() === $fileName,
+                    'opened'   => true,
+                ],
+            ];
+
+            return $directoriesList;
+        }
+            
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $parent=$directoryClass->findByPath($path);
+        $parent=$directoryClass->findOneBy(array('path' => $parentPath));
+            if (!$parent) {
+                throw new HttpException(Response::HTTP_INTERNAL_SERVER_ERROR, 'Parent folder does not exist.');
+            }
         $directories = $directoryClass->findByParent($parent);
 
         //List for tree
-        $directoriesList = null;
+       
 
         foreach ($directories as $directory) {
-            $fileName = $parent . $directory->getName();
-            $queryParameters          = $this->getQueryParameters();
+            $fileName = $parentPath . '/' . $directory->getName();
+            $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
             $queryParametersRoute     = $queryParameters;
             unset($queryParametersRoute['route']);
@@ -526,7 +590,7 @@ class FileManagerController extends Controller
             $directoriesList[] = [
                 'text'     => $directory->getName(),
                 'icon'     => 'far fa-folder-open',
-                'children' => $this->retrieveSubDirectories($fileManager,$fileName, $fileName . DIRECTORY_SEPARATOR),
+                'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                 'a_attr'   => [
                     'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
                 ], 'state' => [
@@ -551,16 +615,7 @@ class FileManagerController extends Controller
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $FileClass=$this->getDoctrine()->getRepository(CSMCFile::class);
         $parent=$directoryClass->findByPath($path);
-        $files = $FileClass->findByParent($parent);
-
-        $FileList = null;
-
-        foreach ($files as $file) {
-            $info = new SplFileInfo($fileManager->getBasePath . '/' . $file->getPhysicalDirectory());
-            array_push($FileList,$info);
-
-        }
-
+        $FileList = $FileClass->findByParent($parent);
         return $FileList;
     }
 

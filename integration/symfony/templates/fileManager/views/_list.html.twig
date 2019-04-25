@@ -14,16 +14,16 @@
             <th><input type="checkbox" id="select-all" title="{{ 'select-all'|trans }}"></th>
             <th></th>
             <th>
-                {{ order(fileManager, 'name') }}
+                {{ CSMCorder(fileManager, 'name') }}
             </th>
             <th class="hidden-xs">
-                {{ order(fileManager, 'date') }}
+                {{ CSMCorder(fileManager, 'date') }}
             </th>
             <th class="hidden-xs">
-                {{ order(fileManager, 'size') }}
+                {{ CSMCorder(fileManager, 'size') }}
             </th>
             <th class="hidden-xs">
-                {{ order(fileManager, 'dimension') }}
+                {{ CSMCorder(fileManager, 'dimension') }}
             </th>
             <th class="text-right">{{ 'table.actions'|trans }}</th>
         </tr>
