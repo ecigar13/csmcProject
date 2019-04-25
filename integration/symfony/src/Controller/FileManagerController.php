@@ -3,13 +3,13 @@
 namespace App\Controller;
 
 use Artgris\Bundle\FileManagerBundle\Event\FileManagerEvents;
-use Artgris\Bundle\FileManagerBundle\Helpers\File;
+use App\Helpers\File;
 use Doctrine\ORM\EntityRepository;
 use App\Entity\File\Directory;
 use App\Entity\File\Link;
-use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
-//use App\Helpers\CSMCFileManager;
-use Artgris\Bundle\FileManagerBundle\Twig\OrderExtension;
+//use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
+use App\Helpers\FileManager;
+use App\Twig\CSMCOrderExtension;
 use App\Entity\File\FileHash;
 use App\Entity\File\File as CSMCFile;
 use App\Entity\File\VirtualFile;
@@ -67,7 +67,7 @@ class FileManagerController extends Controller
         $regex = $fileManager->getRegex();
 
         $orderBy   = $fileManager->getQueryParameter('orderby');
-        $orderDESC = OrderExtension::DESC === $fileManager->getQueryParameter('order');
+        $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
         if (!$orderBy) {
             $finderFiles->sortByType();
         }
@@ -109,7 +109,7 @@ class FileManagerController extends Controller
         $formDelete = $this->createDeleteForm()->createView();
         $fileArray  = [];
         foreach ($finderFiles as $file) {
-            $fileArray[] = new File($file, $this->get('translator'), $this->get('file_type_service'), $fileManager);
+            $fileArray[] = new File($file, $this->get('translator'), $this->get('app.file_type_service'), $fileManager);
         }
 
         if ('dimension' === $orderBy) {
