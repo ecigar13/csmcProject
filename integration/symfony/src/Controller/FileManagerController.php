@@ -46,7 +46,7 @@ class FileManagerController extends Controller
      *
      * @throws \Exception
      */
-    public function indexAction(Request $request, LoggerInterface $l)
+    public function indexAction(Request $request, LoggerInterface $logger)
     {
         $queryParameters = $request->query->all();
         $translator      = $this->get('translator');
@@ -55,22 +55,27 @@ class FileManagerController extends Controller
             unset($queryParameters['json']);
         }
         $fileManager = $this->newFileManager($queryParameters);
-
+        $logger->info("Logging");
+        $logger->info($fileManager->getDirName());
+        $logger->info($fileManager->getBaseName());
         // Folder search
-       $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR);
+       $directoriesArbo = $this->retrieveSubDirectories($fileManager, $fileManager->getDirName(), DIRECTORY_SEPARATOR,$fileManager->getBaseName());
        
         // File search
 
-        $finderFiles = new Finder();
-        $finderFiles->in($fileManager->getCurrentPath())->depth(0);
-        //$finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
+        
+        $logger->info($fileManager->getCurrentRoute());
+        // $finderFiles = new Finder();
+        // $finderFiles->in($fileManager->getCurrentPath())->depth(0);
+        $finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
+        $logger->info(print_r($finderFiles,true));
         $regex = $fileManager->getRegex();
 
         $orderBy   = $fileManager->getQueryParameter('orderby');
         $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
-        if (!$orderBy) {
-            $finderFiles->sortByType();
-        }
+        // if (!$orderBy) {
+        //     $finderFiles->sortByType();
+        // }
 
         switch ($orderBy) {
             case 'name':
@@ -88,28 +93,30 @@ class FileManagerController extends Controller
                 break;
         }
 
-        if ($fileManager->getTree()) {
-            $finderFiles->files()->name($regex)->filter(function (SplFileInfo $file) {
-                return $file->isReadable();
-            });
-        } else {
-            $finderFiles->filter(function (SplFileInfo $file) use ($regex) {
-                if ('file' === $file->getType()) {
-                    if (preg_match($regex, $file->getFilename())) {
-                        return $file->isReadable();
-                    }
+        //to be enabled while using regex for file type matching
 
-                    return false;
-                }
+        // if ($fileManager->getTree()) {
+        //     $finderFiles->files()->name($regex)->filter(function (SplFileInfo $file) {
+        //         return $file->isReadable();
+        //     });
+        // } else {
+        //     $finderFiles->filter(function (SplFileInfo $file) use ($regex) {
+        //         if ('file' === $file->getType()) {
+        //             if (preg_match($regex, $file->getFilename())) {
+        //                 return $file->isReadable();
+        //             }
 
-                return $file->isReadable();
-            });
-        }
+        //             return false;
+        //         }
+
+        //         return $file->isReadable();
+        //     });
+        // }
 
         $formDelete = $this->createDeleteForm()->createView();
         $fileArray  = [];
         foreach ($finderFiles as $file) {
-            $fileArray[] = new File($file, $this->get('translator'), $this->get('app.file_type_service'), $fileManager);
+            $fileArray[] = new File($file, $this->get('translator'), $this->get('file_type_service'), $fileManager);
         }
 
         if ('dimension' === $orderBy) {
@@ -174,6 +181,17 @@ class FileManagerController extends Controller
         if ($form->isSubmitted() && $form->isValid()) {
             $data      = $form->getData();
             $fs        = new Filesystem();
+            $directoryName = $data['name'];
+            $logger->info("directory");
+            $logger->info($directoryName);
+
+
+            $parentPath = $fileManager->getCurrentRoute();
+            if($parentPath=null)
+                $logger->info("No parent");
+            $logger->info("parent");
+            $logger->info($parentPath);
+
             $directory = $directorytmp = $fileManager->getCurrentPath() . DIRECTORY_SEPARATOR . $data['name'];
             $i         = 1;
 
@@ -494,20 +512,50 @@ class FileManagerController extends Controller
      * @param string $parent
      *
      * @return array|null
+     * 
+     * 
      */
-    protected function retrieveSubDirectories(FileManager $fileManager, $path, $parent = DIRECTORY_SEPARATOR)
+    protected function retrieveSubDirectories(FileManager $fileManager, $parentPath = DIRECTORY_SEPARATOR,$baseFolderName = false)
     {
+        $directoriesList = null;
         //Find parent from id and children from parent
+        if($baseFolderName){
+            $fileName = DIRECTORY_SEPARATOR . $fileManager->getBaseName();
+            //$fileName = '/root';
+            $queryParameters          = $fileManager->getQueryParameters();
+            $queryParameters['route'] = $fileName;
+            $queryParametersRoute     = $queryParameters;
+            unset($queryParametersRoute['route']);
+
+            // $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
+            // $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
+
+            $directoriesList[] = [
+                //'text'     => 'root',
+                'text'     => $fileManager->getBaseName(),
+                'icon'     => 'far fa-folder-open',
+                'children' => $this->retrieveSubDirectories($fileManager, $fileName . DIRECTORY_SEPARATOR),
+                'a_attr'   => [
+                    'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                ], 'state' => [
+                    'selected' => $fileManager->getCurrentRoute() === $fileName,
+                    'opened'   => true,
+                ],
+            ];
+
+            return $directoriesList;
+        }
+            
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $parent=$directoryClass->findByPath($path);
+        $parent=$directoryClass->findByPath($parentPath);
         $directories = $directoryClass->findByParent($parent);
 
         //List for tree
-        $directoriesList = null;
+       
 
         foreach ($directories as $directory) {
-            $fileName = $parent . $directory->getName();
-            $queryParameters          = $this->getQueryParameters();
+            $fileName = $parentPath . $directory->getName();
+            $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
             $queryParametersRoute     = $queryParameters;
             unset($queryParametersRoute['route']);
@@ -518,7 +566,7 @@ class FileManagerController extends Controller
             $directoriesList[] = [
                 'text'     => $directory->getName(),
                 'icon'     => 'far fa-folder-open',
-                'children' => $this->retrieveSubDirectories($fileManager,$fileName, $fileName . DIRECTORY_SEPARATOR),
+                'children' => $this->retrieveSubDirectories($fileManager, $fileName . DIRECTORY_SEPARATOR),
                 'a_attr'   => [
                     'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
                 ], 'state' => [
@@ -543,16 +591,7 @@ class FileManagerController extends Controller
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $FileClass=$this->getDoctrine()->getRepository(CSMCFile::class);
         $parent=$directoryClass->findByPath($path);
-        $files = $FileClass->findByParent($parent);
- 
-        $FileList = null;
-
-        foreach ($files as $file) {
-            $info = new SplFileInfo($fileManager->getBasePath . '/' . $file->getPhysicalDirectory());
-            array_push($FileList,$info);
-            
-        }
-
+        $FileList = $FileClass->findByParent($parent);
         return $FileList;
     }
     

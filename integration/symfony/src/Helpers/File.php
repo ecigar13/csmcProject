@@ -3,15 +3,22 @@
 namespace App\Helpers;
 
 use App\Service\FileTypeService;
+use App\Entity\File\File as CSMCFile;
 use Symfony\Component\Finder\SplFileInfo;
 use Symfony\Component\Translation\TranslatorInterface;
 
 class File
 {
     /**
+     *  @var CSMCFile
+     */
+    private $CSMCFile;
+
+    /**
      * @var SplFileInfo
      */
-    private $file;
+    private $fileinfo;
+
     /**
      * @var TranslatorInterface
      */
@@ -29,26 +36,27 @@ class File
     /**
      * File constructor.
      *
-     * @param SplFileInfo         $file
+     * @param CSMCFile              $file
      * @param TranslatorInterface $translator
      * @param FileTypeService     $fileTypeService
      * @param FileManager         $fileManager
      *
      * @internal param $module
      */
-    public function __construct(SplFileInfo $file, TranslatorInterface $translator, FileTypeService $fileTypeService, FileManager $fileManager)
+    public function __construct(CSMCFile $CSMCFile, TranslatorInterface $translator, FileTypeService $fileTypeService, FileManager $fileManager)
     {
-        $this->file = $file;
+        $this->CSMCFile = $CSMCFile;
+        $this->fileinfo = new SplFileInfo($CSMCFile->getPhysicalDirectory());
         $this->translator = $translator;
         $this->fileTypeService = $fileTypeService;
         $this->fileManager = $fileManager;
-        $this->preview = $this->fileTypeService->preview($this->fileManager, $this->file);
+        $this->preview = $this->fileTypeService->preview($this->fileManager, $this->fileinfo);
     }
 
     public function getDimension()
     {
-        return preg_match('/(gif|png|jpe?g|svg)$/i', $this->file->getExtension()) ?
-            getimagesize($this->file->getPathname()) : '';
+        return preg_match('/(gif|png|jpe?g|svg)$/i', $this->fileinfo->getExtension()) ?
+            getimagesize($this->fileinfo->getPathname()) : '';
     }
 
     public function getHTMLDimension()
@@ -62,7 +70,7 @@ class File
     public function getHTMLSize()
     {
         if ('file' === $this->getFile()->getType()) {
-            $size = $this->file->getSize() / 1000;
+            $size = $this->fileinfo->getSize() / 1000;
             $kb = $this->translator->trans('size.kb');
             $mb = $this->translator->trans('size.mb');
 
@@ -81,7 +89,7 @@ class File
                 $attr .= "data-width=\"{$width}\" data-height=\"{$height}\" ";
             }
 
-            if ('file' === $this->file->getType()) {
+            if ('file' === $this->fileinfo->getType()) {
                 $attr .= "data-path=\"{$this->getPreview()['path']}\"";
                 $attr .= ' class="select"';
             }
@@ -101,7 +109,7 @@ class File
      */
     public function getFile()
     {
-        return $this->file;
+        return $this->fileinfo;
     }
 
     /**
@@ -109,7 +117,7 @@ class File
      */
     public function setFile($file)
     {
-        $this->file = $file;
+        $this->fileinfo = $fileinfo;
     }
 
     /**
