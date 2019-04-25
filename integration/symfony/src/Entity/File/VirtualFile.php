@@ -69,4 +69,22 @@ class VirtualFile {
     {
         return $this->id;
     }
+    /**
+     * @return mixed
+     */
+    public function getParent()
+    {
+        return $this->parent;
+    }
+    /**
+     * @param mixed $parent
+     * 
+     * @return self
+     */
+    public function setParent($parent)
+    {
+        $this->parent = $parent;
+
+        return $this;
+    }
 }
