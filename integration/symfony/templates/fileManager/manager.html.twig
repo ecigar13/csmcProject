@@ -51,6 +51,12 @@
                     <span class="far fa-folder-open"></span>
                     <span>{{ 'button.add.folder'|trans }}</span>
                 </button>
+                {# new code add link button start#}
+                <button type="button" style="background-color:#c7b909;border-color:#f1f500;background-image:linear-gradient(to bottom,#f5d704 0,#c7b909 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#addLink">
+                    <span class="fa fa-link"></span>
+                    <span>{{ 'button.add.link'|trans }}</span>
+                </button>
+                {# new add link button end#}
                 {# {% if fileManager.parent %} #}
                     <button type="button"
                             class="btn btn-sm btn-danger btn-action js-delete-modal"
@@ -77,6 +83,12 @@
                     <span class="far fa-check-square"></span>
                     <span>{{ 'button.delete.selected'|trans }}</span>
                 </a>
+                {# new code share button start#}
+                <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareFolder">
+                    <span class="fa fa-share"></span>
+                    <span>{{ 'button.add.share'|trans }}</span>
+                </button>
+                {# new code share button end#}
             {% endblock %}
             {% block display %}
                 <div class="btn-group pull-right">
