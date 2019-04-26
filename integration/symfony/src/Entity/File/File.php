@@ -32,8 +32,8 @@ class File extends VirtualFile {
 
     private $file;
 
-    public function __construct(string $name, User $owner = null, FileHash $hash, array $metadata, string $path) {
-        parent::__construct($name, $owner, $path);
+    public function __construct(string $name, User $owner = null, FileHash $hash, array $metadata) {
+        parent::__construct($name, $owner);
         $this->hash = $hash;
         $this->metadata = new ArrayCollection();
         foreach($metadata as $data) {
@@ -49,10 +49,12 @@ class File extends VirtualFile {
     public static function fromUploadData(FileData $fileData, EntityManagerInterface $entityManager, array $metadata = []) {
         $name = self::createName($fileData->file);
         $hash = self::createHash($fileData->file, $entityManager);
-        if(!empty($metadata))
-            $metadata = self::extractMetaData($fileData->file, $metadata);
 
-        $file = new File($name, $fileData->user, $hash, $metadata, $fileData->path);
+        //if metadata is not defined, guess it and save in database.
+        //TODO: in front end, prevent upload of no-extension file. This will crash.
+        $metadata = empty($metadata) ? self::extractMetaData($fileData->file, $metadata) : [] ;
+
+        $file = new File($name, $fileData->user, $hash, $metadata);
 
         $file->file = $fileData->file;
 
@@ -144,6 +146,13 @@ class File extends VirtualFile {
         $return[] = new FileMetadata('mime', $mime);
 
         $ext = $uploadedFile->guessExtension();
+
+        //this is a stop gap solution. A better one is to prevent uploading no extension file.
+        if($ext === null ){
+            $ext = '';
+        }
+
+        //this is not used. Not sure why it's here.
         $checkExt = $ext == $uploadedFile->getClientOriginalExtension();
 
         $return[] = new FileMetadata('extension', $ext);
