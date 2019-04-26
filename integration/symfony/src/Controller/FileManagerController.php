@@ -211,7 +211,7 @@ class FileManagerController extends Controller
                 
             }
             try{
-                $directory  = new Directory($directoryName,$directoryPath,$this->getUser());
+                $directory  = new Directory($directoryName,$this->getUser(),$directoryPath,);
                 $directory->setParent($parent);
                 $entityManager = $this->getDoctrine()->getManager();
                 $entityManager->persist($directory);
@@ -614,7 +614,7 @@ class FileManagerController extends Controller
                     'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
-                    'opened'   => true,
+                    'opened'   => $fileManager->getCurrentRoute() === $fileName,
                 ],
             ];
 
@@ -623,9 +623,6 @@ class FileManagerController extends Controller
             
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $parent=$directoryClass->findOneBy(array('path' => $parentPath));
-            if (!$parent) {
-                throw new HttpException(Response::HTTP_INTERNAL_SERVER_ERROR, 'Parent folder does not exist.');
-            }
         $directories = $directoryClass->findByParent($parent);
 
         //List for tree
@@ -649,7 +646,7 @@ class FileManagerController extends Controller
                     'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
-                    'opened'   => true,
+                    'opened'   => $fileManager->getCurrentRoute() === $fileName,
                 ],
             ];
         }
