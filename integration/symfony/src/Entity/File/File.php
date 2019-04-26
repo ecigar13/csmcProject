@@ -32,8 +32,8 @@ class File extends VirtualFile {
 
     private $file;
 
-    public function __construct(string $name, User $owner = null, FileHash $hash, array $metadata) {
-        parent::__construct($name, $owner);
+    public function __construct(string $name, User $owner = null, FileHash $hash, array $metadata, string $path) {
+        parent::__construct($name, $owner, $path);
         $this->hash = $hash;
         $this->metadata = new ArrayCollection();
         foreach($metadata as $data) {
@@ -52,7 +52,7 @@ class File extends VirtualFile {
         if(!empty($metadata))
             $metadata = self::extractMetaData($fileData->file, $metadata);
 
-        $file = new File($name, $fileData->user, $hash, $metadata);
+        $file = new File($name, $fileData->user, $hash, $metadata, $fileData->path);
 
         $file->file = $fileData->file;
 

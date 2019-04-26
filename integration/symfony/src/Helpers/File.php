@@ -46,7 +46,7 @@ class File
     public function __construct(CSMCFile $CSMCFile, TranslatorInterface $translator, FileTypeService $fileTypeService, FileManager $fileManager)
     {
         $this->CSMCFile = $CSMCFile;
-        $this->fileinfo = new SplFileInfo($CSMCFile->getPhysicalDirectory());
+        $this->fileinfo = new SplFileInfo($CSMCFile->getPhysicalName(),$CSMCFile->getPhysicalDirectory(),$CSMCFile->getPhysicalDirectory().'/'.$CSMCFile->getPhysicalName());
         $this->translator = $translator;
         $this->fileTypeService = $fileTypeService;
         $this->fileManager = $fileManager;

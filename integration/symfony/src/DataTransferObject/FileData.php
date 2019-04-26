@@ -11,9 +11,11 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class FileData {
     public $file;
     public $user;
+    public $path;
 
-    public function  __construct(UploadedFile $file, User $user){
+    public function  __construct(UploadedFile $file, User $user, string $path=''){
       $this->file = $file;
       $this->user = $user;
+      $this->path = $path;
     }
 }

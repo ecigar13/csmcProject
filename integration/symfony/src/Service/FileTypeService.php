@@ -39,21 +39,21 @@ class FileTypeService
                 array_merge($fileManager->getQueryParameters(), ['fileName' => rawurlencode($file->getFilename())]));
         }
         $extension = $file->getExtension();
-        $type = $file->getType();
-        if ('file' === $type) {
-            $size = $this::IMAGE_SIZE[$fileManager->getView()];
-            return $this->fileIcon($filePath, $extension, $size, true);
-        }
-        if ('dir' === $type) {
-            $href = $this->router->generate('file_manager', array_merge($fileManager->getQueryParameters(),
-                ['route' => $fileManager->getRoute() . '/' . rawurlencode($file->getFilename())]));
+        //$type = $file->getType();
+        //if ('file' === $type) {
+        $size = $this::IMAGE_SIZE[$fileManager->getView()];
+        return $this->fileIcon($filePath, $extension, $size, true);
+        // }
+        // if ('dir' === $type) {
+        //     $href = $this->router->generate('file_manager', array_merge($fileManager->getQueryParameters(),
+        //         ['route' => $fileManager->getRoute() . '/' . rawurlencode($file->getFilename())]));
 
-            return [
-                'path' => $filePath,
-                'html' => "<i class='fas fa-folder-open' aria-hidden='true'></i>",
-                'folder' => '<a  href="' . $href . '">' . $file->getFilename() . '</a>',
-            ];
-        }
+        //     return [
+        //         'path' => $filePath,
+        //         'html' => "<i class='fas fa-folder-open' aria-hidden='true'></i>",
+        //         'folder' => '<a  href="' . $href . '">' . $file->getFilename() . '</a>',
+        //     ];
+        // }
     }
 
     public function accept($type)
