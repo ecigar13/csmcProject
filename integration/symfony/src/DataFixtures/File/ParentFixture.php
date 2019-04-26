@@ -18,16 +18,16 @@ use Doctrine\Common\Persistence\ObjectManager;
 
 class ParentFixture extends Fixture implements DependentFixtureInterface
 {
-     public const UPLOADS = "uploads";
+     public const ROOT = "root";
 
     public function load(ObjectManager $manager)
     {
         $user = $this->getReference(UserFixture::ADMIN_00);
-        $directory  = new Directory("uploads","/uploads",$user);
+        $directory  = new Directory("root","/root",$user);
         $manager->persist($directory);
         $manager->flush();
 
-        $this->addReference(self::UPLOADS,$directory);
+        $this->addReference(self::ROOT,$directory);
         
     }
 

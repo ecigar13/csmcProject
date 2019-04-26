@@ -61,7 +61,7 @@ class FileManagerController extends Controller
         $logger->info($fileManager->getDirName());
         $logger->info($fileManager->getBaseName());
         // Folder search
-       $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,$fileManager->getBaseName());
+       $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,true);
        
         // File search
 
@@ -541,7 +541,8 @@ class FileManagerController extends Controller
 
         //Find parent from id and children from parent
         if($baseFolderName){
-            $fileName = DIRECTORY_SEPARATOR . $fileManager->getBaseName();
+            $logger->info("in Base Folder");
+            $fileName = DIRECTORY_SEPARATOR . 'root';
             //$fileName = '/root';
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
@@ -552,8 +553,8 @@ class FileManagerController extends Controller
             // $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
 
             $directoriesList[] = [
-                //'text'     => 'root',
-                'text'     => $fileManager->getBaseName(),
+                'text'     => 'root',
+                //'text'     => $fileManager->getBaseName(),
                 'icon'     => 'far fa-folder-open',
                 'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                 'a_attr'   => [
