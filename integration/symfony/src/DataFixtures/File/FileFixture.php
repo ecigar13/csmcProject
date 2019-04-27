@@ -33,7 +33,6 @@ class FileFixture extends Fixture implements DependentFixtureInterface
     public function load(ObjectManager $manager)
     {
         $user = $this->getReference(UserFixture::INSTRUCTOR_00);
-        $user = $this->getReference(UserFixture::INSTRUCTOR_00);
         //Get the file in the TestFile as Dummy data
         $uploadedFile = new TestFile("./TestFile/utd.jpg","utd.jpg");
 
@@ -59,9 +58,12 @@ class FileFixture extends Fixture implements DependentFixtureInterface
         $metadata[] = new FileMetadata('mime', $mime);
         $metadata[] = new FileMetadata('extension', $extension);
 
-        $file = new File($name, $user, $fileHash, $metadata);
-        $file->setParent($this->getReference("directory1"));
+        $directory1 = $this->getReference("directory1");
+        $path = $directory1->getPath();
+        echo "path".$path;
+        $file = new File($name, $user, $fileHash, $metadata,$path);
 
+        $file->setParent($this->getReference("directory1"));
         $manager->persist($file);
         $manager->flush();
         

@@ -15,8 +15,10 @@ class Directory extends VirtualFile {
 
     private $directory;
 
+    private $path;
+
     public function __construct(string $name,User $owner, string $path) {
-        parent::__construct($name, $owner, $path,);
+        parent::__construct($name, $owner, $path);
     }
 
     
@@ -111,26 +113,6 @@ class Directory extends VirtualFile {
     public function setDirectory($directory)
     {
         $this->directory = $directory;
-
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getPath()
-    {
-        return $this->path;
-    }
-
-    /**
-     * @param mixed $path
-     *
-     * @return self
-     */
-    public function setPath($path)
-    {
-        $this->path = $path;
 
         return $this;
     }
