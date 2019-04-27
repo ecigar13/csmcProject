@@ -461,6 +461,7 @@ class FileManagerController extends Controller
     public function uploadFileAction(Request $request, LoggerInterface $logger)
     {
         //only accept httpRequest
+        $translator = $this->get('translator');
         if (!$request->isXmlHttpRequest()) {
             throw new MethodNotAllowedException();
         }
