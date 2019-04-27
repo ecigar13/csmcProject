@@ -472,7 +472,7 @@ class FileManagerController extends Controller
 
 
         $uploadedFile = $request->files->get('files');
-        $fileData = new FileData($uploadedFile[0], $this->getUser());
+        
 
         //get filePath and parentpath
         $logger->info("UploadFile");
@@ -502,6 +502,7 @@ class FileManagerController extends Controller
         
         //create a file object with its hash. Moving file to its folder fires during prePersist.
         try{
+            $fileData = new FileData($uploadedFile[0], $this->getUser(),$filePath);
             $file = CSMCFile::fromUploadData($fileData, $em);
             $file->setParent($parent);
             $em->persist($file);
@@ -532,8 +533,8 @@ class FileManagerController extends Controller
         
 
         //should respond with name of file
-        //return new JsonResponse($response, 200);
-        return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
+        $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
+        return new JsonResponse($response, 200);
     }
 
     // private static function getName(UploadedFile $uploadedFile) {

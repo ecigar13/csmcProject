@@ -13,7 +13,7 @@ class FileData {
     public $user;
     public $path;
 
-    public function  __construct(UploadedFile $file, User $user, string $path=''){
+    public function  __construct(UploadedFile $file=null, User $user=null, string $path=''){
       $this->file = $file;
       $this->user = $user;
       $this->path = $path;

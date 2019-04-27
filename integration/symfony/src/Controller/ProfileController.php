@@ -211,20 +211,21 @@ class ProfileController extends BaseController
      *
      * Process request from twig and dropzone front end. Persist and save the file. (just one). The event subscribers fires sometime while this uploader is working.
      */
-    public function saveImageAction(Request $request,LoggerInterface $l)
+    public function saveImageAction(Request $request,LoggerInterface $logger)
     {
 
         if (!$request->isXmlHttpRequest()) {
             throw new MethodNotAllowedException();
         }
-        $file = new FileData();
-        $file->file = $request->files->get('file');
+ 
+       
+        //Updated to have uniform contructor for Filedata
+        $uploadedFile = $request->files->get('file');
         $crop = $request->request->get('crop');
         $canvas = $request->request->get('canvas');
         $image = $request->request->get('image');
-
         $this->get('logger')->debug($crop);
-
+        $file = new FileData($uploadedFile,$this->getUser(),'');
         $em = $this->getDoctrine()->getManager();
         $file = File::fromUploadData($file, $em, array(
             'crop' => $crop,
