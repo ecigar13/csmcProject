@@ -48,17 +48,9 @@ class VirtualFile {
      */
     private $parent;
 
-
-    /**
-     * @ORM\Column(type="string", name="path", length=4000)
-     */
-    private $path;
-
-
-    public function __construct(string $name, User $owner=null, string $path = '') {
+    public function __construct(string $name, User $owner=null) {
         $this->name = $name;
         $this->owner = $owner;
-        $this->path = $path;
         $this->users = new \Doctrine\Common\Collections\ArrayCollection();
         $this->roles = new \Doctrine\Common\Collections\ArrayCollection();
     }

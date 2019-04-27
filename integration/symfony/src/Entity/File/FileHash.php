@@ -42,12 +42,4 @@ class FileHash {
     public function getFullPath() {
         return $this->getDirectory() . '/' . $this->path;
     }
-
-    public function getPath(){
-        return $this->path;
-    }
-
-    public function setPath(string $path){
-        $this->path = $path;
-    }
 }

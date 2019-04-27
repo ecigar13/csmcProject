@@ -14,8 +14,15 @@ use Doctrine\ORM\Mapping as ORM;
 class Directory extends VirtualFile {
 
     private $directory;
-    public function __construct(string $name,User $owner, string $path) {
-        parent::__construct($name, $owner, $path,);
+
+    /**
+     * @ORM\Column(type="string", name="path", length=4000)
+     */
+    private $path;
+
+    public function __construct(string $name, string $path,User $owner) {
+        parent::__construct($name, $owner);
+        $this->path=$path;
     }
 
     
@@ -93,4 +100,44 @@ class Directory extends VirtualFile {
     //     $name = mb_convert_encoding($name, "UTF-8");
     //     return $name;
     // }
+
+    /**
+     * @return mixed
+     */
+    public function getDirectory()
+    {
+        return $this->directory;
+    }
+
+    /**
+     * @param mixed $directory
+     *
+     * @return self
+     */
+    public function setDirectory($directory)
+    {
+        $this->directory = $directory;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPath()
+    {
+        return $this->path;
+    }
+
+    /**
+     * @param mixed $path
+     *
+     * @return self
+     */
+    public function setPath($path)
+    {
+        $this->path = $path;
+
+        return $this;
+    }
 }
