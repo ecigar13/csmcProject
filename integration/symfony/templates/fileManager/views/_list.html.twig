@@ -37,15 +37,18 @@
                 <td data-value="{{ file.fileName }}" {{ fileEntity.attribut|raw }}>
                     {{ (fileEntity.preview.folder is defined ? fileEntity.preview.folder : file.fileName)|raw }}
                 </td>
+                <!-- TODO: This crashes 
                 <td class="hidden-xs">
-                    <small>{{ file.mTime|date('d/m/Y') }}</small>
+                    {# <small>{{ file.mTime|date('d/m/Y') }}</small> #}
                 </td>
                 <td class="hidden-xs">
-                    <small>{{ fileEntity.HTMLSize|trans|raw }}</small>
+                    {# <small>{{ fileEntity.HTMLSize|trans|raw }}</small> #}
                 </td>
                 <td class="hidden-xs">
-                    <small>{{ fileEntity.HTMLDimension }}</small>
+                    {# <small>{{ fileEntity.HTMLDimension }}</small> #}
                 </td>
+
+                -->
                 <td class="text-right">
                     <span data-toggle="tooltip" title="{{ 'title.delete'|trans }}">
                         <button type="button"
