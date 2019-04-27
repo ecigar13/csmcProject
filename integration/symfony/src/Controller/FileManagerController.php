@@ -188,9 +188,13 @@ class FileManagerController extends Controller
             // Get Name and Parent Path
             $directoryName = $data['name'];
             $logger->info("UploadDirectory");
-            $parentPath = $fileManager->getQueryParameters()['route'];
-            $logger->info("parent");
-            //$logger->info($fileManager->getQueryParameters()['route']);
+
+            print_r($fileManager->getQueryParameters());
+            $parentPath= 'root';
+            if(array_key_exists('route',$fileManager->getQueryParameters()) && !is_null($fileManager->getQueryParameters()['route'])){
+                $parentPath = $fileManager->getQueryParameters()['route'];
+            }
+            $logger->info("parentDDDDDDDDDDDDD");
             $logger->info($parentPath);
             $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
 
@@ -470,13 +474,16 @@ class FileManagerController extends Controller
         //create File Manager
         $queryParameters = $request->query->all();
         $fileManager = $this->newFileManager($queryParameters);
-
-
         $uploadedFile = $request->files->get('files');
         
 
         //get filePath and parentpath
         $logger->info("UploadFile");
+
+        //null
+        $queryParameters = $fileManager->getQueryParameters();
+        print_r($queryParameters);
+
         $parentPath = $fileManager->getQueryParameters()['route'];
         $logger->info("parent");
         $logger->info($parentPath);
