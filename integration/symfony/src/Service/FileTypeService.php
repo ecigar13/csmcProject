@@ -6,9 +6,14 @@ use App\Helpers\FileManager;
 use SplFileInfo;
 use Symfony\Component\Asset\Packages;
 use Symfony\Component\Routing\RouterInterface;
-
+use App\Entity\File\File as CSMCFile;
+use Psr\Log\LoggerInterface;
 class FileTypeService
 {
+    /**
+     * @var LoggerInterface
+     */
+    public $logger;
     const IMAGE_SIZE = [
         FileManager::VIEW_LIST => '22',
         FileManager::VIEW_THUMBNAIL => '100',
@@ -25,35 +30,23 @@ class FileTypeService
      * @param RouterInterface $router
      * @param Packages $packages
      */
-    public function __construct(RouterInterface $router)
+    public function __construct(RouterInterface $router,LoggerInterface $logger)
     {
         $this->router = $router;
+        $this->logger=$logger;
     }
 
-    public function preview(FileManager $fileManager, SplFileInfo $file)
+    public function preview(FileManager $fileManager, SplFileInfo $file, CSMCFile $csmcFile )
     {
         if ($fileManager->getImagePath()) {
-            $filePath = htmlentities($fileManager->getImagePath() . rawurlencode($file->getFilename()));
+            $filePath = htmlentities($fileManager->getBasePath(). '/' .$csmcFile->getPhysicalDirectory() . '/'. rawurlencode($file->getFilename()));
         } else {
             $filePath = $this->router->generate('file_manager_file',
                 array_merge($fileManager->getQueryParameters(), ['fileName' => rawurlencode($file->getFilename())]));
         }
         $extension = $file->getExtension();
-        //$type = $file->getType();
-        //if ('file' === $type) {
         $size = $this::IMAGE_SIZE[$fileManager->getView()];
         return $this->fileIcon($filePath, $extension, $size, true);
-        // }
-        // if ('dir' === $type) {
-        //     $href = $this->router->generate('file_manager', array_merge($fileManager->getQueryParameters(),
-        //         ['route' => $fileManager->getRoute() . '/' . rawurlencode($file->getFilename())]));
-
-        //     return [
-        //         'path' => $filePath,
-        //         'html' => "<i class='fas fa-folder-open' aria-hidden='true'></i>",
-        //         'folder' => '<a  href="' . $href . '">' . $file->getFilename() . '</a>',
-        //     ];
-        // }
     }
 
     public function accept($type)
@@ -76,6 +69,11 @@ class FileTypeService
 
     public function fileIcon($filePath, $extension = null, $size = 75, $lazy = false)
     {
+        $this->logger->info("filePath");
+        $this->logger->info($filePath);
+        $this->logger->info("Extension");
+        $this->logger->info($extension);
+
         if (null === $extension) {
             $filePathTmp = strtok($filePath, '?');
             $extension = pathinfo($filePathTmp, PATHINFO_EXTENSION);
@@ -91,8 +89,14 @@ class FileTypeService
             case is_array(@getimagesize($filePath)):
             case preg_match('/(gif|png|jpe?g|svg)$/i', $extension):
                 $query = parse_url($filePath, PHP_URL_QUERY);
+                $this->logger->info("query");
+                $this->logger->info($query);
                 $time = 'time=' . time();
+                $this->logger->info("time");
+                $this->logger->info($time);
                 $fileName = $query ? $filePath . '&' . $time : $filePath . '?' . $time;
+                $this->logger->info("fileName");
+                $this->logger->info($fileName);
 
                 if ($lazy) {
                     $html = "<img class=\"lazy\" data-src=\"{$fileName}\" height='{$size}'>";

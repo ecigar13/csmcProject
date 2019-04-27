@@ -52,6 +52,7 @@ class FileManagerController extends Controller
     {
         $queryParameters = $request->query->all();
         $translator      = $this->get('translator');
+       // $isJson          = $request->get('json') ? true : false;
         $isJson          = $request->get('json') ? true : false;
         if ($isJson) {
             unset($queryParameters['json']);
@@ -64,21 +65,11 @@ class FileManagerController extends Controller
        $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,true);
        
         // File search
-
-        
         $logger->info($fileManager->getCurrentRoute());
-        // $finderFiles = new Finder();
-        // $finderFiles->in($fileManager->getCurrentPath())->depth(0);
         $finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
-        // $logger->info(print_r($finderFiles,true));
         $regex = $fileManager->getRegex();
-
         $orderBy   = $fileManager->getQueryParameter('orderby');
         $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
-        // if (!$orderBy) {
-        //     $finderFiles->sortByType();
-        // }
-
         switch ($orderBy) {
             case 'name':
                 $finderFiles->sort(function (SplFileInfo $a, SplFileInfo $b) {
@@ -118,6 +109,8 @@ class FileManagerController extends Controller
         $formDelete = $this->createDeleteForm()->createView();
         $fileArray  = [];
         foreach ($finderFiles as $file) {
+            $logger->info("path");
+            $logger->info($file->getPhysicalDirectory());
             $fileArray[] = new File($file, $this->get('translator'), $this->get('app.file_type_service'), $fileManager);
         }
 
@@ -470,83 +463,62 @@ class FileManagerController extends Controller
         //create File Manager
         $queryParameters = $request->query->all();
         $fileManager = $this->newFileManager($queryParameters);
-
-
-        $uploadedFile = $request->files->get('files');
-        
-
-        //get filePath and parentpath
-        $logger->info("UploadFile");
-        $parentPath = $fileManager->getQueryParameters()['route'];
-        $logger->info("parent");
-        $logger->info($parentPath);
-        $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile[0]->getClientOriginalName();
-        $logger->info("FilePath");
-        $logger->info($filePath);
-
-        //check if file with same name already exixt
-        $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
-        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $file=$fileClass->findByPath($filePath);
-        if($file){
-            $this->addFlash('danger', "File already exist please change file name");
-            return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
-        }
-
         //Check that parent exist
+        $parentPath = $fileManager->getQueryParameters()['route'];
+        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $parent=$directoryClass->findOneBy(array('path' => $parentPath));
-            if (!$parent) {
-                $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
-                return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
+        if (!$parent) {
+            $this->addFlash('danger', "Parent not found");
+            return new Response(501);
+
+        }
+        $uploadedFiles = $request->files->get('files');
+        
+        foreach ($uploadedFiles as $uploadedFile){
+                $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
+                $logger->info("FilePath");
+                $logger->info($filePath);
+
+                //check if file with same name already exixt
+                $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
                 
-            }
-        
-        //create a file object with its hash. Moving file to its folder fires during prePersist.
-        try{
-            $fileData = new FileData($uploadedFile[0], $this->getUser(),$filePath);
-            $file = CSMCFile::fromUploadData($fileData, $em);
-            $file->setParent($parent);
-            $em->persist($file);
-            $em->flush();
-            $response = [
-                'files'=>[
-                  [
-                    'originalName'=> $uploadedFile[0]->getClientOriginalName(),
-                    'fileExtension' => $uploadedFile[0]->getClientOriginalExtension(),
-                    'size'=> $uploadedFile[0]->getClientSize(),
-                    'mimeType'=> $uploadedFile[0]->getClientMimeType()
-                  ],
-                ]
-              ];
-        }
-        catch (IOExceptionInterface $e) {
-            $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
-        }
-
-
-        // //get translator service.
-        // if (isset($file->error)) {
-        //     $file->error = $this->get('translator')->trans($file->error);
-        // }
-        // $em->flush();
-
-        //by this point, the file should have been successfully uploaded.
-        
-
-        //should respond with name of file
-        $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
-        return new JsonResponse($response, 200);
+                $file=$fileClass->findByPath($filePath);
+                if($file){
+                    $this->addFlash('danger', "cant add file, File already exist-".$data['name']);
+                    return new Response(401);
+                    
+                }
+                
+                //create a file object with its hash. Moving file to its folder fires during prePersist.
+                try{
+                    $fileData = new FileData($uploadedFile, $this->getUser(),$filePath);
+                    $file = CSMCFile::fromUploadData($fileData, $em);
+                    $file->setParent($parent);
+                    $em->persist($file);
+                    $logger->info("Im 1");
+                }
+                catch (IOExceptionInterface $e) {
+                    $logger->info("Im 2");
+                    $this->addFlash('danger', "cant add file-".$data['name']);
+                    return new Response(501);
+                }
+    }
+    try{
+        $em->flush();
+        $logger->info("Im 3");
+    }
+    catch (IOExceptionInterface $e) {
+        $this->addFlash('danger', "Error while pushing to server");
+        return new Response(501);
     }
 
-    // private static function getName(UploadedFile $uploadedFile) {
-    //     $name = $uploadedFile->getClientOriginalName();
+        //should respond with name of file
+        $logger->info("Im 4");
+        //return $this->redirectToRoute('file_management', $fileManager->getQueryParameters(),200);
+        //return new JsonResponse($response, 200);
+        return new Response(200);
+    }
 
-    //     // find the position the extension starts
-    //     $i = strpos($name, '.');
-    //     $name = substr($name, 0, $i);
-    //     $name = mb_convert_encoding($name, "UTF-8");
-    //     return $name;
-    // }
 
     protected function dispatch($eventName, array $arguments = [])
     {

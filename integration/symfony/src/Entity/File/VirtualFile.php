@@ -53,6 +53,13 @@ class VirtualFile {
      */
     private $path;
 
+    /**
+    * @ORM\Column(type="datetime",name="created", nullable=false, options={"default":"CURRENT_TIMESTAMP"})
+    * @ORM\Version
+    * @var string
+    */
+    protected $created;
+
 
     public function __construct(string $name, User $owner=null, string $path = '') {
         $this->name = $name;
@@ -68,6 +75,20 @@ class VirtualFile {
     public function giveRolePermission(Role $role) {
 
     }
+
+    public function giveDate() {
+
+        $to=$this->created;
+        // list($part1,$part2) = explode(' ', $to);
+        // list($day, $month, $year) = explode('-', $part1);
+        // list($hours, $minutes,$seconds) = explode(':', $part2);
+        // if($hours>5)
+        //     $day=$day-1;
+        // $date =  mktime($month, $day, $year);
+        // echo $timeto;
+        return $to;
+    }
+    
 
     /**
      * @return mixed

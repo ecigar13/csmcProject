@@ -33,6 +33,8 @@ class File
     private $fileManager;
     private $preview;
 
+    private $date;
+
     /**
      * File constructor.
      *
@@ -46,18 +48,25 @@ class File
     public function __construct(CSMCFile $CSMCFile, TranslatorInterface $translator, FileTypeService $fileTypeService, FileManager $fileManager)
     {
         $this->CSMCFile = $CSMCFile;
-        $this->fileinfo = new SplFileInfo($CSMCFile->getPhysicalName(),$CSMCFile->getPhysicalDirectory(),$CSMCFile->getPhysicalDirectory().'/'.$CSMCFile->getPhysicalName());
+        $this->fileinfo = new SplFileInfo($CSMCFile->getPhysicalName(),$fileManager->getBasePath(). '/' .$CSMCFile->getPhysicalDirectory(),$fileManager->getBasePath(). '/' .$CSMCFile->getPhysicalDirectory() . '/'.$CSMCFile->getPhysicalName());
         $this->translator = $translator;
         $this->fileTypeService = $fileTypeService;
         $this->fileManager = $fileManager;
-        $this->preview = $this->fileTypeService->preview($this->fileManager, $this->fileinfo);
+        $this->preview = $this->fileTypeService->preview($this->fileManager, $this->fileinfo, $this->CSMCFile);
+        $this->date = $CSMCFile->giveDate();
     }
 
     public function getDimension()
     {
-        return preg_match('/(gif|png|jpe?g|svg)$/i', $this->fileinfo->getExtension()) ?
+        return preg_match('/(gif|png|jpe?g|svg)$/i', $this->CSMCFile->get("extension")) ?
             getimagesize($this->fileinfo->getPathname()) : '';
     }
+
+    public function getPath()
+    {
+        return $fileManager->getBasePath(). '/' .$CSMCFile->getPhysicalDirectory() . '/'.$CSMCFile->getPhysicalName();
+    }
+
 
     public function getHTMLDimension()
     {
@@ -67,15 +76,18 @@ class File
         }
     }
 
+    public function getdate()
+    {
+        return $this->date;
+    }
+
     public function getHTMLSize()
     {
-        if ('file' === $this->getFile()->getType()) {
-            $size = $this->fileinfo->getSize() / 1000;
+            $size = $this->CSMCFile->get("size") / 1000;
             $kb = $this->translator->trans('size.kb');
             $mb = $this->translator->trans('size.mb');
 
             return $size > 1000 ? number_format(($size / 1000), 1, '.', '').' '.$mb : number_format($size, 1, '.', '').' '.$kb;
-        }
     }
 
     public function getAttribut()
@@ -105,11 +117,19 @@ class File
     }
 
     /**
-     * @return SplFileInfo
+     * @return CSMCFile
      */
     public function getFile()
     {
-        return $this->fileinfo;
+        return $this->CSMCFile;
+    }
+
+    /**
+     * @return string
+     */
+    public function getextension()
+    {
+        return $this->CSMCFile->get("extension") ;
     }
 
     /**

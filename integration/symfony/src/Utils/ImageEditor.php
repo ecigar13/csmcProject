@@ -16,6 +16,8 @@ class ImageEditor {
 
     public function getCroppedImage(File $image) {
         $path = $this->uploadDirectory . '/' . $image->getPhysicalPath();
+        $this->logger->info("path");
+        $this->logger->info($path);
 
         $image_data = json_decode($image->get('image'));
         $canvas_data = json_decode($image->get('canvas'));

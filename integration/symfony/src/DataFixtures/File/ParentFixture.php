@@ -23,7 +23,7 @@ class ParentFixture extends Fixture implements DependentFixtureInterface
     public function load(ObjectManager $manager)
     {
         $user = $this->getReference(UserFixture::ADMIN_00);
-        $directory  = new Directory("root","/root",$user);
+        $directory  = new Directory("root",$user,"/root");
         $manager->persist($directory);
         $manager->flush();
 
