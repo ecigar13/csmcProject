@@ -22,33 +22,27 @@
             <th class="hidden-xs">
                 {{ CSMCorder(fileManager, 'size') }}
             </th>
-            <th class="hidden-xs">
-                {{ CSMCorder(fileManager, 'dimension') }}
-            </th>
             <th class="text-right">{{ 'table.actions'|trans }}</th>
         </tr>
         </thead>
         <tbody>
         {% for fileEntity in fileArray %}
             {% set file = fileEntity.file %}
-            <tr class="{{ fileEntity.isImage() ? 'img' : file.type }}">
-                <td><input type="checkbox" class="checkbox" name="delete[]" value="{{ file.fileName }}" title="{{ file.fileName }}"></td>
+            <tr class="{{ fileEntity.isImage() ? 'img' : 'file' }}">
+                <td><input type="checkbox" class="checkbox" name="delete[]" value="{{ file.name }}" title="{{ file.name }}"></td>
                 <td>{{ fileEntity.preview ? fileEntity.preview.html|raw }}</td>
-                <td data-value="{{ file.fileName }}" {{ fileEntity.attribut|raw }}>
-                    {{ (fileEntity.preview.folder is defined ? fileEntity.preview.folder : file.fileName)|raw }}
+                <td data-value="{{ file.name }}" {{ fileEntity.attribut|raw }}>
+                    {{ (fileEntity.preview.folder is defined ? fileEntity.preview.folder : file.name ~ '.' ~ file.extension)|raw }}
                 </td>
-                <!-- TODO: This crashes 
-                <td class="hidden-xs">
-                    {# <small>{{ file.mTime|date('d/m/Y') }}</small> #}
+                {# <td class="hidden-xs">
+                    <small>{{ fileEntity.date|date('d/m/Y') }}</small>
                 </td>
                 <td class="hidden-xs">
                     {# <small>{{ fileEntity.HTMLSize|trans|raw }}</small> #}
                 </td>
                 <td class="hidden-xs">
-                    {# <small>{{ fileEntity.HTMLDimension }}</small> #}
-                </td>
-
-                -->
+                    <small>{{ fileEntity.HTMLDimension }}</small>
+                </td> #}
                 <td class="text-right">
                     <span data-toggle="tooltip" title="{{ 'title.delete'|trans }}">
                         <button type="button"
@@ -59,7 +53,7 @@
                                 data-target="#js-confirm-delete"
                                 data-placement="left"
                                 data-html="true"
-                                data-href='{{ path('file_management_delete', fileManager.queryParameters|merge({'delete[]':file.fileName})) }}'>
+                                data-href='{{ path('file_management_delete', fileManager.queryParameters|merge({'delete[]':file.name})) }}'>
                         <span class="far fa-trash-alt"></span>
                         </button>
                     </span>
@@ -72,15 +66,15 @@
                                 data-target="#js-confirm-rename"
                                 data-placement="left"
                                 data-html="true"
-                                data-name='{{ file.basename('.'~file.extension) }}'
+                                data-name='{{ file.name}}'
                                 data-extension='{{ file.extension }}'
-                                data-href='{{ path('file_management_rename', fileManager.queryParameters|merge({'fileName':file.fileName})) }}'>
+                                data-href='{{ path('file_management_rename', fileManager.queryParameters|merge({'oldName':file.name})) }}'>
                         <span class="far fa-edit"></span>
                         </button>
                     </span>
-                    {% if file.type == "file" %}
+                    {# {% if file.type == "file" %} #}
                         <a data-placement="left" title="{{ 'title.download'|trans }}" class="btn btn-xs btn-default js-download"
-                           href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName':file.fileName})) }}" download>
+                           href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName':file.name})) }}" download>
                             <span class="fas fa-download"></span>
                         </a>
                         {% if fileEntity.isImage() %}
@@ -97,7 +91,7 @@
                                 </button>
                             </span>
                         {% endif %}
-                    {% endif %}
+                    {# {% endif %} #}
                 </td>
             </tr>
         {% endfor %}
