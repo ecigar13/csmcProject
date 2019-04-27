@@ -23,6 +23,7 @@ class File extends VirtualFile {
      */
     private $metadata;
 
+
     /**
      * @ORM\ManyToOne(targetEntity="FileHash", cascade={"persist", "merge"})
      * @ORM\JoinColumn(name="hash_id", referencedColumnName="id")
@@ -31,6 +32,8 @@ class File extends VirtualFile {
 
     private $file;
 
+    private $path;
+    
     public function __construct(string $name, User $owner = null, FileHash $hash, array $metadata) {
         parent::__construct($name, $owner);
         $this->hash = $hash;

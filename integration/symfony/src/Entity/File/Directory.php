@@ -100,4 +100,44 @@ class Directory extends VirtualFile {
     //     $name = mb_convert_encoding($name, "UTF-8");
     //     return $name;
     // }
+
+    /**
+     * @return mixed
+     */
+    public function getDirectory()
+    {
+        return $this->directory;
+    }
+
+    /**
+     * @param mixed $directory
+     *
+     * @return self
+     */
+    public function setDirectory($directory)
+    {
+        $this->directory = $directory;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPath()
+    {
+        return $this->path;
+    }
+
+    /**
+     * @param mixed $path
+     *
+     * @return self
+     */
+    public function setPath($path)
+    {
+        $this->path = $path;
+
+        return $this;
+    }
 }

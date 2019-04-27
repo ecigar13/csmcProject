@@ -37,8 +37,9 @@ class FileUploader {
 
         $dir = $this->uploadDirectory . '/' . $entity->getPhysicalDirectory();
         $name = $entity->getPhysicalName();
+        //move tmp file to path 
+        if($uploadedFile != null)
+            $uploadedFile->move($dir, $name);
 
-        //move tmp file to path
-        $uploadedFile->move($dir, $name);
+        }
     }
-}
