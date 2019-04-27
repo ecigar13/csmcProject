@@ -20,7 +20,9 @@
 **/symfony/vendor/**
 **/symfony/node_modules/**
 /symfony/public/build/
+/symfony/public/build/
 /symfony/public/uploads/
+
 
 ### Other ###
 !*.gitignore

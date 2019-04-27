@@ -15,14 +15,8 @@ class Directory extends VirtualFile {
 
     private $directory;
 
-    /**
-     * @ORM\Column(type="string", name="path", length=4000)
-     */
-    private $path;
-
-    public function __construct(string $name, string $path,User $owner) {
-        parent::__construct($name, $owner);
-        $this->path=$path;
+    public function __construct(string $name,User $owner, string $path) {
+        parent::__construct($name, $owner, $path,);
     }
 
     
