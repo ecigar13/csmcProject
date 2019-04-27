@@ -78,6 +78,16 @@ class File extends VirtualFile {
     }
 
     /**
+     * 
+     *
+     * @return string|null value
+     */
+    public function getextension() {
+
+        return $this->get("extension");
+    }
+
+    /**
      * @param string $key
      * @param mixed $value
      */
@@ -157,6 +167,11 @@ class File extends VirtualFile {
         $checkExt = $ext == $uploadedFile->getClientOriginalExtension();
 
         $return[] = new FileMetadata('extension', $ext);
+
+        //Save size also.
+        $size = $uploadedFile->getClientSize();
+
+        $return[] = new FileMetadata('size', $size);
 
         foreach ($metadata as $key => $value) {
              $return[] = new FileMetadata($key, $value);
