@@ -476,50 +476,58 @@ class FileManagerController extends Controller
 
         }
         $uploadedFiles = $request->files->get('files');
-        
+        $response = [];
         foreach ($uploadedFiles as $uploadedFile){
-                $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
-                $logger->info("FilePath");
-                $logger->info($filePath);
+            $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
+            $logger->info("FilePath");
+            $logger->info($filePath);
 
-                //check if file with same name already exixt
-                $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
+            //check if file with same name already exixt
+            $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
+            
+            $file=$fileClass->findByPath($filePath);
+            if($file){
+                $this->addFlash('danger', "cant add file, File already exist-".$data['name']);
+                return new Response(401);
                 
-                $file=$fileClass->findByPath($filePath);
-                if($file){
-                    $this->addFlash('danger', "cant add file, File already exist-".$data['name']);
-                    return new Response(401);
-                    
-                }
-                
-                //create a file object with its hash. Moving file to its folder fires during prePersist.
-                try{
-                    $fileData = new FileData($uploadedFile, $this->getUser(),$filePath);
-                    $file = CSMCFile::fromUploadData($fileData, $em);
-                    $file->setParent($parent);
-                    $em->persist($file);
-                    $logger->info("Im 1");
-                }
-                catch (IOExceptionInterface $e) {
-                    $logger->info("Im 2");
-                    $this->addFlash('danger', "cant add file-".$data['name']);
-                    return new Response(501);
-                }
-    }
-    try{
-        $em->flush();
-        $logger->info("Im 3");
-    }
-    catch (IOExceptionInterface $e) {
-        $this->addFlash('danger', "Error while pushing to server");
-        return new Response(501);
-    }
+            }
+            
+            //create a file object with its hash. Moving file to its folder fires during prePersist.
+            try{
+                $fileData = new FileData($uploadedFile, $this->getUser(),$filePath);
+                $file = CSMCFile::fromUploadData($fileData, $em);
+                $file->setParent($parent);
+                $em->persist($file);
+                // $logger->info("Im 1");
+            }
+            catch (IOExceptionInterface $e) {
+                $logger->info("Im 2");
+                $this->addFlash('danger', "can't add file-".$data['name']);
+                return new Response(501);
+            }
 
-        //should respond with name of file
-        $logger->info("Im 4");
-        //return $this->redirectToRoute('file_management', $fileManager->getQueryParameters(),200);
-        //return new JsonResponse($response, 200);
-        return new Response(200);
+            $response[] = [
+                'files'=>[
+                    [
+                    'originalName'=> $uploadedFile->getClientOriginalName(),
+                    'fileExtension' => $uploadedFile->getClientOriginalExtension(),
+                    'size'=> $uploadedFile->getClientSize(),
+                    'mimeType'=> $uploadedFile->getClientMimeType()
+                    ],
+                ]
+            ];
+        }
+        
+        try{
+            $em->flush();
+        }
+        catch (IOExceptionInterface $e) {
+            $this->addFlash('danger', "Error while flushing to server");
+            return new Response(501);
+        }
+        
+        //TODO: need to refresh the page on front-end.
+        return new JsonResponse($response,200);
     }
 
 
