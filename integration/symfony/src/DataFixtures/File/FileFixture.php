@@ -60,7 +60,7 @@ class FileFixture extends Fixture implements DependentFixtureInterface
 
         $directory1 = $this->getReference("directory1");
         $path = $directory1->getPath();
-        echo "path".$path;
+        //echo "path".$path;
         $file = new File($name, $user, $fileHash, $metadata,$path);
 
         $file->setParent($this->getReference("directory1"));
