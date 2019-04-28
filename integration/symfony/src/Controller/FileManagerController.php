@@ -462,17 +462,18 @@ class FileManagerController extends Controller
             throw new MethodNotAllowedException();
         }
 
-        $em = $this->getDoctrine()->getManager();
         //create File Manager
+        $em = $this->getDoctrine()->getManager();
         $queryParameters = $request->query->all();
         $fileManager = $this->newFileManager($queryParameters);
-        //Check that parent exist
+
+        //TODO: Check that parent exist to prevent crashing. Maybe front-end.
         $parentPath = $fileManager->getQueryParameters()['route'];
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $parent=$directoryClass->findOneBy(array('path' => $parentPath));
         if (!$parent) {
             $this->addFlash('danger', "Parent not found");
-            return new Response(501);
+            return new Response(Response::HTTP_NOT_IMPLEMENTED);
 
         }
         $uploadedFiles = $request->files->get('files');
@@ -488,7 +489,7 @@ class FileManagerController extends Controller
             $file=$fileClass->findByPath($filePath);
             if($file){
                 $this->addFlash('danger', "cant add file, File already exist-".$data['name']);
-                return new Response(401);
+                return new Response(Response::HTTP_UNAUTHORIZED);
                 
             }
             
@@ -526,7 +527,7 @@ class FileManagerController extends Controller
             return new Response(501);
         }
         
-        //TODO: need to refresh the page on front-end.
+        //TODO: need to refresh the page on front-end. 
         return new JsonResponse($response,200);
     }
 
