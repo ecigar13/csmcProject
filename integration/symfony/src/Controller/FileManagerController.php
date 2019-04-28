@@ -478,7 +478,7 @@ class FileManagerController extends Controller
         $parent=$directoryClass->findOneBy(array('path' => $parentPath));
         if (!$parent) {
             $this->addFlash('danger', "Parent not found");
-            return new Response(Response::HTTP_NOT_IMPLEMENTED);
+            return new Response(Response::HTTP_NOT_FOUND);
 
         }
         $uploadedFiles = $request->files->get('files');
@@ -509,7 +509,7 @@ class FileManagerController extends Controller
             catch (IOExceptionInterface $e) {
                 $logger->info("Im 2");
                 $this->addFlash('danger', "can't add file-".$data['name']);
-                return new Response(501);
+                return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             $response[] = [
@@ -529,7 +529,7 @@ class FileManagerController extends Controller
         }
         catch (IOExceptionInterface $e) {
             $this->addFlash('danger', "Error while flushing to server");
-            return new Response(501);
+            return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
         
         //TODO: need to refresh the page on front-end. 
