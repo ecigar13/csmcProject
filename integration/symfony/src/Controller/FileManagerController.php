@@ -58,9 +58,11 @@ class FileManagerController extends Controller
             unset($queryParameters['json']);
         }
         $fileManager = $this->newFileManager($queryParameters);
-        $logger->info("Logging");
-        $logger->info($fileManager->getDirName());
-        $logger->info($fileManager->getBaseName());
+
+        //$this->createDirectory($fileManager);
+        // $logger->info("Logging");
+        // $logger->info($fileManager->getDirName());
+        // $logger->info($fileManager->getBaseName());
         // Folder search
        $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,true);
        
@@ -72,16 +74,27 @@ class FileManagerController extends Controller
         $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
         switch ($orderBy) {
             case 'name':
-                $finderFiles->sort(function (SplFileInfo $a, SplFileInfo $b) {
-                    return strcmp(strtolower($b->getFileName()), strtolower($a->getFileName()));
-                });
+                // $finderFiles->sort(function (SplFileInfo $a, SplFileInfo $b) {
+                //     return strcmp(strtolower($b->getFileName()), strtolower($a->getFileName()));
+                // });
+                usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
+                    return strcmp(strtolower($first->getName()), strtolower($second->getName()));
+                }); 
                 break;
             case 'date':
-                $finderFiles->sortByModifiedTime();
+                // $finderFiles->sortByModifiedTime();
+                usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
+                    return ($first->giveDate() > $second->giveDate());
+                }); 
                 break;
             case 'size':
-                $finderFiles->sort(function (\SplFileInfo $a, \SplFileInfo $b) {
-                    return $a->getSize() - $b->getSize();
+            usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
+                    return $first->get('size') - $second->get('size');
+                });
+                break;
+            default :
+            usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
+                return strcmp(strtolower($first->get('extension')) ,strtolower($second->get('extension')));
                 });
                 break;
         }
@@ -112,26 +125,6 @@ class FileManagerController extends Controller
             $logger->info("path");
             $logger->info($file->getPhysicalDirectory());
             $fileArray[] = new File($file, $this->get('translator'), $this->get('app.file_type_service'), $fileManager);
-        }
-
-        if ('dimension' === $orderBy) {
-            usort($fileArray, function (File $a, File $b) {
-                $aDimension = $a->getDimension();
-                $bDimension = $b->getDimension();
-                if ($aDimension && !$bDimension) {
-                    return 1;
-                }
-
-                if (!$aDimension && $bDimension) {
-                    return -1;
-                }
-
-                if (!$aDimension && !$bDimension) {
-                    return 0;
-                }
-
-                return ($aDimension[0] * $aDimension[1]) - ($bDimension[0] * $bDimension[1]);
-            });
         }
 
         if ($orderDESC) {
@@ -658,6 +651,26 @@ class FileManagerController extends Controller
         $files->in($path)->files()->depth(0)->name($regex);
 
         return iterator_count($files);
+    }
+
+
+    /**
+     * Automatic Folder Creation.
+     *
+     *
+     * @param $FileManager
+     *
+     * @return null
+     */
+    protected function createDirectory(FileManager $FileManager)
+    {
+        $user = $this->getUser();
+        $roles = $user->getRoles();
+        $netId = $user->getUsername();
+        $lastName = $user->getFirstName();
+        $firstName = $user->getgetLastName();
+
+        return null;
     }
 
 
