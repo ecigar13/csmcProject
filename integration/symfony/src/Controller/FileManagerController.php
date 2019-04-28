@@ -227,7 +227,7 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/fms/rename/{oldName}", name="file_management_rename")
+     * @Route("/fms/rename/", name="file_management_rename")
      *
      * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name and extension.
      * Need to fix this in the future.
@@ -235,36 +235,40 @@ class FileManagerController extends Controller
      * TODO: check if the person who initiated is admin or the owner.
      *
      * @param Request $request
-     * @param $oldName
      *
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      *
      * @throws \Exception
      */
-    public function renameFileAction(Request $request, $oldName)
+    public function renameFileAction(Request $request)
     {
+        $formRename = $this->createRenameForm();
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
-        $formRename = $this->createRenameForm();
+        $oldName = $queryParameters['oldName'];
         $em = $this->getDoctrine()->getManager();
+
+        
         /* @var Form $formRename */
         $formRename->handleRequest($request);
         if ($formRename->isSubmitted() && $formRename->isValid()) {
             //perform updating database
             $data = $formRename->getData();
-
-            if(isset($data['newName'])){
+            
+            if(isset($data['name'])){
                 $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name' => $oldName));
                 if($file === null){
                     //TODO: what if file doesn't exist in database?
                     $this->addFlash('warning', "Can't find the file to rename: ".$oldName);
                     return $this->redirectToRoute('file_management', $queryParameters);
                 }
+                
+                print_r($oldName);
                 //update name
-                if ($data['newName'] !== $oldName) {
+                if ($data['name'] !== $oldName) {
                     //can be multiple because files are not unique. Can't fix it for now.
-                    $file->setName($data['newName']);
-                    $em->update($file);
+                    $file->setName($data['name']);
+                    $em->persist($file);
                 } else {
                     $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
                 }
@@ -286,9 +290,10 @@ class FileManagerController extends Controller
                         $newHash[count($newHash) - 1] = $data['extension'];
                         $fileHash->setPath(implode('.', $newHash)) ;
                     }
-                    $em->update($fileHash);
+                    $em->persist($fileHash);
                 }
             }
+            $this->addFlash('danger', 'Did not provide a file name.');
         }
         $em->flush();
 
