@@ -244,6 +244,7 @@ class FileManagerController extends Controller
      */
     public function renameFileAction(Request $request, LoggerInterface $l)
     {
+        /** @var Form $formRename */
         $formRename = $this->createRenameForm();
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
@@ -443,6 +444,11 @@ class FileManagerController extends Controller
     {
         return $this->createFormBuilder()
             ->add('name', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('id', TextType::class, [
                 'constraints' => [
                     new NotBlank(),
                 ],

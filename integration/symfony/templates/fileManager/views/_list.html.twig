@@ -29,7 +29,7 @@
         <tbody>
         {% for fileEntity in fileArray %}
             {% set file = fileEntity.file %}
-            {{ dump(file.id)   }}
+            {# {{ dump(file)   }} #}
             <tr class="{{ fileEntity.isImage() ? 'img' : 'file' }}">
                 <td><input type="checkbox" class="checkbox" name="delete[]" value="{{ file.name }}" title="{{ file.name }}"></td>
                 <td>{{ fileEntity.preview ? fileEntity.preview.html|raw }}</td>
@@ -43,13 +43,14 @@
                     <small>{{ fileEntity.HTMLSize|trans|raw }}</small>
                 </td>
                 <!-- this doesn't work -->
-                <td class="hidden-xs">
-                    <small>{{ fileEntity.dimension }}</small>
-                </td>
+                {# <td class="hidden-xs">
+                    <small>{{ fileEntity.HTMLDimension }}</small>
+                </td> #}
                 <td class="text-right">
                     <span data-toggle="tooltip" title="{{ 'title.delete'|trans }}">
                         <button type="button"
                                 class="btn btn-xs btn-danger js-delete-modal"
+                                data-id='{{ file.id }}'
                                 data-trigger="click"
                                 data-container="body"
                                 data-toggle="modal"
@@ -63,6 +64,7 @@
                     <span data-toggle="tooltip" title="{{ 'title.rename.file'|trans }}">
                         <button type="button"
                                 class="btn btn-xs btn-default js-rename-modal"
+                                data-id='{{ file.id }}'
                                 data-trigger="click"
                                 data-container="body"
                                 data-toggle="modal"
@@ -84,6 +86,7 @@
                             <span data-toggle="tooltip" title="{{ 'title.preview.file'|trans }}">
                                 <button type="button"
                                         class="btn btn-xs btn-default js-open-modal"
+                                        data-id='{{ file.id }}'
                                         data-trigger="click"
                                         data-container="body"
                                         data-toggle="modal"
