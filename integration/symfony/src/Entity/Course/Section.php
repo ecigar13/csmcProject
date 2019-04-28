@@ -57,12 +57,10 @@ class Section implements ModifiableInterface {
      */
     private $semester;
 
+    
     /**
-     * @ORM\ManyToMany(targetEntity="\App\Entity\User\User")
-     * @ORM\JoinTable(name="section_instructors",
-     *     joinColumns={@ORM\JoinColumn(name="section_id", referencedColumnName="id")},
-     *     inverseJoinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id")}
-     * )
+     * @ORM\ManyToMany(targetEntity="App\Entity\User\User", inversedBy="sections")
+     * @ORM\JoinTable(name="user_section")
      */
     private $instructors;
 

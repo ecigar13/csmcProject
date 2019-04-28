@@ -32,14 +32,19 @@ class VirtualFile {
      */
     private $owner;
 
-    /**
-     * @ORM\ManyToMany(targetEntity="App\Entity\User\User",  mappedBy="vitualFiles")
+     /**
+     * Many role have Many files.
+     * @ORM\ManyToMany(targetEntity="App\Entity\User\User", inversedBy="vitualFiles")
+     * @ORM\JoinTable(name="user_permissions")
      */
     private $users;
 
     /**
-     * @ORM\ManyToMany(targetEntity="App\Entity\User\Role",  mappedBy="vitualFiles")
+     * Many role have Many files.
+     * @ORM\ManyToMany(targetEntity="App\Entity\User\Role", inversedBy="vitualFiles")
+     * @ORM\JoinTable(name="role_permissions")
      */
+    
     private $roles;
 
     /**
@@ -69,11 +74,27 @@ class VirtualFile {
         $this->roles = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
-    public function giveIndividualPermission(User $user) {
-
+    /**
+     * Set instructor
+     *
+     * @param \App\Entity\User\User $user
+     *
+     * @return VirtualFile
+     */
+    public function addUser(User $user) {
+        $this->users->add($user);
+        return $this;
     }
-    public function giveRolePermission(Role $role) {
-
+    /**
+     * Set instructor
+     *
+     * @param \App\Entity\User\Role $role
+     *
+     * @return VirtualFile
+     */
+    public function addRole(Role $role) {
+        $this->roles->add($role);
+        return $this;
     }
 
     public function giveDate() {

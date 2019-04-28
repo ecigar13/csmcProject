@@ -3,6 +3,7 @@
 namespace App\Entity\User;
 
 use App\Entity\File\File;
+use App\Entity\Course\Section;
 use App\Entity\File\VirtualFile;
 use App\Entity\Misc\Subject;
 use App\Entity\Misc\Visit;
@@ -120,11 +121,16 @@ class User implements UserInterface, \Serializable {
      */
     private $occurrences;
 
-     /**
-     * @ORM\ManyToMany(targetEntity="App\Entity\File\VirtualFile", inversedBy="users")
-     * @ORM\JoinTable(name="user_permissions")
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\File\VirtualFile",  mappedBy="users")
      */
+
     private $vitualFiles;
+
+    /**
+     * @ORM\ManyToMany(targetEntity="App\Entity\Course\Section",  mappedBy="instructors")
+     */
+    private $sections;
 
     /**
      * @ORM\OneToOne(targetEntity="App\Entity\User\Info\NotificationPreferences",
@@ -152,11 +158,26 @@ class User implements UserInterface, \Serializable {
         $this->roles = new ArrayCollection();
         $this->occurrences = new ArrayCollection();
         $this->vitualFiles = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->sections = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     public function addOccurrence(Occurrence $occurrence)
     {
         $this->occurrences->add($occurrence);
+    }
+
+    public function addSection(Section $section)
+    {
+        $this->sections->add($section);
+    }
+
+    /**
+     * Get instructor
+     *
+     * @return Sections
+     */
+    public function getSections() {
+        return $this->sections;
     }
 
     /**
