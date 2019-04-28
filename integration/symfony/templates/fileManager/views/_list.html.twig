@@ -28,25 +28,24 @@
         </thead>
         <tbody>
         {% for fileEntity in fileArray %}
-            {# {{ dump(fileEntity)   }} #}
             {% set file = fileEntity.file %}
-            {{ dump(file)   }}
+            {{ dump(file.id)   }}
             <tr class="{{ fileEntity.isImage() ? 'img' : 'file' }}">
                 <td><input type="checkbox" class="checkbox" name="delete[]" value="{{ file.name }}" title="{{ file.name }}"></td>
                 <td>{{ fileEntity.preview ? fileEntity.preview.html|raw }}</td>
                 <td data-value="{{ file.name }}" {{ fileEntity.attribut|raw }}>
                     {{ (fileEntity.preview.folder is defined ? fileEntity.preview.folder : file.name ~ '.' ~ file.extension)|raw }}
                 </td>
-                {# <td class="hidden-xs">
-                    <small>{{ file.getdate()|date('d/m/Y') }}</small>
-                </td>#}
                 <td class="hidden-xs">
-                    <small>{{ file.hash.size|trans|raw }}</small>
-                </td> 
+                    <small>{{ fileEntity.date|date('d/m/Y') }}</small>
+                </td>
+                <td class="hidden-xs">
+                    <small>{{ fileEntity.HTMLSize|trans|raw }}</small>
+                </td>
                 <!-- this doesn't work -->
-                {# <td class="hidden-xs">
-                    <small>{{ fileEntity.HTMLDimension }}</small>
-                </td> #}
+                <td class="hidden-xs">
+                    <small>{{ fileEntity.dimension }}</small>
+                </td>
                 <td class="text-right">
                     <span data-toggle="tooltip" title="{{ 'title.delete'|trans }}">
                         <button type="button"
