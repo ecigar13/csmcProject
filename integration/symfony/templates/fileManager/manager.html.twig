@@ -1,3 +1,5 @@
+{% extends 'fileManager/base.html.twig' %}
+{% block fmscontent %}
 {% form_theme form 'bootstrap_3_layout.html.twig' %}
 {% form_theme formRename 'bootstrap_3_layout.html.twig' %}
 <!doctype html>
@@ -6,8 +8,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% block stylesheets %}
-        <link rel="stylesheet" href="{{ asset('bundles/artgrisfilemanager/libs/bootstrap/dist/css/bootstrap.min.css') }}">
+    <title>{% block title %}File Manager{% endblock %}</title>
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
         <link rel="stylesheet"
               href="{{ asset('bundles/artgrisfilemanager/libs/jstree/dist/themes/default/style.min.css') }}">
@@ -16,8 +17,7 @@
         <link rel="stylesheet" href="{{ asset('bundles/artgrisfilemanager/css/manager.css') }}">
         <link rel="stylesheet"
               href="{{ asset('bundles/artgrisfilemanager/libs/jQuery-contextMenu/dist/jquery.contextMenu.min.css') }}">
-    {% endblock %}
-    <title>{% block title %}File Manager{% endblock %}</title>
+
 </head>
 <body>
 {% block body %}
@@ -52,6 +52,12 @@
                     <span class="far fa-folder-open"></span>
                     <span>{{ 'button.add.folder'|trans }}</span>
                 </button>
+                {# new code add link button start#}
+                <button type="button" style="background-color:#c7b909;border-color:#f1f500;background-image:linear-gradient(to bottom,#f5d704 0,#c7b909 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#addLink">
+                    <span class="fa fa-link"></span>
+                    <span>{{ 'New link...'|trans }}</span>
+                </button>
+                {# new add link button end#}
                 {# {% if fileManager.parent %} #}
                     <button type="button"
                             class="btn btn-sm btn-danger btn-action js-delete-modal"
@@ -78,6 +84,12 @@
                     <span class="far fa-check-square"></span>
                     <span>{{ 'button.delete.selected'|trans }}</span>
                 </a>
+                {# new code share button start#}
+                <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareFolder">
+                    <span class="fa fa-share"></span>
+                    <span>{{ 'Share folder'|trans }}</span>
+                </button>
+                {# new code share button end#}
             {% endblock %}
             {% block display %}
                 <div class="btn-group pull-right">
@@ -180,3 +192,4 @@
 {% endblock %}
 </body>
 </html>
+{% endblock %}
