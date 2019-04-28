@@ -69,6 +69,7 @@ class FileManagerController extends Controller
         $regex = $fileManager->getRegex();
         $orderBy   = $fileManager->getQueryParameter('orderby');
         $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
+
         switch ($orderBy) {
             case 'name':
                 $finderFiles->sort(function (SplFileInfo $a, SplFileInfo $b) {
@@ -105,6 +106,7 @@ class FileManagerController extends Controller
         //     });
         // }
 
+        //create delete form for FMS
         $formDelete = $this->createDeleteForm()->createView();
         $fileArray  = [];
         foreach ($finderFiles as $file) {
@@ -240,7 +242,7 @@ class FileManagerController extends Controller
      *
      * @throws \Exception
      */
-    public function renameFileAction(Request $request)
+    public function renameFileAction(Request $request, LoggerInterface $l)
     {
         $formRename = $this->createRenameForm();
         $translator = $this->get('translator');
@@ -256,6 +258,8 @@ class FileManagerController extends Controller
             $data = $formRename->getData();
             
             if(isset($data['name'])){
+                //TODO: find by ID, or hash. Not by file name
+                //TODO: avoid sending file name in query parameter.
                 $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name' => $oldName));
                 if($file === null){
                     //TODO: what if file doesn't exist in database?
@@ -263,7 +267,9 @@ class FileManagerController extends Controller
                     return $this->redirectToRoute('file_management', $queryParameters);
                 }
                 
-                print_r($oldName);
+                print_r($file);
+                $l->info("DDDDDDDDDDDDDDDDDDD");
+                // $l->info($file);
                 //update name
                 if ($data['name'] !== $oldName) {
                     //can be multiple because files are not unique. Can't fix it for now.
@@ -297,7 +303,8 @@ class FileManagerController extends Controller
         }
         $em->flush();
 
-        return $this->redirectToRoute('file_management', $queryParameters);
+        return new Response($request,200);
+        // return $this->redirectToRoute('file_management', $queryParameters);
     }
 
     /**
@@ -646,6 +653,8 @@ class FileManagerController extends Controller
     }
 
     /**
+     * Retrive all files in a directory/path
+     * 
      * @param $path
      * @param string $parent
      *

@@ -49,4 +49,9 @@ class FileHash {
     public function setPath(string $path){
         $this->path = $path;
     }
+
+    public function getSize(){
+        return $this->size;
+    }
+
 }
