@@ -408,6 +408,11 @@ class FileManagerController extends Controller
                     'class' => 'btn btn-danger',
                 ],
                 'label'              => 'button.delete.action',
+            ])->add('deleteId', HiddenType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
             ])
             ->getForm();
     }

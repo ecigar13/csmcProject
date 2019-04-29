@@ -49,7 +49,7 @@
                     <span data-toggle="tooltip" title="{{ 'title.delete'|trans }}">
                         <button type="button"
                                 class="btn btn-xs btn-danger js-delete-modal"
-                                data-id='{{ file.id }}'
+                                data-id="{{ file.id }}"
                                 data-trigger="click"
                                 data-container="body"
                                 data-toggle="modal"
@@ -63,7 +63,7 @@
                     <span data-toggle="tooltip" title="{{ 'title.rename.file'|trans }}">
                         <button type="button"
                                 class="btn btn-xs btn-default js-rename-modal"
-                                data-id='{{ file.id }}'
+                                data-id="{{ file.id }}"
                                 data-trigger="click"
                                 data-container="body"
                                 data-toggle="modal"
@@ -77,7 +77,7 @@
                         </button>
                     </span>
                     {# {% if file.type == "file" %} #}
-                        <a data-placement="left" data-id='{{ file.id }}' title="{{ 'title.download'|trans }}" class="btn btn-xs btn-default js-download"
+                        <a data-placement="left" data-id="{{ file.id }}" title="{{ 'title.download'|trans }}" class="btn btn-xs btn-default js-download"
                            href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName':'file.name'})) }}" download>
                             <span class="fas fa-download"></span>
                         </a>
@@ -85,7 +85,7 @@
                             <span data-toggle="tooltip" title="{{ 'title.preview.file'|trans }}">
                                 <button type="button"
                                         class="btn btn-xs btn-default js-open-modal"
-                                        data-id='{{ file.id }}'
+                                        data-id="{{ file.id }}"
                                         data-trigger="click"
                                         data-container="body"
                                         data-toggle="modal"

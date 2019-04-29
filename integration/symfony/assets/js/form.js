@@ -57,13 +57,14 @@ $( document ).ready(function() {
 
     function renameFile($renameModalButton) {
         $('#form_name').val($renameModalButton.data('name'));
-        console.log($renameModalButton.data('id'));
         $('#form_id').val($renameModalButton.data('id'));
         $('#form_extension').val($renameModalButton.data('extension'));
         $renameModal.find('form').attr('action', $renameModalButton.data('href'))
     }
 
     function deleteFile($deleteModalButton) {
+        console.log($deleteModalButton.data('id'));
+        $('#form_deleteId').val($deleteModalButton.data('id'));
         $('#js-confirm-delete').find('form').attr('action', $deleteModalButton.data('href'));
     }
 
@@ -248,5 +249,12 @@ $( document ).ready(function() {
             displayError('File upload failed.')
         });
     });
+
+
+    function lazy() {
+        $('.lazy').Lazy({});
+    }
+
+    lazy();
 
 });

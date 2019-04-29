@@ -13,6 +13,7 @@
             <div class="modal-footer">
                 {{ form_start(formDelete, {"attr" : {'class':'pull-right'}}) }}
                 {{ form_widget(formDelete) }}
+                {{ form_row(formDelete.deleteId) }}
                 {{ form_end(formDelete) }}
                 <button type="button" class="btn btn-default pull-left" title="{{ 'button.cancel'|trans }}"
                         data-dismiss="modal"> {{ 'button.cancel'|trans }}</button>
