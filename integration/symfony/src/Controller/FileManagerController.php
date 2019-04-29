@@ -319,16 +319,11 @@ class FileManagerController extends Controller
 
         $em = $this->getDoctrine()->getManager();
         if ($form->isSubmitted() && $form->isValid()) {
-            if (isset($queryParameters['delete'])) {
-                //delete from disk is in FileSubscriber, preRemove
-                //delete from database
-                foreach ($queryParameters['delete'] as $fileName) {
-                    $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name'=>$fileName));
-                    if($file !== null) $em->remove($file);  //this will remove files/folders inside this one.
-                }
-
-                unset($queryParameters['delete']);
-            }
+            //delete from disk is in FileSubscriber, preRemove
+            //delete from database
+            $data = $form->getData();
+            $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id'=> $data['deleteId']));
+            if($file !== null) $em->remove($file);  //this will remove files/folders inside this one.
         }
         $em->flush();
 
