@@ -77,6 +77,10 @@ class FileManagerController extends Controller
         $regex = $fileManager->getRegex();
         $orderBy   = $fileManager->getQueryParameter('orderby');
         $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
+<<<<<<< HEAD
+=======
+
+>>>>>>> remotes/origin/keith/fixUploadRenameDelete
         switch ($orderBy) {
             case 'name':
                 // $finderFiles->sort(function (SplFileInfo $a, SplFileInfo $b) {
@@ -124,6 +128,7 @@ class FileManagerController extends Controller
         //     });
         // }
 
+        //create delete form for FMS
         $formDelete = $this->createDeleteForm()->createView();
         $fileArray  = [];
         foreach ($finderFiles as $file) {
@@ -179,9 +184,13 @@ class FileManagerController extends Controller
             // Get Name and Parent Path
             $directoryName = $data['name'];
             $logger->info("UploadDirectory");
-            $parentPath = $fileManager->getQueryParameters()['route'];
-            $logger->info("parent");
-            //$logger->info($fileManager->getQueryParameters()['route']);
+
+            print_r($fileManager->getQueryParameters());
+            $parentPath= 'root';
+            if(array_key_exists('route',$fileManager->getQueryParameters()) && !is_null($fileManager->getQueryParameters()['route'])){
+                $parentPath = $fileManager->getQueryParameters()['route'];
+            }
+            $logger->info("parentDDDDDDDDDDDDD");
             $logger->info($parentPath);
             $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
 
@@ -222,70 +231,58 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/fms/rename/{oldName}", name="file_management_rename")
+     * @Route("/fms/rename/", name="file_management_rename")
      *
-     * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name and extension.
+     * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name.
      * Need to fix this in the future.
      *
      * TODO: check if the person who initiated is admin or the owner.
+     * TODO: it is possible to change extension too.
      *
      * @param Request $request
-     * @param $oldName
      *
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      *
      * @throws \Exception
      */
-    public function renameFileAction(Request $request, $oldName)
+    public function renameFileAction(Request $request, LoggerInterface $l)
     {
+        /** @var Form $formRename */
+        $formRename = $this->createRenameForm();
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
-        $formRename = $this->createRenameForm();
         $em = $this->getDoctrine()->getManager();
+
         /* @var Form $formRename */
         $formRename->handleRequest($request);
         if ($formRename->isSubmitted() && $formRename->isValid()) {
             //perform updating database
             $data = $formRename->getData();
-
-            if(isset($data['newName'])){
-                $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name' => $oldName));
-                if($file === null){
+            
+            if(isset($data['id'])){
+                //TODO: find by ID, or hash. Not by file name
+                //TODO: avoid sending file name in query parameter.
+                $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id' => $data['id']));
+                if(is_null($file)){
                     //TODO: what if file doesn't exist in database?
-                    $this->addFlash('warning', "Can't find the file to rename: ".$oldName);
+                    $this->addFlash('warning', "Can't find the file to rename: ".$data['id']);
                     return $this->redirectToRoute('file_management', $queryParameters);
                 }
+                
                 //update name
-                if ($data['newName'] !== $oldName) {
+                if (isset($data['name']) && $data['name'] !== $file->getName()) {
                     //can be multiple because files are not unique. Can't fix it for now.
-                    $file->setName($data['newName']);
-                    $em->update($file);
+                    $file->setName($data['name']);
+                    $em->persist($file);
                 } else {
                     $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
                 }
-
-                //update extension
-                if(isset($data['extension'])){
-                    $fileHash = $this->getDoctrine()->getRepository(FileHash::class)->findOneBy(array('id' => $file->getId()));
-                    if($fileHash === null) {
-
-                        $this->addFlash('warning', "Can't find the file to rename: ".$oldName);
-                        return $this->redirectToRoute('file_management', $queryParameters);
-                    }
-                    $newHash = explode('.', $fileHash->getPath());
-
-                    //no extension
-                    if(count($newHash) === 1){
-                        $fileHash->setPath($newHash[0].$data['extension']);
-                    }else{
-                        $newHash[count($newHash) - 1] = $data['extension'];
-                        $fileHash->setPath(implode('.', $newHash)) ;
-                    }
-                    $em->update($fileHash);
-                }
+            }else{
+                $this->addFlash('danger', 'Did not provide a file name.');
             }
         }
         $em->flush();
+
 
         return $this->redirectToRoute('file_management', $queryParameters);
     }
@@ -430,6 +427,11 @@ class FileManagerController extends Controller
                     new NotBlank(),
                 ],
                 'label'       => false,
+            ])->add('id', HiddenType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
             ])->add('extension', HiddenType::class)
             ->add('send', SubmitType::class, [
                 'attr'  => [
@@ -457,16 +459,22 @@ class FileManagerController extends Controller
             throw new MethodNotAllowedException();
         }
 
-        $em = $this->getDoctrine()->getManager();
         //create File Manager
+        $em = $this->getDoctrine()->getManager();
         $queryParameters = $request->query->all();
         $fileManager = $this->newFileManager($queryParameters);
+<<<<<<< HEAD
         //Check that parent exist
+=======
+
+        //TODO: Check that parent exist to prevent crashing. Maybe front-end.
+>>>>>>> remotes/origin/keith/fixUploadRenameDelete
         $parentPath = $fileManager->getQueryParameters()['route'];
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $parent=$directoryClass->findOneBy(array('path' => $parentPath));
         if (!$parent) {
             $this->addFlash('danger', "Parent not found");
+<<<<<<< HEAD
             return new Response(501);
 
         }
@@ -517,6 +525,66 @@ class FileManagerController extends Controller
         return new Response(200);
     }
 
+=======
+            return new Response(Response::HTTP_NOT_FOUND);
+
+        }
+        $uploadedFiles = $request->files->get('files');
+        $response = [];
+        foreach ($uploadedFiles as $uploadedFile){
+            $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
+            $logger->info("FilePath");
+            $logger->info($filePath);
+
+            //check if file with same name already exixt
+            $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
+            
+            $file=$fileClass->findByPath($filePath);
+            if($file){
+                $this->addFlash('danger', "cant add file, File already exist-".$data['name']);
+                return new Response(Response::HTTP_UNAUTHORIZED);
+                
+            }
+            
+            //create a file object with its hash. Moving file to its folder fires during prePersist.
+            try{
+                $fileData = new FileData($uploadedFile, $this->getUser(),$filePath);
+                $file = CSMCFile::fromUploadData($fileData, $em);
+                $file->setParent($parent);
+                $em->persist($file);
+                // $logger->info("Im 1");
+            }
+            catch (IOExceptionInterface $e) {
+                $logger->info("Im 2");
+                $this->addFlash('danger', "can't add file-".$data['name']);
+                return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $response[] = [
+                'files'=>[
+                    [
+                    'originalName'=> $uploadedFile->getClientOriginalName(),
+                    'fileExtension' => $uploadedFile->getClientOriginalExtension(),
+                    'size'=> $uploadedFile->getClientSize(),
+                    'mimeType'=> $uploadedFile->getClientMimeType()
+                    ],
+                ]
+            ];
+        }
+        
+        try{
+            $em->flush();
+        }
+        catch (IOExceptionInterface $e) {
+            $this->addFlash('danger', "Error while flushing to server");
+            return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+        
+        //TODO: need to refresh the page on front-end. 
+        return new JsonResponse($response,200);
+    }
+
+>>>>>>> remotes/origin/keith/fixUploadRenameDelete
 
     protected function dispatch($eventName, array $arguments = [])
     {
@@ -627,6 +695,8 @@ class FileManagerController extends Controller
     }
 
     /**
+     * Retrive all files in a directory/path
+     * 
      * @param $path
      * @param string $parent
      *

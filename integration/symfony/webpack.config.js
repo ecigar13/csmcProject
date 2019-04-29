@@ -8,7 +8,7 @@ Encore
     // .cleanupOutputBeforeBuild()
     .enableSourceMaps(!Encore.isProduction())
     .enableVersioning()
-
+    .addEntry('js/form', './assets/js/form.js')
     .addEntry('js/fastclick', 'fastclick/lib/fastclick.js')
     .addEntry('js/nprogress', 'nprogress/nprogress.js')
     .addStyleEntry('css/global', './assets/css/global.scss')

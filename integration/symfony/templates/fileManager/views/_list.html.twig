@@ -1,3 +1,4 @@
+{# This component displays list view for each file, checkbox, file name, delete, rename, download and preview option #}
 <div class="table-responsive list-blk">
     <table class="table">
         <colgroup>
@@ -40,6 +41,7 @@
                 <td class="hidden-xs">
                     <small>{{ fileEntity.HTMLSize|trans|raw }}</small>
                 </td>
+                <!-- this doesn't work -->
                 {# <td class="hidden-xs">
                     <small>{{ fileEntity.HTMLDimension }}</small>
                 </td> #}
@@ -47,19 +49,21 @@
                     <span data-toggle="tooltip" title="{{ 'title.delete'|trans }}">
                         <button type="button"
                                 class="btn btn-xs btn-danger js-delete-modal"
+                                data-id='{{ file.id }}'
                                 data-trigger="click"
                                 data-container="body"
                                 data-toggle="modal"
                                 data-target="#js-confirm-delete"
                                 data-placement="left"
                                 data-html="true"
-                                data-href='{{ path('file_management_delete', fileManager.queryParameters|merge({'delete[]':file.name})) }}'>
+                                data-href='{{ path('file_management_delete', fileManager.queryParameters|merge({'delete[]': file.name })) }}'>
                         <span class="far fa-trash-alt"></span>
                         </button>
                     </span>
                     <span data-toggle="tooltip" title="{{ 'title.rename.file'|trans }}">
                         <button type="button"
                                 class="btn btn-xs btn-default js-rename-modal"
+                                data-id='{{ file.id }}'
                                 data-trigger="click"
                                 data-container="body"
                                 data-toggle="modal"
@@ -74,13 +78,14 @@
                     </span>
                     {# {% if file.type == "file" %} #}
                         <a data-placement="left" title="{{ 'title.download'|trans }}" class="btn btn-xs btn-default js-download"
-                           href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName':file.name})) }}" download>
+                           href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName':'file.name'})) }}" download>
                             <span class="fas fa-download"></span>
                         </a>
                         {% if fileEntity.isImage() %}
                             <span data-toggle="tooltip" title="{{ 'title.preview.file'|trans }}">
                                 <button type="button"
                                         class="btn btn-xs btn-default js-open-modal"
+                                        data-id='{{ file.id }}'
                                         data-trigger="click"
                                         data-container="body"
                                         data-toggle="modal"

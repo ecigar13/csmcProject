@@ -183,12 +183,13 @@
 
         // display session flash messages
         {% for type, messages in app.session.flashbag.all %}
-        {% for message in messages %}
-        displayAlert('{{ type }}', '{{ message|trans|e('js') }}')
-        {% endfor %}
+            {% for message in messages %}
+            displayAlert('{{ type }}', '{{ message|trans|e('js') }}')
+            {% endfor %}
         {% endfor %}
     </script>
     <script src="{{ asset('bundles/artgrisfilemanager/js/manager.js') }}"></script>
+    <script src="{{ asset('build/js/form.js') }}" type="text/javascript"></script>
 {% endblock %}
 </body>
 </html>
