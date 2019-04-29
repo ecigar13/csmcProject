@@ -74,13 +74,6 @@ class FileSubscriber implements EventSubscriber {
         }catch(IOExceptionInterface $e){
             return $e->getPath();
         }
-
-
-        // $em = $this->getDoctrine()->getManager();
-        // $hashId = $entity->getHash();
-        // $fileHash = $this->getDoctrine()->getRepository(FileHash::class)->findOneBy(array('id' => $hashId));
-        // if($fileHash !== null){
-        // }
     }
 
 

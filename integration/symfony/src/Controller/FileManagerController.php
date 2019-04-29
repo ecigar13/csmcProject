@@ -323,9 +323,14 @@ class FileManagerController extends Controller
             //delete from database
             $data = $form->getData();
             $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id'=> $data['deleteId']));
-            if($file !== null) $em->remove($file);  //this will remove files/folders inside this one.
+            if($file !== null) {
+                $file->setParent(null);
+                $em->persist($file);
+                $em->flush();
+                $em->remove($file);  //this will remove files/folders inside this one.
+                $em->flush();
+            }
         }
-        $em->flush();
 
         return $this->redirectToRoute('file_management', $queryParameters);
     }
