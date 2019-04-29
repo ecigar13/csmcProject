@@ -609,18 +609,44 @@ class FileManagerController extends Controller
 
             // $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
             // $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
-
-            $directoriesList[] = [
-                'text'     => $directory->getName(),
-                'icon'     => 'far fa-folder-open',
-                'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
-                'a_attr'   => [
-                    'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
-                ], 'state' => [
-                    'selected' => $fileManager->getCurrentRoute() === $fileName,
-                    'opened'   => $fileManager->getCurrentRoute() === $fileName,
-                ],
-            ];
+            $directoryRoles=[];
+            foreach($directory->getRoles() as $role){
+                array_push($directoryRoles, $role->getName());
+            }
+            $directoryUsers=[];
+            foreach($directory->getUsers() as $user){
+                array_push($directoryUsers, $user->getUsername());
+            }
+            $userRoles=[];
+            foreach($this->getUser()->getRoles() as $role){
+                array_push($userRoles, $role->getName());
+            }
+            $access=false;
+            if (in_array($this->getUser()->getUsername(), $directoryUsers)){
+                    $access=true;
+            }
+            else{
+                foreach($userRoles as $r){
+                    if(in_array($r, $directoryRoles)){
+                        $access=true;
+                        break;
+                    }
+                    $access=false;
+                }
+            }
+            if($access){
+                $directoriesList[] = [
+                    'text'     => $directory->getName(),
+                    'icon'     => 'far fa-folder-open',
+                    'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
+                    'a_attr'   => [
+                        'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                    ], 'state' => [
+                        'selected' => $fileManager->getCurrentRoute() === $fileName,
+                        'opened'   => $fileManager->getCurrentRoute() === $fileName,
+                    ],
+                ];
+        }
         }
 
         return $directoriesList;
