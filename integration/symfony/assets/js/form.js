@@ -57,6 +57,7 @@ $( document ).ready(function() {
 
     function renameFile($renameModalButton) {
         $('#form_name').val($renameModalButton.data('name'));
+        console.log($renameModalButton.data('id'));
         $('#form_id').val($renameModalButton.data('id'));
         $('#form_extension').val($renameModalButton.data('extension'));
         $renameModal.find('form').attr('action', $renameModalButton.data('href'))

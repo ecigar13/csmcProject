@@ -56,7 +56,7 @@
                                 data-target="#js-confirm-delete"
                                 data-placement="left"
                                 data-html="true"
-                                data-href='{{ path('file_management_delete', fileManager.queryParameters|merge({'delete[]': file.name })) }}'>
+                                data-href='{{ path('file_management_delete', fileManager.queryParameters) }}'>
                         <span class="far fa-trash-alt"></span>
                         </button>
                     </span>
@@ -72,7 +72,7 @@
                                 data-html="true"
                                 data-name='{{ file.name}}'
                                 data-extension='{{ file.extension }}'
-                                data-href='{{ path('file_management_rename', fileManager.queryParameters|merge({'oldName':file.name})) }}'>
+                                data-href='{{ path('file_management_rename', fileManager.queryParameters) }}'>
                         <span class="far fa-edit"></span>
                         </button>
                     </span>
