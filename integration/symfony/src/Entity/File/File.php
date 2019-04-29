@@ -49,10 +49,11 @@ class File extends VirtualFile {
     public static function fromUploadData(FileData $fileData, EntityManagerInterface $entityManager, array $metadata = []) {
         $name = self::createName($fileData->file);
         $hash = self::createHash($fileData->file, $entityManager);
+        $metadata = self::extractMetaData($fileData->file, $metadata);
 
         //if metadata is not defined, guess it and save in database.
         //TODO: in front end, prevent upload of no-extension file. This will crash.
-        $metadata = empty($metadata) ? '' :self::extractMetaData($fileData->file, $metadata) ;
+        //$metadata = empty($metadata) ?  :self::extractMetaData($fileData->file, $metadata) ;
 
         $file = new File($name, $fileData->user, $hash, $metadata, $fileData->path);
 

@@ -77,10 +77,6 @@ class FileManagerController extends Controller
         $regex = $fileManager->getRegex();
         $orderBy   = $fileManager->getQueryParameter('orderby');
         $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
-<<<<<<< HEAD
-=======
-
->>>>>>> remotes/origin/keith/fixUploadRenameDelete
         switch ($orderBy) {
             case 'name':
                 // $finderFiles->sort(function (SplFileInfo $a, SplFileInfo $b) {
@@ -185,7 +181,7 @@ class FileManagerController extends Controller
             $directoryName = $data['name'];
             $logger->info("UploadDirectory");
 
-            print_r($fileManager->getQueryParameters());
+            // print_r($fileManager->getQueryParameters());
             $parentPath= 'root';
             if(array_key_exists('route',$fileManager->getQueryParameters()) && !is_null($fileManager->getQueryParameters()['route'])){
                 $parentPath = $fileManager->getQueryParameters()['route'];
@@ -463,69 +459,13 @@ class FileManagerController extends Controller
         $em = $this->getDoctrine()->getManager();
         $queryParameters = $request->query->all();
         $fileManager = $this->newFileManager($queryParameters);
-<<<<<<< HEAD
-        //Check that parent exist
-=======
 
         //TODO: Check that parent exist to prevent crashing. Maybe front-end.
->>>>>>> remotes/origin/keith/fixUploadRenameDelete
         $parentPath = $fileManager->getQueryParameters()['route'];
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $parent=$directoryClass->findOneBy(array('path' => $parentPath));
         if (!$parent) {
             $this->addFlash('danger', "Parent not found");
-<<<<<<< HEAD
-            return new Response(501);
-
-        }
-        $uploadedFiles = $request->files->get('files');
-        
-        foreach ($uploadedFiles as $uploadedFile){
-                $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
-                $logger->info("FilePath");
-                $logger->info($filePath);
-
-                //check if file with same name already exixt
-                $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
-                
-                $file=$fileClass->findByPath($filePath);
-                if($file){
-                    $this->addFlash('danger', "cant add file, File already exist-".$data['name']);
-                    return new Response(401);
-                    
-                }
-                
-                //create a file object with its hash. Moving file to its folder fires during prePersist.
-                try{
-                    $fileData = new FileData($uploadedFile, $this->getUser(),$filePath);
-                    $file = CSMCFile::fromUploadData($fileData, $em);
-                    $file->setParent($parent);
-                    $em->persist($file);
-                    $logger->info("Im 1");
-                }
-                catch (IOExceptionInterface $e) {
-                    $logger->info("Im 2");
-                    $this->addFlash('danger', "cant add file-".$data['name']);
-                    return new Response(501);
-                }
-    }
-    try{
-        $em->flush();
-        $logger->info("Im 3");
-    }
-    catch (IOExceptionInterface $e) {
-        $this->addFlash('danger', "Error while pushing to server");
-        return new Response(501);
-    }
-
-        //should respond with name of file
-        $logger->info("Im 4");
-        //return $this->redirectToRoute('file_management', $fileManager->getQueryParameters(),200);
-        //return new JsonResponse($response, 200);
-        return new Response(200);
-    }
-
-=======
             return new Response(Response::HTTP_NOT_FOUND);
 
         }
@@ -541,8 +481,8 @@ class FileManagerController extends Controller
             
             $file=$fileClass->findByPath($filePath);
             if($file){
-                $this->addFlash('danger', "cant add file, File already exist-".$data['name']);
-                return new Response(Response::HTTP_UNAUTHORIZED);
+                $this->addFlash('danger', "can't add file, File already exist-".$data['name']);
+                return new Response(401);
                 
             }
             
@@ -552,11 +492,9 @@ class FileManagerController extends Controller
                 $file = CSMCFile::fromUploadData($fileData, $em);
                 $file->setParent($parent);
                 $em->persist($file);
-                // $logger->info("Im 1");
             }
             catch (IOExceptionInterface $e) {
-                $logger->info("Im 2");
-                $this->addFlash('danger', "can't add file-".$data['name']);
+                $this->addFlash('danger', "cant add file-".$data['name']);
                 return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
@@ -571,7 +509,7 @@ class FileManagerController extends Controller
                 ]
             ];
         }
-        
+
         try{
             $em->flush();
         }
@@ -579,13 +517,12 @@ class FileManagerController extends Controller
             $this->addFlash('danger', "Error while flushing to server");
             return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-        
+
+        //should respond with name of file
         //TODO: need to refresh the page on front-end. 
         return new JsonResponse($response,200);
     }
-
->>>>>>> remotes/origin/keith/fixUploadRenameDelete
-
+    
     protected function dispatch($eventName, array $arguments = [])
     {
         $arguments = array_replace([
