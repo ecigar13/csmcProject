@@ -316,8 +316,8 @@ class FileManagerController extends Controller
         $form = $this->createDeleteForm();
         $form->handleRequest($request);
         $queryParameters = $request->query->all();
-
         $em = $this->getDoctrine()->getManager();
+
         if ($form->isSubmitted() && $form->isValid()) {
             //delete from disk is in FileSubscriber, preRemove
             //delete from database

@@ -151,6 +151,7 @@ class VirtualFile {
     }
 
     /**
+     * Get logical path in the database, not physical path.
      * @return mixed
      */
     public function getPath()

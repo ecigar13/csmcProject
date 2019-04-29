@@ -5,6 +5,9 @@ namespace App\DoctrineEventSubscriber;
 use App\Annotation\Uploadable;
 use App\Utils\FileUploader;
 use App\Entity\File\File;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Filesystem\Filesystem;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
@@ -61,16 +64,23 @@ class FileSubscriber implements EventSubscriber {
         $entity = $args->getObject();
 
         if(!$entity instanceof File){
-            return;
+            return "Cannot find file.";
         }
 
-        $em = $this->getDoctrine()->getManager();
-        $hashId = $entity->getHash();
-        $fileHash = $this->getDoctrine()->getRepository(FileHash::class)->findOneBy(array('id' => $hashId));
-        if($fileHash !== null){
+        try{
             $fileSystem = new Filesystem();
-            $fileSystem->remove($fileHash->getFullPath());
+            $fileSystem->remove($entity->getPhysicalPath());
+
+        }catch(IOExceptionInterface $e){
+            return $e->getPath();
         }
+
+
+        // $em = $this->getDoctrine()->getManager();
+        // $hashId = $entity->getHash();
+        // $fileHash = $this->getDoctrine()->getRepository(FileHash::class)->findOneBy(array('id' => $hashId));
+        // if($fileHash !== null){
+        // }
     }
 
 
