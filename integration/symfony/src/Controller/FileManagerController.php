@@ -231,10 +231,11 @@ class FileManagerController extends Controller
     /**
      * @Route("/fms/rename/", name="file_management_rename")
      *
-     * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name and extension.
+     * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name.
      * Need to fix this in the future.
      *
      * TODO: check if the person who initiated is admin or the owner.
+     * TODO: it is possible to change extension too.
      *
      * @param Request $request
      *
@@ -248,31 +249,27 @@ class FileManagerController extends Controller
         $formRename = $this->createRenameForm();
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
-        $oldName = $queryParameters['oldName'];
         $em = $this->getDoctrine()->getManager();
 
-        
+        $response = [];
         /* @var Form $formRename */
         $formRename->handleRequest($request);
         if ($formRename->isSubmitted() && $formRename->isValid()) {
             //perform updating database
             $data = $formRename->getData();
             
-            if(isset($data['name'])){
+            if(isset($data['id'])){
                 //TODO: find by ID, or hash. Not by file name
                 //TODO: avoid sending file name in query parameter.
-                $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name' => $oldName));
-                if($file === null){
+                $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id' => $data['id']));
+                if(is_null($file)){
                     //TODO: what if file doesn't exist in database?
-                    $this->addFlash('warning', "Can't find the file to rename: ".$oldName);
+                    $this->addFlash('warning', "Can't find the file to rename: ".$data['id']);
                     return $this->redirectToRoute('file_management', $queryParameters);
                 }
                 
-                print_r($file);
-                $l->info("DDDDDDDDDDDDDDDDDDD");
-                // $l->info($file);
                 //update name
-                if ($data['name'] !== $oldName) {
+                if (isset($data['name']) && $data['name'] !== $file->getName()) {
                     //can be multiple because files are not unique. Can't fix it for now.
                     $file->setName($data['name']);
                     $em->persist($file);
@@ -280,31 +277,20 @@ class FileManagerController extends Controller
                     $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
                 }
 
-                //update extension
-                if(isset($data['extension'])){
-                    $fileHash = $this->getDoctrine()->getRepository(FileHash::class)->findOneBy(array('id' => $file->getId()));
-                    if($fileHash === null) {
-
-                        $this->addFlash('warning', "Can't find the file to rename: ".$oldName);
-                        return $this->redirectToRoute('file_management', $queryParameters);
-                    }
-                    $newHash = explode('.', $fileHash->getPath());
-
-                    //no extension
-                    if(count($newHash) === 1){
-                        $fileHash->setPath($newHash[0].$data['extension']);
-                    }else{
-                        $newHash[count($newHash) - 1] = $data['extension'];
-                        $fileHash->setPath(implode('.', $newHash)) ;
-                    }
-                    $em->persist($fileHash);
-                }
+                $response = [
+                    'files'=>[
+                        [
+                        'newName'=> $file->getName(),
+                        ],
+                    ]
+                ];
             }
             $this->addFlash('danger', 'Did not provide a file name.');
         }
         $em->flush();
 
-        return new Response($request,200);
+
+        return new Response($response,200);
         // return $this->redirectToRoute('file_management', $queryParameters);
     }
 
