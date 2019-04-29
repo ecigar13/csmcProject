@@ -251,7 +251,6 @@ class FileManagerController extends Controller
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
 
-        $response = [];
         /* @var Form $formRename */
         $formRename->handleRequest($request);
         if ($formRename->isSubmitted() && $formRename->isValid()) {
@@ -276,22 +275,14 @@ class FileManagerController extends Controller
                 } else {
                     $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
                 }
-
-                $response = [
-                    'files'=>[
-                        [
-                        'newName'=> $file->getName(),
-                        ],
-                    ]
-                ];
+            }else{
+                $this->addFlash('danger', 'Did not provide a file name.');
             }
-            $this->addFlash('danger', 'Did not provide a file name.');
         }
         $em->flush();
 
 
-        return new Response($response,200);
-        // return $this->redirectToRoute('file_management', $queryParameters);
+        return $this->redirectToRoute('file_management', $queryParameters);
     }
 
     /**
