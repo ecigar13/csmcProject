@@ -448,7 +448,7 @@ class FileManagerController extends Controller
                     new NotBlank(),
                 ],
                 'label'       => false,
-            ])->add('id', TextType::class, [
+            ])->add('id', HiddenType::class, [
                 'constraints' => [
                     new NotBlank(),
                 ],
