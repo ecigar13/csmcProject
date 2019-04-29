@@ -118,6 +118,16 @@ class VirtualFile {
         return $this->id;
     }
 
+    public function getUsers()
+    {
+        return $this->users->toArray();;
+    }
+
+    public function getRoles()
+    {
+        return $this->roles->toArray();;
+    }
+
     /**
      * @return mixed
      */
