@@ -171,6 +171,7 @@ class FileManagerController extends Controller
         $form->handleRequest($request);
         /** @var Form $formRename */
         $formRename = $this->createRenameForm();
+        $formMove = $this->createMoveForm();
         
 
         //Uploading Folder---------------------------------------->
@@ -222,10 +223,10 @@ class FileManagerController extends Controller
         }
         $parameters['form']       = $form->createView();
         $parameters['formRename'] = $formRename->createView();
+        $parameters['formMove']   = $formMove->createView();
 
         return $this->render('fileManager/manager.html.twig', $parameters);
     }
-
     /**
      * @Route("/fms/rename/", name="file_management_rename")
      *
@@ -277,6 +278,49 @@ class FileManagerController extends Controller
                 $this->addFlash('danger', 'Did not provide a file name.');
             }
         }
+        $em->flush();
+
+
+        return $this->redirectToRoute('file_management', $queryParameters);
+    }
+
+    /**
+     * @Route("/fms/move/", name="fms_move")
+     *
+     * TODO: check if the person who initiated is admin or the owner.
+     * TODO: it is possible to change extension too.
+     *
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     *
+     * @throws \Exception
+     */
+    public function moveFileAction(Request $request, LoggerInterface $l)
+    {
+        $file_id = $request->request->get('file_id');
+        $parent_id = $request->request->get('new_parent_id');
+
+        $translator = $this->get('translator');
+        $queryParameters = $request->query->all();
+        $em = $this->getDoctrine()->getManager();
+
+        if(!empty($file_id)){
+            $file = $this->getDoctrine()
+                ->getRepository(VirtualFile::class)
+                ->findOneBy(array('id' => $file_id));
+
+            $parent = $this->getDoctrine()
+                ->getRepository(Directory::class)
+                ->findOneBy(array('id' => $parent_id));
+
+            $file->setParent($parent);
+            $em->persist($file);
+        }
+        else{
+            $this->addFlash('danger', 'Did not provide a valid files.');
+        }
+
         $em->flush();
 
 
@@ -408,6 +452,31 @@ class FileManagerController extends Controller
                     'class' => 'btn btn-danger',
                 ],
                 'label'              => 'button.delete.action',
+            ])
+            ->getForm();
+    }
+
+    /**
+     * @return mixed
+     */
+    protected function createMoveForm()
+    {
+        return $this->createFormBuilder()
+            ->add('name', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('id', HiddenType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('send', SubmitType::class, [
+                'attr'  => [
+                    'class' => 'btn btn-primary',
+                ],
+                'label' => 'button.move.action',
             ])
             ->getForm();
     }
@@ -569,6 +638,9 @@ class FileManagerController extends Controller
         $logger->info("RetrieveDirectory");
         $logger->info($parentPath);
 
+        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+        $root=$directoryClass->findOneBy(array('path' => '/root'));
+
         //Find parent from id and children from parent
         if($baseFolderName){
             $logger->info("in Base Folder");
@@ -584,7 +656,7 @@ class FileManagerController extends Controller
 
             $directoriesList[] = [
                 'text'     => 'root',
-                //'text'     => $fileManager->getBaseName(),
+                'id'     => $root->getId(),
                 'icon'     => 'far fa-folder-open',
                 'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                 'a_attr'   => [
@@ -597,8 +669,7 @@ class FileManagerController extends Controller
 
             return $directoriesList;
         }
-            
-        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+
         $parent=$directoryClass->findOneBy(array('path' => $parentPath));
         $directories = $directoryClass->findByParent($parent);
 
@@ -642,6 +713,7 @@ class FileManagerController extends Controller
             if($access){
                 $directoriesList[] = [
                     'text'     => $directory->getName(),
+                    'id'       => $directory->getId(),
                     'icon'     => 'far fa-folder-open',
                     'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                     'a_attr'   => [

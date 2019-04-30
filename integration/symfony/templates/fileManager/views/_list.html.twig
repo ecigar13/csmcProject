@@ -76,6 +76,22 @@
                         <span class="far fa-edit"></span>
                         </button>
                     </span>
+                    <span data-toggle="tooltip" title="Move File">
+                        <button type="button"
+                                class="btn btn-xs btn-default js-move-modal"
+                                data-id='{{ file.id }}'
+                                data-trigger="click"
+                                data-container="body"
+                                data-toggle="modal"
+                                data-target="#js-confirm-move"
+                                data-placement="left"
+                                data-html="true"
+                                data-name='{{ file.name}}'
+                                data-extension='{{ file.extension }}'
+                                >
+                        <span class="fas fa-arrows-alt"></span>
+                        </button>
+                    </span>
                     {# {% if file.type == "file" %} #}
                         <a data-placement="left" data-id='{{ file.id }}' title="{{ 'title.download'|trans }}" class="btn btn-xs btn-default js-download"
                            href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName':'file.name'})) }}" download>
