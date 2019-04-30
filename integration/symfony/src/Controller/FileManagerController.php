@@ -325,8 +325,8 @@ class FileManagerController extends Controller
             $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id'=> $data['deleteId']));
             if($file !== null) {
                 $file->setParent(null);
-                $em->persist($file);
-                $em->flush();
+                //$em->persist($file);
+                //$em->flush();
                 $em->remove($file);  //this will remove files/folders inside this one.
                 $em->flush();
             }

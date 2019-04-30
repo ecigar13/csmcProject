@@ -83,12 +83,6 @@ $(document).ready(function () {
         }
     });
 
-    function renameFile($renameModalButton) {
-        $('#form_name').val($renameModalButton.data('name'));
-        $('#form_id').val($renameModalButton.data('id'));
-        $('#form_extension').val($renameModalButton.data('extension'));
-        $renameModal.find('form').attr('action', $renameModalButton.data('href'))
-    }
 
     function deleteFile($deleteModalButton) {
         $('#form_deleteId').val($deleteModalButton.data('id'));
@@ -97,8 +91,25 @@ $(document).ready(function () {
 
     function deleteFolder($deleteModalButton) {
         $('#form_deleteId').val($('.jstree-clicked').attr('id'));
-        console.log($('.jstree-clicked').attr('id'));
         $('#js-confirm-delete').find('form').attr('action', $deleteModalButton.data('href'));
+    }
+
+    function renameFile($renameModalButton) {
+        $('#form_name').val($renameModalButton.data('name'));
+        $('#form_id').val($renameModalButton.data('id'));
+        $('#form_extension').val($renameModalButton.data('extension'));
+        $renameModal.find('form').attr('action', $renameModalButton.data('href'))
+    }
+
+    function renameFolder($renameModalButton) {
+        $('#form_name').val($('.jstree-clicked')
+            .clone()
+            .children()
+            .remove()
+            .end()
+            .text());
+        $('#form_id').val($('.jstree-clicked').attr('id'));
+        $renameModal.find('form').attr('action', $renameModalButton.data('href'))
     }
 
     function previewFile($previewModalButton) {
@@ -160,6 +171,9 @@ $(document).ready(function () {
         // rename modal buttons
         .on('click', '.js-rename-modal', function () {
             renameFile($(this));
+        })
+        .on('click', '.js-rename-folder', function () {
+            renameFolder($(this));
         })
         // multiple delete modal button
         .on('click', '#js-delete-multiple-modal', function () {
