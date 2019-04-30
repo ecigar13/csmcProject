@@ -136,10 +136,12 @@ class VirtualFile {
         return $this->name;
     }
     /**
+     * @return self
      */
     public function setName(string $name)
     {
-        return $this->name = $name;
+        $this->name = $name;
+        return $this;
     }
     /**
      * @return mixed

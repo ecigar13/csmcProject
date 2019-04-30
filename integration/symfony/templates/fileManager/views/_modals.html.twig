@@ -13,6 +13,7 @@
             <div class="modal-footer">
                 {{ form_start(formDelete, {"attr" : {'class':'pull-right'}}) }}
                 {{ form_widget(formDelete) }}
+                {{ form_row(formDelete.deleteId) }}
                 {{ form_end(formDelete) }}
                 <button type="button" class="btn btn-default pull-left" title="{{ 'button.cancel'|trans }}"
                         data-dismiss="modal"> {{ 'button.cancel'|trans }}</button>
@@ -21,8 +22,6 @@
     </div>
 </div>
 <div class="modal fade" id="js-confirm-rename" tabindex="-1" role="dialog" aria-hidden="true">
-{{ dump(fileArray) }}
-{{dump(formRename)}}
     <div class="modal-dialog">
         <div class="modal-content">
             {{ form_start(formRename) }}

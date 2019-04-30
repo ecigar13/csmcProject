@@ -49,21 +49,21 @@
                     <span data-toggle="tooltip" title="{{ 'title.delete'|trans }}">
                         <button type="button"
                                 class="btn btn-xs btn-danger js-delete-modal"
-                                data-id='{{ file.id }}'
+                                data-id="{{ file.id }}"
                                 data-trigger="click"
                                 data-container="body"
                                 data-toggle="modal"
                                 data-target="#js-confirm-delete"
                                 data-placement="left"
                                 data-html="true"
-                                data-href='{{ path('file_management_delete', fileManager.queryParameters|merge({'delete[]': file.name })) }}'>
+                                data-href='{{ path('file_management_delete', fileManager.queryParameters) }}'>
                         <span class="far fa-trash-alt"></span>
                         </button>
                     </span>
                     <span data-toggle="tooltip" title="{{ 'title.rename.file'|trans }}">
                         <button type="button"
                                 class="btn btn-xs btn-default js-rename-modal"
-                                data-id='{{ file.id }}'
+                                data-id="{{ file.id }}"
                                 data-trigger="click"
                                 data-container="body"
                                 data-toggle="modal"
@@ -72,7 +72,7 @@
                                 data-html="true"
                                 data-name='{{ file.name}}'
                                 data-extension='{{ file.extension }}'
-                                data-href='{{ path('file_management_rename', fileManager.queryParameters|merge({'oldName':file.name})) }}'>
+                                data-href='{{ path('file_management_rename', fileManager.queryParameters) }}'>
                         <span class="far fa-edit"></span>
                         </button>
                     </span>
@@ -93,7 +93,7 @@
                         </button>
                     </span>
                     {# {% if file.type == "file" %} #}
-                        <a data-placement="left" data-id='{{ file.id }}' title="{{ 'title.download'|trans }}" class="btn btn-xs btn-default js-download"
+                        <a data-placement="left" data-id="{{ file.id }}" title="{{ 'title.download'|trans }}" class="btn btn-xs btn-default js-download"
                            href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName':'file.name'})) }}" download>
                             <span class="fas fa-download"></span>
                         </a>
@@ -101,7 +101,7 @@
                             <span data-toggle="tooltip" title="{{ 'title.preview.file'|trans }}">
                                 <button type="button"
                                         class="btn btn-xs btn-default js-open-modal"
-                                        data-id='{{ file.id }}'
+                                        data-id="{{ file.id }}"
                                         data-trigger="click"
                                         data-container="body"
                                         data-toggle="modal"

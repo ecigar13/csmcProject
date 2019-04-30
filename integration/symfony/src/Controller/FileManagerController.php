@@ -231,7 +231,6 @@ class FileManagerController extends Controller
      * @Route("/fms/rename/", name="file_management_rename")
      *
      * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name.
-     * Need to fix this in the future.
      *
      * TODO: check if the person who initiated is admin or the owner.
      * TODO: it is possible to change extension too.
@@ -250,30 +249,48 @@ class FileManagerController extends Controller
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
 
-        /* @var Form $formRename */
+        /** @var Form $formRename **/
         $formRename->handleRequest($request);
         if ($formRename->isSubmitted() && $formRename->isValid()) {
-            //perform updating database
             $data = $formRename->getData();
             
-            if(isset($data['id'])){
-                //TODO: find by ID, or hash. Not by file name
-                //TODO: avoid sending file name in query parameter.
-                $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id' => $data['id']));
-                if(is_null($file)){
-                    //TODO: what if file doesn't exist in database?
+            if(isset($data['id']) && isset($data['name'])){
+                $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findBy(array('id' => $data['id']));
+                $children = $this->getDoctrine()->getRepository(VirtualFile::class)->findByParent($data['id']);
+
+                //if file doesn't exist in database?
+                if(count($files) == 0){
                     $this->addFlash('warning', "Can't find the file to rename: ".$data['id']);
                     return $this->redirectToRoute('file_management', $queryParameters);
                 }
                 
                 //update name
-                if (isset($data['name']) && $data['name'] !== $file->getName()) {
-                    //can be multiple because files are not unique. Can't fix it for now.
-                    $file->setName($data['name']);
-                    $em->persist($file);
-                } else {
-                    $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                $newName = $data['name'];
+                $oldName = '';
+
+                //there should only be 1 record.
+                foreach($files as $file){
+                    $oldName = $file->getName();
+
+                    if ($newName !== $oldName) {
+                        //can be multiple because files are not unique. Can't fix it for now.
+                        $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                        $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                        $em->persist($file);
+
+                    
+                    } else {
+                        $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                    }
                 }
+                //TODO: update children.
+                foreach($children as $child){
+                    // $l->info(str_replace("/".$oldName , "/".$newName, $child->getPath()));
+                    $child->setPath(str_replace("/".$oldName , "/".$newName, $child->getPath()));
+                    $em->persist($child);
+                }
+                
+
             }else{
                 $this->addFlash('danger', 'Did not provide a file name.');
             }
@@ -360,21 +377,21 @@ class FileManagerController extends Controller
         $form = $this->createDeleteForm();
         $form->handleRequest($request);
         $queryParameters = $request->query->all();
-
         $em = $this->getDoctrine()->getManager();
-        if ($form->isSubmitted() && $form->isValid()) {
-            if (isset($queryParameters['delete'])) {
-                //delete from disk is in FileSubscriber, preRemove
-                //delete from database
-                foreach ($queryParameters['delete'] as $fileName) {
-                    $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name'=>$fileName));
-                    if($file !== null) $em->remove($file);  //this will remove files/folders inside this one.
-                }
 
-                unset($queryParameters['delete']);
+        if ($form->isSubmitted() && $form->isValid()) {
+            //delete from disk is in FileSubscriber, preRemove
+            //delete from database
+            $data = $form->getData();
+            $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id'=> $data['deleteId']));
+            if($file !== null) {
+                $file->setParent(null);
+                //$em->persist($file);
+                //$em->flush();
+                $em->remove($file);  //this will remove files/folders inside this one.
+                $em->flush();
             }
         }
-        $em->flush();
 
         return $this->redirectToRoute('file_management', $queryParameters);
     }
@@ -452,6 +469,11 @@ class FileManagerController extends Controller
                     'class' => 'btn btn-danger',
                 ],
                 'label'              => 'button.delete.action',
+            ])->add('deleteId', HiddenType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
             ])
             ->getForm();
     }
@@ -648,6 +670,7 @@ class FileManagerController extends Controller
             //$fileName = '/root';
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
+            // $queryParameters['id'] = $rootId;
             $queryParametersRoute     = $queryParameters;
             unset($queryParametersRoute['route']);
 
@@ -660,7 +683,8 @@ class FileManagerController extends Controller
                 'icon'     => 'far fa-folder-open',
                 'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                 'a_attr'   => [
-                    'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                    'href' => $this->generateUrl('file_management', $queryParameters),
+                    'id'   => $rootId,
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
                     'opened'   => $fileManager->getCurrentRoute() === $fileName,
@@ -680,6 +704,7 @@ class FileManagerController extends Controller
             $fileName = $parentPath . '/' . $directory->getName();
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
+            // $queryParameters['id'] =  $directory->getId();
             $queryParametersRoute     = $queryParameters;
             unset($queryParametersRoute['route']);
 
@@ -713,17 +738,17 @@ class FileManagerController extends Controller
             if($access){
                 $directoriesList[] = [
                     'text'     => $directory->getName(),
-                    'id'       => $directory->getId(),
                     'icon'     => 'far fa-folder-open',
                     'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                     'a_attr'   => [
                         'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                        'id'   => $directory->getId(),
                     ], 'state' => [
                         'selected' => $fileManager->getCurrentRoute() === $fileName,
                         'opened'   => $fileManager->getCurrentRoute() === $fileName,
                     ],
                 ];
-        }
+            }
         }
 
         return $directoriesList;
