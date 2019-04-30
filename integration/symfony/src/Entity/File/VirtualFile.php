@@ -118,6 +118,16 @@ class VirtualFile {
         return $this->id;
     }
 
+    public function getUsers()
+    {
+        return $this->users->toArray();;
+    }
+
+    public function getRoles()
+    {
+        return $this->roles->toArray();;
+    }
+
     /**
      * @return mixed
      */
@@ -151,7 +161,6 @@ class VirtualFile {
     }
 
     /**
-     * Get logical path in the database, not physical path.
      * @return mixed
      */
     public function getPath()
