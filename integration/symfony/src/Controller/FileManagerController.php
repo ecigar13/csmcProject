@@ -581,7 +581,7 @@ class FileManagerController extends Controller
             //$fileName = '/root';
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
-            $queryParameters['id'] = $rootId;
+            // $queryParameters['id'] = $rootId;
             $queryParametersRoute     = $queryParameters;
             unset($queryParametersRoute['route']);
 
@@ -595,6 +595,7 @@ class FileManagerController extends Controller
                 'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                 'a_attr'   => [
                     'href' => $this->generateUrl('file_management', $queryParameters),
+                    'id'   => $rootId,
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
                     'opened'   => $fileManager->getCurrentRoute() === $fileName,
@@ -615,7 +616,7 @@ class FileManagerController extends Controller
             $fileName = $parentPath . '/' . $directory->getName();
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
-            $queryParameters['id'] =  $directory->getId();
+            // $queryParameters['id'] =  $directory->getId();
             $queryParametersRoute     = $queryParameters;
             unset($queryParametersRoute['route']);
 
@@ -653,6 +654,7 @@ class FileManagerController extends Controller
                     'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                     'a_attr'   => [
                         'href' => $this->generateUrl('file_management', $queryParameters) ,
+                        'id'   => $directory->getId(),
                     ], 'state' => [
                         'selected' => $fileManager->getCurrentRoute() === $fileName,
                         'opened'   => $fileManager->getCurrentRoute() === $fileName,
