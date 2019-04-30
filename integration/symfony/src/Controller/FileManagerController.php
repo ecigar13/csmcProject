@@ -254,37 +254,39 @@ class FileManagerController extends Controller
             $data = $formRename->getData();
             
             if(isset($data['id']) && isset($data['name'])){
-                $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id' => $data['id']));
+                $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findBy(array('id' => $data['id']));
                 $children = $this->getDoctrine()->getRepository(VirtualFile::class)->findByParent($data['id']);
 
                 //if file doesn't exist in database?
-                if(is_null($file)){
+                if(count($files) == 0){
                     $this->addFlash('warning', "Can't find the file to rename: ".$data['id']);
                     return $this->redirectToRoute('file_management', $queryParameters);
                 }
                 
                 //update name
-                $oldName = $file->getName();
                 $newName = $data['name'];
-                if ($newName !== $oldName) {
-                    //can be multiple because files are not unique. Can't fix it for now.
-                    $l->info("DDDDDDDDDDDDDD");
-                    $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
-                    $file->setName($newName)
-                        ->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
-                    $em->persist($file);
+                $oldName = '';
+
+                //there should only be 1 record.
+                foreach($files as $file){
+                    $oldName = $file->getName();
+
+                    if ($newName !== $oldName) {
+                        //can be multiple because files are not unique. Can't fix it for now.
+                        $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                        $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                        $em->persist($file);
+
                     
-                    //TODO: update path.
-                    if(count($children) != 0){
-                        $l->info("DDDDDDDDDDDDDD");
-                        foreach($children as $child){
-                            $l->info(str_replace("/".$oldName , "/".$newName, $child->getPath()));
-                            $child->setPath(str_replace("/".$oldName , "/".$newName, $child->getPath()));
-                            $em->persist($child);
-                        }
+                    } else {
+                        $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
                     }
-                } else {
-                    $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                }
+                //TODO: update children.
+                foreach($children as $child){
+                    // $l->info(str_replace("/".$oldName , "/".$newName, $child->getPath()));
+                    $child->setPath(str_replace("/".$oldName , "/".$newName, $child->getPath()));
+                    $em->persist($child);
                 }
                 
 
