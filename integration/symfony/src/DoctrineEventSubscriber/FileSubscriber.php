@@ -69,6 +69,7 @@ class FileSubscriber implements EventSubscriber {
 
         try{
             $fileSystem = new Filesystem();
+            $logger->info("DDDDDDDDDDDDDD".$entity->getPhysicalPath());
             $fileSystem->remove($entity->getPhysicalPath());
 
         }catch(IOExceptionInterface $e){

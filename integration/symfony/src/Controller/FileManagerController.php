@@ -230,7 +230,6 @@ class FileManagerController extends Controller
      * @Route("/fms/rename/", name="file_management_rename")
      *
      * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name.
-     * Need to fix this in the future.
      *
      * TODO: check if the person who initiated is admin or the owner.
      * TODO: it is possible to change extension too.
@@ -249,30 +248,46 @@ class FileManagerController extends Controller
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
 
-        /* @var Form $formRename */
+        /** @var Form $formRename **/
         $formRename->handleRequest($request);
         if ($formRename->isSubmitted() && $formRename->isValid()) {
-            //perform updating database
             $data = $formRename->getData();
             
-            if(isset($data['id'])){
-                //TODO: find by ID, or hash. Not by file name
-                //TODO: avoid sending file name in query parameter.
+            if(isset($data['id']) && isset($data['name'])){
                 $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id' => $data['id']));
+                $children = $this->getDoctrine()->getRepository(VirtualFile::class)->findByParent($data['id']);
+
+                //if file doesn't exist in database?
                 if(is_null($file)){
-                    //TODO: what if file doesn't exist in database?
                     $this->addFlash('warning', "Can't find the file to rename: ".$data['id']);
                     return $this->redirectToRoute('file_management', $queryParameters);
                 }
                 
                 //update name
-                if (isset($data['name']) && $data['name'] !== $file->getName()) {
+                $oldName = $file->getName();
+                $newName = $data['name'];
+                if ($newName !== $oldName) {
                     //can be multiple because files are not unique. Can't fix it for now.
-                    $file->setName($data['name']);
+                    $l->info("DDDDDDDDDDDDDD");
+                    $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                    $file->setName($newName)
+                        ->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
                     $em->persist($file);
+                    
+                    //TODO: update path.
+                    if(count($children) != 0){
+                        $l->info("DDDDDDDDDDDDDD");
+                        foreach($children as $child){
+                            $l->info(str_replace("/".$oldName , "/".$newName, $child->getPath()));
+                            $child->setPath(str_replace("/".$oldName , "/".$newName, $child->getPath()));
+                            $em->persist($child);
+                        }
+                    }
                 } else {
                     $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
                 }
+                
+
             }else{
                 $this->addFlash('danger', 'Did not provide a file name.');
             }

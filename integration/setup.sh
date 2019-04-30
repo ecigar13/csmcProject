@@ -3,7 +3,7 @@ docker-compose exec php yarn install
 docker-compose exec php php bin/console doctrine:database:drop --force &&
 docker-compose exec php php bin/console doctrine:database:create &&
 docker-compose exec php php bin/console doctrine:schema:update --force &&
-docker-compose exec php php bin/console doctrine:fixtures:load
+docker-compose exec php php bin/console doctrine:fixtures:load &&
 docker-compose exec php yarn run encore dev --watch
 
 docker-compose exec php php bin/console app:add-user yournetid developer
