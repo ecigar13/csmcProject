@@ -1,8 +1,9 @@
-$( document ).ready(function() {
+$(document).ready(function () {
 
     var $renameModal = $('#js-confirm-rename');
     var $deleteModal = $('#js-confirm-delete');
     var $displayModal = $('#js-display-image');
+
     var callback = function (key, opt) {
         switch (key) {
             case 'edit':
@@ -31,27 +32,54 @@ $( document ).ready(function() {
         selector: '.file',
         callback: callback,
         items: {
-            "delete": {name: deleteMessage, icon: "far fa-trash-alt"},
-            "edit": {name: renameMessage, icon: "far fa-edit"},
-            "download": {name: downloadMessage, icon: "fas fa-download"},
+            "delete": {
+                name: deleteMessage,
+                icon: "far fa-trash-alt"
+            },
+            "edit": {
+                name: renameMessage,
+                icon: "far fa-edit"
+            },
+            "download": {
+                name: downloadMessage,
+                icon: "fas fa-download"
+            },
         }
     });
     $.contextMenu({
         selector: '.img',
         callback: callback,
         items: {
-            "delete": {name: deleteMessage, icon: "far fa-trash-alt"},
-            "edit": {name: renameMessage, icon: "far fa-edit"},
-            "download": {name: downloadMessage, icon: "fas fa-download"},
-            "preview": {name: previewMessage, icon: "fas fa-eye"},
+            "delete": {
+                name: deleteMessage,
+                icon: "far fa-trash-alt"
+            },
+            "edit": {
+                name: renameMessage,
+                icon: "far fa-edit"
+            },
+            "download": {
+                name: downloadMessage,
+                icon: "fas fa-download"
+            },
+            "preview": {
+                name: previewMessage,
+                icon: "fas fa-eye"
+            },
         }
     });
     $.contextMenu({
         selector: '.dir',
         callback: callback,
         items: {
-            "delete": {name: deleteMessage, icon: "far fa-trash-alt"},
-            "edit": {name: renameMessage, icon: "far fa-edit"},
+            "delete": {
+                name: deleteMessage,
+                icon: "far fa-trash-alt"
+            },
+            "edit": {
+                name: renameMessage,
+                icon: "far fa-edit"
+            },
         }
     });
 
@@ -63,8 +91,13 @@ $( document ).ready(function() {
     }
 
     function deleteFile($deleteModalButton) {
-        console.log($deleteModalButton.data('id'));
         $('#form_deleteId').val($deleteModalButton.data('id'));
+        $('#js-confirm-delete').find('form').attr('action', $deleteModalButton.data('href'));
+    }
+
+    function deleteFolder($deleteModalButton) {
+        $('#form_deleteId').val($('.jstree-clicked').attr('id'));
+        console.log($('.jstree-clicked').attr('id'));
         $('#js-confirm-delete').find('form').attr('action', $deleteModalButton.data('href'));
     }
 
@@ -73,8 +106,8 @@ $( document ).ready(function() {
         $('#js-display-image').find('img').attr('src', href);
     }
 
-    function addParameterToURL(_url, param){
-        _url += (_url.split('?')[1] ? '&':'?') + param;
+    function addParameterToURL(_url, param) {
+        _url += (_url.split('?')[1] ? '&' : '?') + param;
         return _url;
     }
 
@@ -101,9 +134,10 @@ $( document ).ready(function() {
         $("#tree-block").stick_in_parent();
 
         initTree(treedata);
+
     }
     $(document)
-    // checkbox select all
+        // checkbox select all
         .on('click', '#select-all', function () {
             var checkboxes = $('#form-multiple-delete').find(':checkbox')
             if ($(this).is(':checked')) {
@@ -114,19 +148,19 @@ $( document ).ready(function() {
         })
         // delete modal buttons
         .on('click', '.js-delete-modal', function () {
-                deleteFile($(this));
-            }
-        )
+            deleteFile($(this));
+        })
+        .on('click', '.js-delete-folder', function () {
+            deleteFolder($(this));
+        })
         // preview modal buttons
         .on('click', '.js-open-modal', function () {
-                previewFile($(this));
-            }
-        )
+            previewFile($(this));
+        })
         // rename modal buttons
         .on('click', '.js-rename-modal', function () {
-                renameFile($(this));
-            }
-        )
+            renameFile($(this));
+        })
         // multiple delete modal button
         .on('click', '#js-delete-multiple-modal', function () {
             var $multipleDelete = $('#form-multiple-delete').serialize();
