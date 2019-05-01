@@ -69,7 +69,9 @@ class FileManagerController extends Controller
         // $logger->info($fileManager->getDirName());
         // $logger->info($fileManager->getBaseName());
         // Folder search
-       $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,true);
+        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+        $root=$directoryClass->findOneBy(array('path' => '/root'));
+        $directoriesArbo = $this->retrieveSubDirectories($fileManager, $root,$logger,true);
        
         // File search
         $logger->info($fileManager->getCurrentRoute());
@@ -207,9 +209,18 @@ class FileManagerController extends Controller
                 return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
                 
             }
+            // $user = $this->getUser();
+            // $role = $user->getRole();
+            // $roleClass = $this->getDoctrine()->getRepository(Role::class);
+            // $Admin = $roleClass->findOneByName('admin');
             try{
                 $directory  = new Directory($directoryName,$this->getUser(),$directoryPath,);
+                
                 $directory->setParent($parent);
+                foreach($parent->getUsers() as $user)
+                    $directory->addUser($user);
+                foreach($parent->getRoles() as $role)
+                    $directory->addRole($role);
                 $entityManager = $this->getDoctrine()->getManager();
                 $entityManager->persist($directory);
                 $entityManager->flush();
@@ -654,98 +665,67 @@ class FileManagerController extends Controller
      * 
      * 
      */
-    protected function retrieveSubDirectories(FileManager $fileManager, $parentPath = DIRECTORY_SEPARATOR,LoggerInterface $logger,$baseFolderName = false)
+    protected function retrieveSubDirectories(FileManager $fileManager, $parent,LoggerInterface $logger,$baseFolderName = false)
     {
         $directoriesList = null;
         $logger->info("RetrieveDirectory");
-        $logger->info($parentPath);
+        $logger->info($parent->getpath());
 
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $root=$directoryClass->findOneBy(array('path' => '/root'));
 
         //Find parent from id and children from parent
         if($baseFolderName){
+            
+            //$root=$directoryClass->findOneBy(array('path' => '/root'));
             $logger->info("in Base Folder");
-            $fileName = DIRECTORY_SEPARATOR . 'root';
+            $fileName = DIRECTORY_SEPARATOR . $parent->getName();
             //$fileName = '/root';
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
-            // $queryParameters['id'] = $rootId;
-            $queryParametersRoute     = $queryParameters;
-            unset($queryParametersRoute['route']);
-
-            // $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
-            // $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
+            $queryParameters['id'] = $parent->getId();
 
             $directoriesList[] = [
-                'text'     => 'root',
-                'id'     => $root->getId(),
+                'text'     => $parent->getName(),
+                'id'     =>   $parent->getId(),
                 'icon'     => 'far fa-folder-open',
-                'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
+                'children' => $this->retrieveSubDirectories($fileManager, $parent,$logger),
                 'a_attr'   => [
                     'href' => $this->generateUrl('file_management', $queryParameters),
-                    'id'   => $rootId,
+                    'id'   => $parent->getId(),
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
-                    'opened'   => $fileManager->getCurrentRoute() === $fileName,
+                    'opened'   => false,
                 ],
             ];
 
             return $directoriesList;
         }
 
-        $parent=$directoryClass->findOneBy(array('path' => $parentPath));
+        //$parent=$directoryClass->findOneBy(array('path' => $parentPath));
         $directories = $directoryClass->findByParent($parent);
 
         //List for tree
        
 
         foreach ($directories as $directory) {
-            $fileName = $parentPath . '/' . $directory->getName();
+            $fileName = $parent->getPath() . '/' . $directory->getName();
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
-            // $queryParameters['id'] =  $directory->getId();
-            $queryParametersRoute     = $queryParameters;
-            unset($queryParametersRoute['route']);
+            $queryParameters['id'] = $directory->getId();
 
-            // $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
-            // $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
-            $directoryRoles=[];
-            foreach($directory->getRoles() as $role){
-                array_push($directoryRoles, $role->getName());
-            }
-            $directoryUsers=[];
-            foreach($directory->getUsers() as $user){
-                array_push($directoryUsers, $user->getUsername());
-            }
-            $userRoles=[];
-            foreach($this->getUser()->getRoles() as $role){
-                array_push($userRoles, $role->getName());
-            }
-            $access=false;
-            if (in_array($this->getUser()->getUsername(), $directoryUsers)){
-                    $access=true;
-            }
-            else{
-                foreach($userRoles as $r){
-                    if(in_array($r, $directoryRoles)){
-                        $access=true;
-                        break;
-                    }
-                    $access=false;
-                }
-            }
-            if($access){
+            
+            if($this->getViewAccess($directory)){
                 $directoriesList[] = [
                     'text'     => $directory->getName(),
+                    'id'     =>   $directory->getId(),
                     'icon'     => 'far fa-folder-open',
-                    'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
+                    'children' => $this->retrieveSubDirectories($fileManager, $directory,$logger),
                     'a_attr'   => [
                         'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
                         'id'   => $directory->getId(),
                     ], 'state' => [
                         'selected' => $fileManager->getCurrentRoute() === $fileName,
-                        'opened'   => $fileManager->getCurrentRoute() === $fileName,
+                        'opened'   => false,
                     ],
                 ];
             }
@@ -754,6 +734,35 @@ class FileManagerController extends Controller
         return $directoriesList;
     }
 
+    public function getViewAccess(Directory $directory){
+        $access=false;
+        $directoryRoles=[];
+        foreach($directory->getRoles() as $role){
+            array_push($directoryRoles, $role->getName());
+        }
+        $directoryUsers=[];
+        foreach($directory->getUsers() as $user){
+            array_push($directoryUsers, $user->getUsername());
+        }
+        $userRoles=[];
+        foreach($this->getUser()->getRoles() as $role){
+            array_push($userRoles, $role->getName());
+        }
+        if (in_array($this->getUser()->getUsername(), $directoryUsers)){
+                $access=true;
+        }
+        else{
+            foreach($userRoles as $r){
+                if(in_array($r, $directoryRoles)){
+                    $access=true;
+                    break;
+                }
+                $access=false;
+            }
+        }
+        return $access;
+
+    }
     /**
      * Retrive all files in a directory/path
      * 

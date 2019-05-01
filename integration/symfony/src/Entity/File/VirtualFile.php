@@ -136,6 +136,11 @@ class VirtualFile {
         return $this->id;
     }
 
+    public function getOwner()
+    {
+        return $this->owner;
+    }
+
     public function getUsers()
     {
         return $this->users->toArray();;
@@ -146,7 +151,7 @@ class VirtualFile {
         return $this->roles->toArray();;
     }
 
-    public function getChild()
+    public function getChildren()
     {
         return $this->children->toArray();;
     }
