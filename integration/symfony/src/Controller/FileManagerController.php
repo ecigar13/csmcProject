@@ -65,14 +65,11 @@ class FileManagerController extends Controller
         $fileManager = $this->newFileManager($queryParameters);
 
         $this->createDirectory($fileManager,$logger);
-        // $logger->info("Logging");
-        // $logger->info($fileManager->getDirName());
-        // $logger->info($fileManager->getBaseName());
         // Folder search
        $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,true);
        
         // File search
-        $logger->info($fileManager->getCurrentRoute());
+        // $logger->info($fileManager->getCurrentRoute());
         $finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
         $regex = $fileManager->getRegex();
         $orderBy   = $fileManager->getQueryParameter('orderby');
@@ -174,7 +171,7 @@ class FileManagerController extends Controller
         $formMove = $this->createMoveForm();
         
 
-        //Uploading Folder---------------------------------------->
+        //Creating Folder---------------------------------------->
         if ($form->isSubmitted() && $form->isValid()) {
             $data      = $form->getData();
 
@@ -187,7 +184,6 @@ class FileManagerController extends Controller
             if(array_key_exists('route',$fileManager->getQueryParameters()) && !is_null($fileManager->getQueryParameters()['route'])){
                 $parentPath = $fileManager->getQueryParameters()['route'];
             }
-            $logger->info("parentDDDDDDDDDDDDD");
             $logger->info($parentPath);
             $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
 
@@ -966,7 +962,7 @@ class FileManagerController extends Controller
     //     return null;
     // }
 
-    protected function createDirectory(FileManager $FileManager,LoggerInterface $logger)
+    protected function createDirectory(FileManager $FileManager, LoggerInterface $logger)
     {
         $user = $this->getUser();
         $roles=[];
@@ -976,15 +972,19 @@ class FileManagerController extends Controller
         $netId = $user->getUsername();
         $firstName = $user->getFirstName();
         $lastName = $user->getLastName();
+
         $entityManager = $this->getDoctrine()->getManager();
         $userClass = $this->getDoctrine()->getRepository(User::class);
         $roleClass = $this->getDoctrine()->getRepository(Role::class);
+
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $admin = $userClass->findOneBy(array('username' => 'axa000000'));
         $sectionClass = $userClass->findOneBy(array('username' => 'axa000000'));
+
         $Instructor = $roleClass->findOneByName('instructor');
         $Mentor = $roleClass->findOneByName('mentor');
         $Admin = $roleClass->findOneByName('admin');
+        
         $Student = $roleClass->findOneByName('student');
         $Developer = $roleClass->findOneByName('developer');
 
@@ -1116,6 +1116,65 @@ class FileManagerController extends Controller
         return null;
     }
 
+    /**
+     * @return mixed
+     */
+    protected function createNewFolderForm()
+    {
+        return $this->createFormBuilder()
+            ->add('name', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => 'New Folder Name',
+            ])
+            ->add('send', SubmitType::class, [
+                'attr'  => [
+                    'class' => 'btn btn-primary',
+                ],
+                'label' => 'button.createFolder.action',
+            ])
+            ->getForm();
+    }
+
+    /**
+     * @Route("/fms/createFolder/", name="file_management_create_folder")
+     *
+     * Create folder in the database. 
+     * @param Request $request
+     * @return Response
+     * @throws \Exception
+     */
+    public function createFolder(Request $request, LoggerInterface $logger)
+    {
+        /** @var Form $formRename */
+        $formRename = $this->createNewFolderForm();
+
+        // Protect against non-admin user or anyone who don't have access to this path from creating directory.
+        //TODO: check for permission to this path, not only admin
+        $isAdmin = $this->isGranted('admin');
+        if (!$isAdmin) {
+            // Redirect to home instead of displaying a forbidden message
+            return $this->redirectToRoute('home');
+        }
+        
+        $translator = $this->get('translator');
+        $queryParameters = $request->query->all();
+        
+        $em = $this->getDoctrine()->getManager();
+        $fileManager = $this->newFileManager($queryParameters);
+        
+        /** @var Form $formRename **/
+        $formRename->handleRequest($request);
+        if ($formRename->isSubmitted() && $formRename->isValid()) {
+            
+            $data = $formRename->getData();
+            $currentPath = $fileManager->getCurrentRoute();
+
+            $newFolder = new Directory($data['name'], $this->getUser(), $currentPath.$data['name']);
 
 
+        }
+            
+    }
 }
