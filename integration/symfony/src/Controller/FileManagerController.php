@@ -214,7 +214,7 @@ class FileManagerController extends Controller
             // $roleClass = $this->getDoctrine()->getRepository(Role::class);
             // $Admin = $roleClass->findOneByName('admin');
             try{
-                $directory  = new Directory($directoryName,$this->getUser(),$directoryPath,);
+                $directory  = new Directory($directoryName,$this->getUser(),$directoryPath);
 
                 $directory->setParent($parent);
                 foreach($parent->getUsers() as $user)
@@ -320,8 +320,8 @@ class FileManagerController extends Controller
         }
         $em->flush();
 
-        // return $this->redirectToRoute('file_management', $queryParameters);
-        return new JsonResponse($response, 200);
+        return $this->redirectToRoute('file_management', $queryParameters);
+        // return new JsonResponse($response, 200);
     }
 
     /**
@@ -592,7 +592,7 @@ class FileManagerController extends Controller
 
             $file=$fileClass->findByPath($filePath);
             if($file){
-                $this->addFlash('danger', "can't add file, File already exist-".$data['name']);
+                $this->addFlash('danger', "can't add file, File already exist-".$uploadedFile->getClientOriginalName());
                 return new Response(401);
 
             }
@@ -605,7 +605,7 @@ class FileManagerController extends Controller
                 $em->persist($file);
             }
             catch (IOExceptionInterface $e) {
-                $this->addFlash('danger', "cant add file-".$data['name']);
+                $this->addFlash('danger', "can't add file-".$uploadedFile->getClientOriginalName());
                 return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
@@ -691,11 +691,11 @@ class FileManagerController extends Controller
             //$fileName = '/root';
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
-            $queryParameters['id'] = $parent->getId();
+            // $queryParameters['id'] = $parent->getId();
 
             $directoriesList[] = [
                 'text'     => $parent->getName(),
-                'id'     =>   $parent->getId(),
+                // 'id'     =>   $parent->getId(),
                 'icon'     => 'far fa-folder-open',
                 'children' => $this->retrieveSubDirectories($fileManager, $parent,$logger),
                 'a_attr'   => [
@@ -720,17 +720,18 @@ class FileManagerController extends Controller
             $fileName = $parent->getPath() . '/' . $directory->getName();
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
-            $queryParameters['id'] = $directory->getId();
+            // $queryParameters['id'] = $directory->getId();
 
 
             if($this->getViewAccess($directory)){
                 $directoriesList[] = [
                     'text'     => $directory->getName(),
-                    'id'     =>   $directory->getId(),
+                    // 'id'     =>   $directory->getId(),
                     'icon'     => 'far fa-folder-open',
                     'children' => $this->retrieveSubDirectories($fileManager, $directory,$logger),
                     'a_attr'   => [
-                        'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                        // 'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                        'href' => $this->generateUrl('file_management', $queryParameters),
                         'id'   => $directory->getId(),
                     ], 'state' => [
                         'selected' => $fileManager->getCurrentRoute() === $fileName,
@@ -841,7 +842,7 @@ class FileManagerController extends Controller
             // Create root folder it's Not there
             $root=$directoryClass->findOneBy(array('path' => '/root'));
             if(!$root){
-                $root  = new Directory('root',$admin,'/root',);
+                $root  = new Directory('root',$admin,'/root');
                 $entityManager->persist($root);
                 $entityManager->flush();
             }
