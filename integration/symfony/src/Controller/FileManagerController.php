@@ -233,7 +233,7 @@ class FileManagerController extends Controller
      * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name.
      *
      * TODO: check if the person who initiated is admin or the owner.
-     * TODO: it is possible to change extension too.
+     * TODO: it is possible to change extension because front-end sends extension and file ID.
      *
      * @param Request $request
      *
@@ -248,6 +248,7 @@ class FileManagerController extends Controller
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
+        $response = [];
 
         /** @var Form $formRename **/
         $formRename->handleRequest($request);
@@ -255,7 +256,7 @@ class FileManagerController extends Controller
             $data = $formRename->getData();
             
             if(isset($data['id']) && isset($data['name'])){
-                $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findBy(array('id' => $data['id']));
+                $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($data['id']);
                 $children = $this->getDoctrine()->getRepository(VirtualFile::class)->findByParent($data['id']);
 
                 //if file doesn't exist in database?
@@ -274,7 +275,13 @@ class FileManagerController extends Controller
 
                     if ($newName !== $oldName) {
                         //can be multiple because files are not unique. Can't fix it for now.
-                        $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                        $response[] = [
+                            $file->getName() => [
+                                'oldPath' => $file->getPath(),
+                                'newPath' => str_replace("/".$oldName , "/".$newName, $file->getPath()),
+                            ],
+                        ];
+                        // $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
                         $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
                         $em->persist($file);
 
@@ -285,7 +292,12 @@ class FileManagerController extends Controller
                 }
                 //TODO: update children.
                 foreach($children as $child){
-                    // $l->info(str_replace("/".$oldName , "/".$newName, $child->getPath()));
+                    $response[] = [
+                        $child->getName() => [
+                            'oldPath' => $child->getPath(),
+                            'newPath' => str_replace("/".$oldName , "/".$newName, $child->getPath()),
+                        ],
+                    ];
                     $child->setPath(str_replace("/".$oldName , "/".$newName, $child->getPath()));
                     $em->persist($child);
                 }
@@ -297,8 +309,8 @@ class FileManagerController extends Controller
         }
         $em->flush();
 
-
-        return $this->redirectToRoute('file_management', $queryParameters);
+        // return $this->redirectToRoute('file_management', $queryParameters);
+        return new JsonResponse($response, 200);
     }
 
     /**
@@ -679,12 +691,12 @@ class FileManagerController extends Controller
 
             $directoriesList[] = [
                 'text'     => 'root',
-                'id'     => $root->getId(),
+                // 'id'     => $root->getId(),
                 'icon'     => 'far fa-folder-open',
                 'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
                 'a_attr'   => [
                     'href' => $this->generateUrl('file_management', $queryParameters),
-                    'id'   => $rootId,
+                    'id'   => $root->getId(),
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
                     'opened'   => $fileManager->getCurrentRoute() === $fileName,

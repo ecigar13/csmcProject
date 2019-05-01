@@ -21,11 +21,13 @@ class FileSubscriber implements EventSubscriber {
     private $reader;
     private $logger;
     private $uploader;
+    private $kernelRoot;
 
-    public function __construct(Reader $reader, FileUploader $fileUploader, LoggerInterface $logger) {
+    public function __construct(Reader $reader, FileUploader $fileUploader, string $kernelRoot, LoggerInterface $logger) {
         $this->reader = $reader;
         $this->uploader = $fileUploader;
         $this->logger = $logger;
+        $this->kernelRoot = $kernelRoot;
     }
 
     /**
@@ -69,8 +71,8 @@ class FileSubscriber implements EventSubscriber {
 
         try{
             $fileSystem = new Filesystem();
-            $logger->info("DDDDDDDDDDDDDD".$entity->getPhysicalPath());
-            $fileSystem->remove($entity->getPhysicalPath());
+            $this->logger->info($this->kernelRoot.'/public/uploads/'.$entity->getPhysicalPath());
+            $fileSystem->remove($this->kernelRoot.'/public/uploads/'.$entity->getPhysicalPath());
 
         }catch(IOExceptionInterface $e){
             return $e->getPath();

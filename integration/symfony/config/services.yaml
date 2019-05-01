@@ -43,7 +43,7 @@ services:
         - { name: doctrine.event_subscriber, connection: default }
 
     App\DoctrineEventSubscriber\FileSubscriber:
-      arguments: ['@annotation_reader', '@app.file_uploader', '@logger']
+      arguments: ['@annotation_reader', '@app.file_uploader', '%kernel.project_dir%', '@logger']
       tags:
         - { name: doctrine.event_subscriber, connection: default }
 
