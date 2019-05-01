@@ -420,7 +420,7 @@ class FileManagerController extends Controller
             //echo "conf variable not set. Switching to default.";
             $queryParameters['conf'] = 'default';
         }
-        $webDir = $this->getParameter('artgris_file_manager')['web_dir'];
+        $webDir = $this->getParameter('file_manager')['web_dir'];
 
         $this->fileManager = new FileManager($queryParameters, $this->getBasePath($queryParameters), $this->getKernelRoute(), $this->get('router'), $webDir);
 
@@ -439,7 +439,7 @@ class FileManagerController extends Controller
         }
 
         $conf        = $queryParameters['conf'];
-        $managerConf = $this->getParameter('artgris_file_manager')['conf'];
+        $managerConf = $this->getParameter('file_manager')['conf'];
         if (isset($managerConf[$conf]['dir'])) {
             return $managerConf[$conf];
         }
@@ -806,162 +806,6 @@ class FileManagerController extends Controller
      *
      * @return null
      */
-    // protected function createDirectory(FileManager $FileManager,LoggerInterface $logger)
-    // {
-    //     $user = $this->getUser();
-    //     $roles=[];
-    //     foreach($user->getRoles() as $role){
-    //         array_push($roles, $role->getName());
-    //     }
-    //     $netId = $user->getUsername();
-    //     $firstName = $user->getFirstName();
-    //     $lastName = $user->getLastName();
-    //     $entityManager = $this->getDoctrine()->getManager();
-    //     $userClass = $this->getDoctrine()->getRepository(User::class);
-    //     $roleClass = $this->getDoctrine()->getRepository(Role::class);
-    //     $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-    //     $admin = $userClass->findOneBy(array('username' => 'axa000000'));
-    //     $sectionClass = $userClass->findOneBy(array('username' => 'axa000000'));
-    //     $Instructor = $roleClass->findOneByName('instructor');
-    //     $Mentor = $roleClass->findOneByName('mentor');
-    //     $Admin = $roleClass->findOneByName('admin');
-    //     $Student = $roleClass->findOneByName('student');
-    //     $Developer = $roleClass->findOneByName('developer');
-
-    //     try{
-    //         // Create root folder it's Not there
-    //         $root=$directoryClass->findOneBy(array('path' => '/root'));
-    //         if(!$root){
-    //             $root  = new Directory('root',$admin,'/root',);        
-    //             $entityManager->persist($root);
-    //             // $entityManager->flush();
-    //         }
-
-    //         //check for instructor role if not there create section directory
-    //         if (in_array("instructor", $roles)){
-    //             $instructorFolder=$directoryClass->findOneBy(array('path' => '/root/Instructors'));
-    //             $instructorFolderPath = '/root/Instructors';
-    //             if(!$instructorFolder){
-    //                 $instructorFolder  = new Directory('Instructors',$admin,$instructorFolderPath);
-    //                 $root->addChild($instructorFolder);
-    //                 $instructorFolder->addRole($Instructor);
-    //                 $instructorFolder->addRole($Admin);
-    //                 $instructorFolder->addRole($Mentor);
-    //                 $instructorFolder->addRole($Developer);
-    //                 //$entityManager->flush();
-    //             }
-
-    //             $instructorName = $netId. '_' .$lastName;
-    //             $nameFolderPath = $instructorFolderPath . '/' . $instructorName;
-    //             $nameFolder = $directoryClass->findOneBy(array('path' => $instructionPath));
-    //             if(!$nameFolder){
-    //                         $nameFolder = new Directory($instructorName,$user,$nameFolderPath);
-    //                         $instructorFolder->addChild($nameFolder);
-    //                         $nameFolder->addUser($user);
-    //                         $nameFolder->addRole($Mentor);
-    //                         $nameFolder->addRole($Developer);
-    //                         $nameFolder->addRole($Admin);
-                            
-    //             }
-    //             $entityManager->persist($root);
-    //             $entityManager->persist($instructorFolder);
-    //             $entityManager->persist($nameFolder);
-                    
-    //                 //Find all sections related to Instructor and create directories for them
-    //             $instructorName = $user->getSections();
-    //             foreach($SectionForInstructor as $section){
-    //                     $seasonName=$section->getSemester()->getSeason(). '_' . $section->getSemester()->getYear();
-    //                     $seasonPath='/root/sections/' . $seasonName;
-    //                     $logger->info("Season");
-    //                     $logger->info($seasonName);
-    //                     $logger->info("seasonPath");
-    //                     $logger->info($seasonPath);
-    //                     $season = $directoryClass->findOneBy(array('path' => $seasonPath));
-    //                     if(!$season){
-    //                         $season = new Directory($seasonName,$admin,$seasonPath);
-    //                         $season->setParent($sections);
-    //                         $season->addRole($Instructor);
-    //                         $season->addRole($Mentor);
-    //                         $season->addRole($Developer);
-    //                         $season->addRole($Admin);
-    //                         $entityManager->persist($season);
-    //                     }
-    //                     $sectionName = $section->getCourse()->getDepartment()->getAbbreviation(). '_' . $section->getCourse()->getNumber(). '_' .$section->getNumber();
-    //                     $sectionPath = $seasonPath . '/' .  $sectionName;
-    //                     $sectionFolder = $directoryClass->findOneBy(array('path' => $sectionPath));
-    //                     if(!$sectionFolder){
-    //                         $sectionFolder = new Directory( $sectionName,$admin,$sectionPath);
-    //                         $sectionFolder->setParent($season);
-    //                         $sectionFolder->addUser($user);
-    //                         $sectionFolder->addRole($Mentor);
-    //                         $sectionFolder->addRole($Developer);
-    //                         $sectionFolder->addRole($Admin);
-    //                         $entityManager->persist($sectionFolder);
-    //                     }
-                        
-    //                     $entityManager->flush();
-    //             }
-
-    //             $roles = array_diff($roles, array('instructor'));
-    //         }
-    //         foreach($roles as $r){
-    //             $folder = $directoryClass->findOneBy(array('path' => '/root/' . $r));
-    //             if(!$folder){
-    //                 $folder = new Directory($r,$admin,'/root/' . $r);
-    //                 $folder->setParent($root);
-    //                 $folder->addRole($Admin);
-    //                 $folder->addRole($Developer);
-    //                 switch ($r) {
-    //                     case 'admin': 
-    //                     $entityManager->persist($folder);
-    //                     break;
-    //                     case 'mentor':
-    //                     $folder->addRole($Mentor);
-    //                     $entityManager->persist($folder);
-    //                     break;
-    //                     case 'student':
-    //                     $folder->addRole($Mentor);
-    //                     $folder->addRole($Student);
-    //                     $entityManager->persist($folder);
-    //                     break;
-    //                     default:
-    //                     $entityManager->persist($folder);
-    //                     break;
-    //                 }
-    //             }
-    //             if(!($r=='student')){
-    //                 $Name = $netId. '_' . $lastName;
-    //                 $NameFolder = $directoryClass->findOneBy(array('path' => '/root/' . $r . '/' .$Name));
-    //                 if(!$NameFolder){
-    //                     $NameFolder = new Directory( $Name,$user,'/root/' . $r . '/' .$Name);
-    //                     $NameFolder->setparent($folder);
-    //                     $NameFolder->addRole($Admin);
-    //                     $NameFolder->addRole($Developer);
-    //                     switch ($r) {
-    //                         case 'admin': 
-    //                         $entityManager->persist($NameFolder);
-    //                         break;
-    //                         case 'mentor':
-    //                         $NameFolder->addRole($Mentor);
-    //                         $entityManager->persist($NameFolder);
-    //                         break;
-    //                         default:
-    //                         $entityManager->persist($NameFolder);
-    //                         break;
-    //                     }
-
-    //                 }
-    //             }
-    //             $entityManager->flush();
-    //         }
-            
-    //     }
-    //     catch (IOExceptionInterface $e) {
-    //         return new Response(Response::HTTP_NOT_IMPLEMENTED);
-    //     }
-    //     return null;
-    // }
-
     protected function createDirectory(FileManager $FileManager,LoggerInterface $logger)
     {
         $user = $this->getUser();
@@ -976,8 +820,8 @@ class FileManagerController extends Controller
         $userClass = $this->getDoctrine()->getRepository(User::class);
         $roleClass = $this->getDoctrine()->getRepository(Role::class);
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $admin = $userClass->findOneBy(array('username' => 'axa000000'));
-        $sectionClass = $userClass->findOneBy(array('username' => 'axa000000'));
+        $UserName = $this->getParameter('file_manager')['superUser'];
+        $admin = $userClass->findOneBy(array('username' => $UserName));
         $Instructor = $roleClass->findOneByName('instructor');
         $Mentor = $roleClass->findOneByName('mentor');
         $Admin = $roleClass->findOneByName('admin');
@@ -995,22 +839,41 @@ class FileManagerController extends Controller
 
             //check for instructor role if not there create section directory
             if (in_array("instructor", $roles)){
-                $sections=$directoryClass->findOneBy(array('path' => '/root/sections'));
-                if(!$sections){
-                    $sections  = new Directory('sections',$admin,'/root/sections');
-                    $sections->setParent($root);
-                    $sections->addRole($Instructor);
-                    $sections->addRole($Admin);
-                    $sections->addRole($Mentor);
-                    $sections->addRole($Developer);
-                    $entityManager->persist($sections);
+                $instructorFolder=$directoryClass->findOneBy(array('path' => '/root/Instructors'));
+                $instructorFolderPath = '/root/Instructors';
+                if(!$instructorFolder){
+                    $instructorFolder  = new Directory('Instructors',$admin,$instructorFolderPath);
+                    $instructorFolder->setParent($root);
+                    $instructorFolder->addRole($Instructor);
+                    $instructorFolder->addRole($Admin);
+                    $instructorFolder->addRole($Mentor);
+                    $instructorFolder->addRole($Developer);
+                    $entityManager->persist($instructorFolder);
                     $entityManager->flush();
                 }
+
+                $instructorName = $netId. '_' .$lastName;
+                $nameFolderPath = $instructorFolderPath . '/' . $instructorName;
+                $nameFolder = $directoryClass->findOneBy(array('path' => $nameFolderPath));
+                if(!$nameFolder){
+                            $nameFolder = new Directory($instructorName,$user,$nameFolderPath);
+                            $nameFolder->setParent($instructorFolder);
+                            $nameFolder->addUser($user);
+                            $nameFolder->addRole($Mentor);
+                            $nameFolder->addRole($Developer);
+                            $nameFolder->addRole($Admin);
+                            $entityManager->persist($nameFolder);
+                            $entityManager->flush();
+                }
+                
+                
+                
+                    
                     //Find all sections related to Instructor and create directories for them
-                $SectionForInstructor = $user->getSections();
-                foreach($SectionForInstructor as $section){
+                $Sections = $user->getSections();
+                foreach($Sections as $section){
                         $seasonName=$section->getSemester()->getSeason(). '_' . $section->getSemester()->getYear();
-                        $seasonPath='/root/sections/' . $seasonName;
+                        $seasonPath= $nameFolderPath . '/' .  $seasonName;
                         $logger->info("Season");
                         $logger->info($seasonName);
                         $logger->info("seasonPath");
@@ -1018,14 +881,14 @@ class FileManagerController extends Controller
                         $season = $directoryClass->findOneBy(array('path' => $seasonPath));
                         if(!$season){
                             $season = new Directory($seasonName,$admin,$seasonPath);
-                            $season->setParent($sections);
-                            $season->addRole($Instructor);
+                            $season->setParent($nameFolder);
+                            $season->addUser($user);
                             $season->addRole($Mentor);
                             $season->addRole($Developer);
                             $season->addRole($Admin);
                             $entityManager->persist($season);
                         }
-                        $sectionName = $section->getCourse()->getDepartment()->getAbbreviation(). '_' . $section->getCourse()->getNumber(). '_' .$section->getNumber();
+                        $sectionName = $section->getCourse()->getDepartment()->getAbbreviation(). '_' . $section->getCourse()->getNumber();
                         $sectionPath = $seasonPath . '/' .  $sectionName;
                         $sectionFolder = $directoryClass->findOneBy(array('path' => $sectionPath));
                         if(!$sectionFolder){
@@ -1037,18 +900,7 @@ class FileManagerController extends Controller
                             $sectionFolder->addRole($Admin);
                             $entityManager->persist($sectionFolder);
                         }
-                        $instructorName = $netId. '_' .$lastName;
-                        $instructionPath = $sectionPath . '/' . $instructorName;
-                        $instructorFolder = $directoryClass->findOneBy(array('path' => $instructionPath));
-                        if(!$instructorFolder){
-                            $instructorFolder = new Directory($instructorName,$user,$instructionPath);
-                            $instructorFolder->setParent($sectionFolder);
-                            $instructorFolder->addUser($user);
-                            $instructorFolder->addRole($Mentor);
-                            $instructorFolder->addRole($Developer);
-                            $instructorFolder->addRole($Admin);
-                            $entityManager->persist($instructorFolder);
-                        }
+                        
                         $entityManager->flush();
                 }
 
@@ -1112,6 +964,5 @@ class FileManagerController extends Controller
         return null;
     }
 
-
-
+   
 }
