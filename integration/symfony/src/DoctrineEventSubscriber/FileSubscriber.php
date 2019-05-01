@@ -71,7 +71,7 @@ class FileSubscriber implements EventSubscriber {
 
         try{
             $fileSystem = new Filesystem();
-            $this->logger->info($this->kernelRoot.'/public/uploads/'.$entity->getPhysicalPath());
+            $this->logger->info("Deleting file: ".$this->kernelRoot.'/public/uploads/'.$entity->getPhysicalPath());
             $fileSystem->remove($this->kernelRoot.'/public/uploads/'.$entity->getPhysicalPath());
 
         }catch(IOExceptionInterface $e){
@@ -81,7 +81,7 @@ class FileSubscriber implements EventSubscriber {
 
 
     /**
-     * Don't need this because file is hashed. Any update happens in database. 
+     * Don't need this because file is hashed. Any update happens in database.
      */
     public function preUpdate(LifecycleEventArgs $args) {
     }
