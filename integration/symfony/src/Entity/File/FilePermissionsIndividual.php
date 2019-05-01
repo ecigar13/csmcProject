@@ -9,7 +9,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * @ORM\Entity()
  */
-class FilePermissions {
+class FilePermissionsIndividual {
     /**
      * @ORM\Id()
      * @ORM\ManyToOne(targetEntity="VirtualFile", inversedBy="permissions")
@@ -17,27 +17,15 @@ class FilePermissions {
      */
     private $virtualFile;
 
+
     /**
-     * @ORM\Id()
-     * @ORM\ManyToOne(targetEntity="App\Entity\User\User")
+	 * @ORM\ManyToOne(targetEntity="App\Entity\User\User")
      * @ORM\JoinColumn(name="user_id", referencedColumnName="id")
      */
     private $user;
 
-    /**
-     * @ORM\Column(type="boolean", name="view")
-     */
-    private $view;
-
-    /**
-     * @ORM\Column(type="boolean", name="edit")
-     */
-    private $edit;
-
-    public function __construct(User $user, bool $view , bool $edit) {
+    public function __construct(User $user) {
             $this->user = $user;
-            $this->view = $view;
-            $this->edit = $edit;
         }
     /**
      * @return mixed
@@ -75,46 +63,6 @@ class FilePermissions {
     public function setUser($user)
     {
         $this->user = $user;
-
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getView()
-    {
-        return $this->view;
-    }
-
-    /**
-     * @param mixed $view
-     *
-     * @return self
-     */
-    public function setView($view)
-    {
-        $this->view = $view;
-
-        return $this;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getEdit()
-    {
-        return $this->edit;
-    }
-
-    /**
-     * @param mixed $edit
-     *
-     * @return self
-     */
-    public function setEdit($edit)
-    {
-        $this->edit = $edit;
 
         return $this;
     }
