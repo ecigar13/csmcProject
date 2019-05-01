@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\Common\Collections\ArrayCollection;
+use App\Entity\File\Directory;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\Session\RequestRepository")
@@ -87,6 +88,12 @@ class Request {
      *      )
      */
     private $files;
+    /**
+     * 
+     * @ORM\OneToOne(targetEntity="App\Entity\File\Directory")
+     * @ORM\JoinColumn(name="directory", referencedColumnName="id")
+     */
+    private $directory;
 
     /**
      * Constructor
@@ -130,6 +137,26 @@ class Request {
     public function getId() {
         return $this->id;
     }
+
+    /**
+     * set Directory
+     *
+     * @return Request
+     */
+    public function setDirectory(Directory $directory) {
+         $this->directory=$directory;
+         return $this;
+    }
+
+    /**
+     * get Directory
+     *
+     * @return Directory
+     */
+    public function getDirectory() {
+        return $this->directory;
+        
+   }
 
     /**
      * Set timeRequested

@@ -839,8 +839,9 @@ class FileManagerController extends Controller
 
             //check for instructor role if not there create section directory
             if (in_array("instructor", $roles)){
-                $instructorFolder=$directoryClass->findOneBy(array('path' => '/root/Instructors'));
+                
                 $instructorFolderPath = '/root/Instructors';
+                $instructorFolder=$directoryClass->findOneBy(array('path' => $instructorFolderPath ));
                 if(!$instructorFolder){
                     $instructorFolder  = new Directory('Instructors',$admin,$instructorFolderPath);
                     $instructorFolder->setParent($root);
@@ -866,10 +867,8 @@ class FileManagerController extends Controller
                             $entityManager->flush();
                 }
                 
-                
-                
-                    
-                    //Find all sections related to Instructor and create directories for them
+                  
+                //Find all sections related to Instructor and create directories for them
                 $Sections = $user->getSections();
                 foreach($Sections as $section){
                         $seasonName=$section->getSemester()->getSeason(). '_' . $section->getSemester()->getYear();
