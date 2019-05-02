@@ -177,19 +177,18 @@ $(document).ready(function () {
         })
         // multiple delete modal button
         .on('click', '#js-delete-multiple-modal', function () {
-            //WORKING HERE
             //get ID of all files to delete, then do multiple ajax.
-            console.log($('#form-multiple-delete input:checked'));
+            var deleteId = $('#form-multiple-delete input:checked').map(function(){
+                return $(this).attr('data-id');
+            }).join(',');
 
-            // var $multipleDelete = $('#form-multiple-delete').serialize();
-            //do multiple ajax here
 
-            $('#form_deleteId').val($deleteModalButton.data('id'));
-            $('#js-confirm-delete').find('form').attr('action', $deleteModalButton.data('href'));
-            if ($multipleDelete) {
-                var href = urldelete + '&' + $multipleDelete;
-                $('#js-confirm-delete').find('form').attr('action', href);
-            }
+            $('#form_deleteId').val(deleteId);
+            // $('#js-confirm-delete').find('form').attr('action', $deleteModalButton.data('href'));
+            // if ($multipleDelete) {
+            //     var href = urldelete + '&' + $multipleDelete;
+            //     $('#js-confirm-delete').find('form').attr('action', href);
+            // }
         })
         // disable button when very box is unchecked
         .on('click', '#form-multiple-delete :checkbox', function () {

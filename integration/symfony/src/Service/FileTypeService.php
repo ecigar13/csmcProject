@@ -69,10 +69,10 @@ class FileTypeService
 
     public function fileIcon($filePath, $extension = null, $size = 75, $lazy = false)
     {
-        $this->logger->info("filePath");
-        $this->logger->info($filePath);
-        $this->logger->info("Extension");
-        $this->logger->info($extension);
+        // $this->logger->info("filePath");
+        // $this->logger->info($filePath);
+        // $this->logger->info("Extension");
+        // $this->logger->info($extension);
 
         if (null === $extension) {
             $filePathTmp = strtok($filePath, '?');
@@ -89,14 +89,14 @@ class FileTypeService
             case is_array(@getimagesize($filePath)):
             case preg_match('/(gif|png|jpe?g|svg)$/i', $extension):
                 $query = parse_url($filePath, PHP_URL_QUERY);
-                $this->logger->info("query");
-                $this->logger->info($query);
+                // $this->logger->info("query");
+                // $this->logger->info($query);
                 $time = 'time=' . time();
-                $this->logger->info("time");
-                $this->logger->info($time);
+                // $this->logger->info("time");
+                // $this->logger->info($time);
                 $fileName = $query ? $filePath . '&' . $time : $filePath . '?' . $time;
-                $this->logger->info("fileName");
-                $this->logger->info($fileName);
+                // $this->logger->info("fileName");
+                // $this->logger->info($fileName);
 
                 if ($lazy) {
                     $html = "<img class=\"lazy\" data-src=\"{$fileName}\" height='{$size}'>";
