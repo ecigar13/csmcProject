@@ -128,10 +128,6 @@
                        class="btn btn-sm btn-default {{ fileManager.view == 'list' ? 'active' }}">
                         <span class="fas fa-th-list"></span>
                     </a>
-                    <a type="button" href="{{ path('file_management', fileManager.queryParameters|merge({'view':'thumbnail'})) }}"
-                       class="btn btn-sm btn-default {{ fileManager.view == 'thumbnail' ? 'active' }}">
-                        <span class="fas fa-th"></span>
-                    </a>
                 </div>
             {% endblock %}
         </div>
