@@ -11,6 +11,8 @@ parameters:
                 dir: "../public/uploads"
                 regex: '^[A-Za-z0-9\ ]++\.[A-Za-z]++$'
                 accept: 'file'
+                upload:
+                    max_file_size: 41943040
 
 
 

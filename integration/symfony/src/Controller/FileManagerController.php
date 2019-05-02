@@ -636,16 +636,21 @@ class FileManagerController extends Controller
             //check if file with same name already exixt
             $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
             $file=$fileClass->findByPath($filePath);
+
+            $extensionCheck = preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName().$uploadedFile->getClientOriginalExtension());
+            $logger->error(gettype($fileManager->getConfiguration()['upload']['max_file_size']));
+
+            $sizeCheck = $uploadedFile->getClientSize() > $fileManager->getConfiguration()['upload']['max_file_size'];
             if($file){
                 $this->addFlash('danger', "Can't add file, File already exist-".$uploadedFile->getClientOriginalName());
 
                 return new Response("Can't add file, File already exist-".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
-            }else if(preg_match($fileManager->getRegex(),
-                $uploadedFile->getClientOriginalName().
-                $uploadedFile->getClientOriginalExtension()) == false){
+            }else if($extensionCheck == false){
 
                 return new Response("File should have an extension - ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
                 //check for file extension. If no, don't upload.
+            }else if($sizeCheck){
+                return new Response("File size must be smaller than 40 MB - ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             //create a file object with its hash. Moving file to its folder fires during prePersist.
