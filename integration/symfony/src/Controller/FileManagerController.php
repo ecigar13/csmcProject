@@ -395,24 +395,19 @@ class FileManagerController extends Controller
      */
     public function deleteAction(Request $request, LoggerInterface $l)
     {
-        $l->info( "aaa0");
         $form = $this->createDeleteForm();
-        $l->info( "aaa1");
         $form->handleRequest($request);
-        $l->info( "aaa2");
         $queryParameters = $request->query->all();
-        $l->info( "aaa3");
         $em = $this->getDoctrine()->getManager();
-        $l->info( "aaa4");
+        $l->info( "FFFFFFFFFFFF");
         if ($form->isSubmitted() && $form->isValid()) {
             //delete from disk is in FileSubscriber, preRemove
             //delete from database
-            $l->info( "IIIIIII");
             $data = $form->getData();
-            $l->info( "IIIIIII");
             $l->info( "FFFFFFFFFFFF".$data['deleteId']);
-            foreach($data['deleteId'] as $id){
-                echo $id;
+            $ids = explode('|',$data['deleteId']);
+            foreach($ids as $id){
+                $l->info( $id);
                 $l->info("DDDDDDDDDDDD".$id);
                 $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($id);
 
@@ -428,7 +423,8 @@ class FileManagerController extends Controller
         }
         $em->flush();
 
-        return $this->redirectToRoute('file_management', $queryParameters);
+        return new JsonResponse(200);
+        // return $this->redirectToRoute('file_management', $queryParameters);
     }
 
     /**
@@ -594,7 +590,7 @@ class FileManagerController extends Controller
         $uploadedFiles = $request->files->get('files');
         $response = [];
         foreach ($uploadedFiles as $uploadedFile){
-            // $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
+            $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
             // $logger->info("FilePath");
             // $logger->info($filePath);
 

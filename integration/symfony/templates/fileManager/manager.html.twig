@@ -104,7 +104,8 @@
                    data-toggle="modal"
                    data-target="#js-confirm-delete"
                    data-placement="left"
-                   data-html="true">
+                   data-html="true"
+                   data-href='{{ path('file_management_delete', fileManager.queryParameters) }}'>
                     <span class="far fa-check-square"></span>
                     <span>{{ 'Delete selected files'|trans }}</span>
                 </a>
