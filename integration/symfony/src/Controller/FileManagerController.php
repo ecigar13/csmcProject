@@ -39,6 +39,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\MimeType\ExtensionGuesser;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use App\DataTransferObject\FileData;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FileManagerController extends Controller
 {
@@ -366,20 +367,57 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/fms/file/{fileName}", name="file_management_file")
+     * @Route("/fms/file/{fileName}/{file}", name="file_management_file")
      *
      * @param Request $request
      * @param $fileName
+     * @param $file
      *
      * @return BinaryFileResponse
      *
      * @throws \Exception
      */
-    public function binaryFileResponseAction(Request $request, $fileName)
+    public function binaryFileResponseAction(Request $request, $fileName, $file)
     {
         $fileManager = $this->newFileManager($request->query->all());
+        $type = explode('.', $fileName)[1]; 
+        $path = substr($fileName,1);
+        $file_path = strtr($path,'-','/');
+        //$file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id'=> $array['id']));
 
-        return new BinaryFileResponse($fileManager->getCurrentPath().DIRECTORY_SEPARATOR.urldecode($fileName));
+        //return new BinaryFileResponse($fileManager->getCurrentPath().urldecode($file -> getPath()));
+        //if($type == 'pdf'){
+        //    return new BinaryFileResponse($file_path);
+        //}
+        //return new BinaryFileResponse($file_path);
+        //return new BinaryFileResponse($fileManager->getCurrentPath().DIRECTORY_SEPARATOR.urldecode('abc.png'));
+
+        header("Content-type:text/html;charset=utf-8"); 
+		//$file_path="testMe.txt"; 
+		//$file_name=iconv("utf-8","gb2312",$file_name);
+		//$file_sub_path=$_SERVER['DOCUMENT_ROOT']."marcofly/phpstudy/down/down/"; 
+		//$file_path=$file_sub_path.$file_name; 
+		
+		if(!file_exists($file_path)){
+			echo "NoSuchFile"; 
+			return ; 
+		}
+		$fp=fopen($file_path,"r");
+		$file_size=filesize($file_path);
+		
+		Header("Content-type: application/octet-stream");
+		Header("Accept-Ranges: bytes"); 
+		Header("Accept-Length:".$file_size); 
+		Header("Content-Disposition: attachment; filename=".$file.".".$type);
+		$buffer=1024; 
+		$file_count=0; 
+		
+		while(!feof($fp) && $file_count<$file_size){ 
+			$file_con=fread($fp,$buffer); 
+			$file_count+=$buffer; 
+			echo $file_con; 
+		}
+		fclose($fp);
     }
 
     /**
