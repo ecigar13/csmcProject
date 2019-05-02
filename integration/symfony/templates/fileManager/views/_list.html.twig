@@ -101,7 +101,9 @@
                            href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName': fileEntity.preview.path|slice(12)|replace({'/' : '-'}),'file':file.name })) }}">
                             <span class="fas fa-download"></span>
                         </a>
-                        {#{% if fileEntity.isImage() %}
+                    {# {% endif %} #}
+
+                        {% if fileEntity.isImage() %}
                             <span data-toggle="tooltip" title="{{ 'title.preview.file'|trans }}">
                                 <button type="button"
                                         class="btn btn-xs btn-default js-open-modal"
@@ -115,7 +117,7 @@
                                 <span class="fas fa-eye"></span>
                                 </button>
                             </span>
-                        {% endif %}#}
+                        {% endif %}
 
                         <span data-toggle="tooltip" title="{{ 'title.preview.file'|trans }}">
                             <button type="button"
@@ -123,7 +125,7 @@
                                     data-trigger="click"
                                      data-container="body"
                                     data-toggle="modal"
-                                    
+
                                     ata-placement="left"
                                     data-href='{{ fileEntity.preview.path|slice(12) }}'>
                                     <span class="fas fa-eye"></span>

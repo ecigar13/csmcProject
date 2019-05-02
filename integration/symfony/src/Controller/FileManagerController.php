@@ -189,7 +189,7 @@ class FileManagerController extends Controller
             if(array_key_exists('route',$fileManager->getQueryParameters()) && !is_null($fileManager->getQueryParameters()['route'])){
                 $parentPath = $fileManager->getQueryParameters()['route'];
             }
-            
+
             $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
 
             //Search for Directory in Table
@@ -380,7 +380,7 @@ class FileManagerController extends Controller
     public function binaryFileResponseAction(Request $request, $fileName, $file)
     {
         $fileManager = $this->newFileManager($request->query->all());
-        $type = explode('.', $fileName)[1]; 
+        $type = explode('.', $fileName)[1];
         $path = substr($fileName,1);
         $file_path = strtr($path,'-','/');
         //$file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id'=> $array['id']));
@@ -392,30 +392,30 @@ class FileManagerController extends Controller
         //return new BinaryFileResponse($file_path);
         //return new BinaryFileResponse($fileManager->getCurrentPath().DIRECTORY_SEPARATOR.urldecode('abc.png'));
 
-        header("Content-type:text/html;charset=utf-8"); 
-		//$file_path="testMe.txt"; 
+        header("Content-type:text/html;charset=utf-8");
+		//$file_path="testMe.txt";
 		//$file_name=iconv("utf-8","gb2312",$file_name);
-		//$file_sub_path=$_SERVER['DOCUMENT_ROOT']."marcofly/phpstudy/down/down/"; 
-		//$file_path=$file_sub_path.$file_name; 
-		
+		//$file_sub_path=$_SERVER['DOCUMENT_ROOT']."marcofly/phpstudy/down/down/";
+		//$file_path=$file_sub_path.$file_name;
+
 		if(!file_exists($file_path)){
-			echo "NoSuchFile"; 
-			return ; 
+			echo "NoSuchFile";
+			return ;
 		}
 		$fp=fopen($file_path,"r");
 		$file_size=filesize($file_path);
-		
+
 		Header("Content-type: application/octet-stream");
-		Header("Accept-Ranges: bytes"); 
-		Header("Accept-Length:".$file_size); 
+		Header("Accept-Ranges: bytes");
+		Header("Accept-Length:".$file_size);
 		Header("Content-Disposition: attachment; filename=".$file.".".$type);
-		$buffer=1024; 
-		$file_count=0; 
-		
-		while(!feof($fp) && $file_count<$file_size){ 
-			$file_con=fread($fp,$buffer); 
-			$file_count+=$buffer; 
-			echo $file_con; 
+		$buffer=1024;
+		$file_count=0;
+
+		while(!feof($fp) && $file_count<$file_size){
+			$file_con=fread($fp,$buffer);
+			$file_count+=$buffer;
+			echo $file_con;
 		}
 		fclose($fp);
     }
@@ -433,32 +433,36 @@ class FileManagerController extends Controller
      */
     public function deleteAction(Request $request, LoggerInterface $l)
     {
-        $form = $this->createDeleteForm();
-        $form->handleRequest($request);
-        $queryParameters = $request->query->all();
-        $em = $this->getDoctrine()->getManager();
-        if ($form->isSubmitted() && $form->isValid()) {
-            //delete from disk is in FileSubscriber, preRemove
-            //delete from database
-            $data = $form->getData();
-            $ids = explode(',',$data['deleteId']);
-            foreach($ids as $id){
-                $l->info("Deleting from database: ".$id);
-                $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($id);
+        if($this->isGranted('admin')){
+            $form = $this->createDeleteForm();
+            $form->handleRequest($request);
+            $queryParameters = $request->query->all();
+            $em = $this->getDoctrine()->getManager();
+            if ($form->isSubmitted() && $form->isValid()) {
+                //delete from disk is in FileSubscriber, preRemove
+                //delete from database
+                $data = $form->getData();
+                $ids = explode(',',$data['deleteId']);
+                foreach($ids as $id){
+                    $l->info("Deleting from database: ".$id);
+                    $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($id);
 
-                foreach($files as $file){
-                    // echo $file->getParent()->getName();
-                    $file->setParent(null);
-                    $em->remove($file);  //this will remove files/folders inside this one.
+                    foreach($files as $file){
+                        // echo $file->getParent()->getName();
+                        $file->setParent(null);
+                        $em->remove($file);  //this will remove files/folders inside this one.
+                    }
+
                 }
 
+
             }
+            $em->flush();
 
-
+            // return new JsonResponse(200);
+        }else{
+            throw new MethodNotAllowedHttpException([]);
         }
-        $em->flush();
-
-        // return new JsonResponse(200);
         return $this->redirectToRoute('file_management', $queryParameters);
     }
 
@@ -631,12 +635,22 @@ class FileManagerController extends Controller
 
             //check if file with same name already exixt
             $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
-
             $file=$fileClass->findByPath($filePath);
+
+            $extensionCheck = preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName().$uploadedFile->getClientOriginalExtension());
+            $logger->error(gettype($fileManager->getConfiguration()['upload']['max_file_size']));
+
+            $sizeCheck = $uploadedFile->getClientSize() > $fileManager->getConfiguration()['upload']['max_file_size'];
             if($file){
                 $this->addFlash('danger', "Can't add file, File already exist-".$uploadedFile->getClientOriginalName());
-                return new Response(401);
 
+                return new Response("Can't add file, File already exist-".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+            }else if($extensionCheck == false){
+
+                return new Response("File should have an extension - ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+                //check for file extension. If no, don't upload.
+            }else if($sizeCheck){
+                return new Response("File size must be smaller than 40 MB - ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             //create a file object with its hash. Moving file to its folder fires during prePersist.
@@ -672,7 +686,6 @@ class FileManagerController extends Controller
         }
 
         //should respond with name of file
-        //TODO: need to refresh the page on front-end.
         return new JsonResponse($response,200);
     }
 
@@ -687,6 +700,7 @@ class FileManagerController extends Controller
         $this->get('event_dispatcher')->dispatch($eventName, $event);
     }
 
+    //David's function. Might not need anymore because using service.
     private function createHash($file, $entityManager) {
         $file_path = '../public' . $file->url;
         $file_path = utf8_encode($file_path);
