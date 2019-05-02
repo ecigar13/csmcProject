@@ -9,7 +9,8 @@ parameters:
         conf:
             default:
                 dir: "../public/uploads"
-                
+                type: 'file'
+
 
 
 services:
