@@ -182,15 +182,13 @@ class FileManagerController extends Controller
 
             // Get Name and Parent Path
             $directoryName = $data['name'];
-            $logger->info("UploadDirectory");
 
             // print_r($fileManager->getQueryParameters());
             $parentPath= 'root';
             if(array_key_exists('route',$fileManager->getQueryParameters()) && !is_null($fileManager->getQueryParameters()['route'])){
                 $parentPath = $fileManager->getQueryParameters()['route'];
             }
-            $logger->info("parentDDDDDDDDDDDDD");
-            $logger->info($parentPath);
+            
             $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
 
             //Search for Directory in Table
@@ -388,35 +386,41 @@ class FileManagerController extends Controller
      * @Route("/fms/delete/", name="file_management_delete", methods={"DELETE"})
      *
      * Should expect a file/folder name array to delete. Assumming file names are unique.
-     * TODO: check with Steven. Does recursive delete in database also trigger multiple preRemove event?
+     * Recursive delete in database also trigger multiple preRemove events.
      *
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      *
      * @throws \Exception
      */
-    public function deleteAction(Request $request)
+    public function deleteAction(Request $request, LoggerInterface $l)
     {
         $form = $this->createDeleteForm();
         $form->handleRequest($request);
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
-
         if ($form->isSubmitted() && $form->isValid()) {
             //delete from disk is in FileSubscriber, preRemove
             //delete from database
             $data = $form->getData();
-            $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($data['deleteId']);
-            foreach($files as $file){
-                // echo $file->getParent()->getName();
-                $file->setParent(null);
-                //$em->persist($file);
-                //$em->flush();
-                $em->remove($file);  //this will remove files/folders inside this one.
+            $ids = explode(',',$data['deleteId']);
+            foreach($ids as $id){
+                $l->info("Deleting from database: ".$id);
+                $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($id);
+
+                foreach($files as $file){
+                    // echo $file->getParent()->getName();
+                    $file->setParent(null);
+                    $em->remove($file);  //this will remove files/folders inside this one.
+                }
+
             }
+
+
         }
         $em->flush();
 
+        // return new JsonResponse(200);
         return $this->redirectToRoute('file_management', $queryParameters);
     }
 
@@ -584,15 +588,15 @@ class FileManagerController extends Controller
         $response = [];
         foreach ($uploadedFiles as $uploadedFile){
             $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
-            $logger->info("FilePath");
-            $logger->info($filePath);
+            // $logger->info("FilePath");
+            // $logger->info($filePath);
 
             //check if file with same name already exixt
             $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
 
             $file=$fileClass->findByPath($filePath);
             if($file){
-                $this->addFlash('danger', "can't add file, File already exist-".$uploadedFile->getClientOriginalName());
+                $this->addFlash('danger', "Can't add file, File already exist-".$uploadedFile->getClientOriginalName());
                 return new Response(401);
 
             }

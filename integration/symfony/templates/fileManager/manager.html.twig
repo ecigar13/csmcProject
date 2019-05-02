@@ -9,7 +9,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}File Manager{% endblock %}</title>
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css"
+              integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp"
+              crossorigin="anonymous">
         <link rel="stylesheet"
               href="{{ asset('bundles/artgrisfilemanager/libs/jstree/dist/themes/default/style.min.css') }}">
         <link rel="stylesheet"
@@ -43,13 +45,18 @@
 
                 <span class="btn btn-success btn-sm fileinput-button btn-action">
                     <span class="far fa-file"></span>
-                    <span>{{ 'button.add.files'|trans }}</span>
-                        <input id="fileupload" type="file"
-                               data-url="{{ path('file_management_upload', fileManager.queryParameters) }}"
-                               name="files[]" multiple=""
-                               accept="{{ fileManager.configuration.accept is defined ? fileManager.configuration.accept : (fileManager.type ? accept(fileManager.type)) }}">
-                </span>
-                <button type="button" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#addFolder">
+                    <span>{{ 'Upload files'|trans }}</span>
+                        <input id="fileupload"
+                                type="file"
+                                data-url="{{ path('file_management_upload', fileManager.queryParameters) }}"
+                                name="files[]"
+                                multiple=""
+                                accept="{{ fileManager.configuration.accept is defined ? fileManager.configuration.accept : (fileManager.type ? accept(fileManager.type)) }}">
+                    </span>
+                <button type="button"
+                    class="btn btn-primary btn-sm btn-action"
+                    data-toggle="modal"
+                    data-target="#addFolder">
                     <span class="far fa-folder-open"></span>
                     <span>{{ 'button.add.folder'|trans }}</span>
                 </button>
@@ -88,6 +95,7 @@
                     </button>
 
                 {# {% endif %} #}
+                {# Delete selected files #}
                 <a id="js-delete-multiple-modal"
                    class="btn btn-sm btn-danger btn-action disabled"
                    type="button"
@@ -96,9 +104,10 @@
                    data-toggle="modal"
                    data-target="#js-confirm-delete"
                    data-placement="left"
-                   data-html="true">
+                   data-html="true"
+                   data-href='{{ path('file_management_delete', fileManager.queryParameters) }}'>
                     <span class="far fa-check-square"></span>
-                    <span>{{ 'button.delete.selected'|trans }}</span>
+                    <span>{{ 'Delete selected files'|trans }}</span>
                 </a>
                 {# new code share button start#}
                 <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareFolder">

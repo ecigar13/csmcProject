@@ -177,13 +177,17 @@ $(document).ready(function () {
         })
         // multiple delete modal button
         .on('click', '#js-delete-multiple-modal', function () {
-            var $multipleDelete = $('#form-multiple-delete').serialize();
-            if ($multipleDelete) {
-                var href = urldelete + '&' + $multipleDelete;
-                $('#js-confirm-delete').find('form').attr('action', href);
-            }
+            //get ID of all files to delete, then do multiple ajax.
+            var deleteId = $('#form-multiple-delete input:checked').map(function(){
+                return $(this).attr('data-id');
+            }).get();//.join('|');
+            console.log(deleteId);
+
+
+            $('#form_deleteId').val(deleteId);
+            $('#js-confirm-delete').find('form').attr('action', $('#js-delete-multiple-modal').data('href'));
         })
-        // checkbox
+        // disable button when very box is unchecked
         .on('click', '#form-multiple-delete :checkbox', function () {
             var $jsDeleteMultipleModal = $('#js-delete-multiple-modal');
             if ($(".checkbox").is(':checked')) {
@@ -264,13 +268,14 @@ $(document).ready(function () {
     }).on('fileuploaddone', function (e, data) {
         $.each(data.result.files, function (index, file) {
             if (file.url) {
-                displaySuccess('<strong>' + file.name + '</strong> ' + successMessage)
                 // Ajax update view
+
                 $.ajax({
                     dataType: "json",
                     url: url,
-                    type: 'GET'
+                    type: 'POST'
                 }).done(function (data) {
+                    displaySuccess('<strong>' + file.name + '</strong> ' + successMessage)
                     // update file list
                     $('#form-multiple-delete').html(data.data);
 
