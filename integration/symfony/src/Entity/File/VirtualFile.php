@@ -34,17 +34,17 @@ class VirtualFile {
 
      /**
      * Many role have Many files.
-     * @ORM\ManyToMany(targetEntity="App\Entity\User\User", inversedBy="vitualFiles")
-     * @ORM\JoinTable(name="user_permissions")
+     * @ORM\ManyToMany(targetEntity="App\Entity\User\User", inversedBy="virtualFiles")
+     * @ORM\JoinTable(name="file_permissions_users")
      */
     private $users;
 
     /**
      * Many role have Many files.
-     * @ORM\ManyToMany(targetEntity="App\Entity\User\Role", inversedBy="vitualFiles")
-     * @ORM\JoinTable(name="role_permissions")
-     */
-    
+     * @ORM\ManyToMany(targetEntity="App\Entity\User\Role", inversedBy="virtualFiles")
+     * @ORM\JoinTable(name="file_permissions_roles")
+     *
+	 */
     private $roles;
 
     /**

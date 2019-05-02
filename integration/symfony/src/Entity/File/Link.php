@@ -12,6 +12,8 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 /**
  * @ORM\Entity
  * @ORM\Table(name="link")
+ *
+ * @Uploadable
  */
 class Link extends VirtualFile {
 
@@ -21,9 +23,7 @@ class Link extends VirtualFile {
      */
     private $url;
 
-    private $link;
-
-    public function __construct(string $name, User $owner,string $url) {
+    public function __construct(string $name, User $owner, string $url) {
         parent::__construct($name, $owner);
         $this->url = $url;
     }

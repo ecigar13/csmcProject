@@ -70,11 +70,13 @@ class FileManagerController extends Controller
         // $logger->info($fileManager->getBaseName());
         // Folder search
        $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,true);
-       
+
         // File search
         $logger->info($fileManager->getCurrentRoute());
         $finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
+
         $regex = $fileManager->getRegex();
+	
         $orderBy   = $fileManager->getQueryParameter('orderby');
         $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
         switch ($orderBy) {
@@ -150,7 +152,6 @@ class FileManagerController extends Controller
             return new JsonResponse(['data' => $fileList, 'badge' => $finderFiles->count(), 'treeData' => $directoriesArbo]);
         }
         $parameters['treeData'] = json_encode($directoriesArbo);
-
         $form = $this->get('form.factory')->createNamedBuilder('rename', FormType::class)
             ->add('name', TextType::class, [
                 'constraints' => [
@@ -637,7 +638,6 @@ class FileManagerController extends Controller
         $directoriesList = null;
         $logger->info("RetrieveDirectory");
         $logger->info($parentPath);
-
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $root=$directoryClass->findOneBy(array('path' => '/root'));
 
@@ -673,10 +673,13 @@ class FileManagerController extends Controller
         $parent=$directoryClass->findOneBy(array('path' => $parentPath));
         $directories = $directoryClass->findByParent($parent);
 
+		dump($this->getDoctrine()->getRepository(VirtualFile::class));
+
         //List for tree
-       
+		//dump($directories);
 
         foreach ($directories as $directory) {
+			
             $fileName = $parentPath . '/' . $directory->getName();
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
@@ -689,27 +692,42 @@ class FileManagerController extends Controller
             foreach($directory->getRoles() as $role){
                 array_push($directoryRoles, $role->getName());
             }
+
             $directoryUsers=[];
             foreach($directory->getUsers() as $user){
                 array_push($directoryUsers, $user->getUsername());
             }
-            $userRoles=[];
+            
+			$userRoles=[];
             foreach($this->getUser()->getRoles() as $role){
                 array_push($userRoles, $role->getName());
             }
-            $access=false;
-            if (in_array($this->getUser()->getUsername(), $directoryUsers)){
-                    $access=true;
-            }
-            else{
-                foreach($userRoles as $r){
-                    if(in_array($r, $directoryRoles)){
-                        $access=true;
-                        break;
-                    }
-                    $access=false;
-                }
-            }
+
+			// Regulate who see what directories / files here
+
+			$isAdmin = false;
+
+			if(in_array('admin', $userRoles)) {
+				$isAdmin = true; // If the user is considered an admin, set this variable true
+			}
+
+            $access = $isAdmin || false; // Admins should be able to see every folder
+
+			if(!$access) {
+				if (in_array($this->getUser()->getUsername(), $directoryUsers)){
+
+					    $access=true;
+				}
+				else{
+	                foreach($userRoles as $r){
+						if(in_array($r, $directoryRoles)){
+	                        $access=true;
+							break;
+						}
+						$access=false;
+					}
+				}	
+			}
             if($access){
                 $directoriesList[] = [
                     'text'     => $directory->getName(),
@@ -721,6 +739,7 @@ class FileManagerController extends Controller
                     ], 'state' => [
                         'selected' => $fileManager->getCurrentRoute() === $fileName,
                         'opened'   => $fileManager->getCurrentRoute() === $fileName,
+
                     ],
                 ];
         }
@@ -786,8 +805,8 @@ class FileManagerController extends Controller
         $userClass = $this->getDoctrine()->getRepository(User::class);
         $roleClass = $this->getDoctrine()->getRepository(Role::class);
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $admin = $userClass->findOneBy(array('username' => 'axa000000'));
-        $sectionClass = $userClass->findOneBy(array('username' => 'axa000000'));
+        $admin = $userClass->findOneBy(array('username' => $netId));
+        $sectionClass = $userClass->findOneBy(array('username' => $netId));
         $Instructor = $roleClass->findOneByName('instructor');
         $Mentor = $roleClass->findOneByName('mentor');
         $Admin = $roleClass->findOneByName('admin');
@@ -795,15 +814,15 @@ class FileManagerController extends Controller
         $Developer = $roleClass->findOneByName('developer');
 
         try{
-            // Create root folder it's Not there
+            // Create root folder if it's not there
             $root=$directoryClass->findOneBy(array('path' => '/root'));
             if(!$root){
-                $root  = new Directory('root',$admin,'/root',);        
+                $root  = new Directory('root',$admin,'/root');        
                 $entityManager->persist($root);
                 $entityManager->flush();
             }
 
-            //check for instructor role if not there create section directory
+            // check for instructor role if not there create section directory
             if (in_array("instructor", $roles)){
                 $sections=$directoryClass->findOneBy(array('path' => '/root/sections'));
                 if(!$sections){
@@ -816,7 +835,7 @@ class FileManagerController extends Controller
                     $entityManager->persist($sections);
                     $entityManager->flush();
                 }
-                    //Find all sections related to Instructor and create directories for them
+                    // Find all sections related to Instructor and create directories for them
                 $SectionForInstructor = $user->getSections();
                 foreach($SectionForInstructor as $section){
                         $seasonName=$section->getSemester()->getSeason(). '_' . $section->getSemester()->getYear();
