@@ -406,6 +406,8 @@ class FileManagerController extends Controller
             //delete from disk is in FileSubscriber, preRemove
             //delete from database
             $data = $form->getData();
+
+
             $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($data['deleteId']);
             foreach($files as $file){
                 // echo $file->getParent()->getName();
@@ -592,7 +594,7 @@ class FileManagerController extends Controller
 
             $file=$fileClass->findByPath($filePath);
             if($file){
-                $this->addFlash('danger', "can't add file, File already exist-".$uploadedFile->getClientOriginalName());
+                $this->addFlash('danger', "Can't add file, File already exist-".$uploadedFile->getClientOriginalName());
                 return new Response(401);
 
             }
