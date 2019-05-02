@@ -635,12 +635,17 @@ class FileManagerController extends Controller
 
             //check if file with same name already exixt
             $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
-
             $file=$fileClass->findByPath($filePath);
             if($file){
                 $this->addFlash('danger', "Can't add file, File already exist-".$uploadedFile->getClientOriginalName());
-                return new Response(401);
 
+                return new Response("Can't add file, File already exist-".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+            }else if(preg_match($fileManager->getRegex(),
+                $uploadedFile->getClientOriginalName().
+                $uploadedFile->getClientOriginalExtension()) == false){
+
+                return new Response("File should have an extension - ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+                //check for file extension. If no, don't upload.
             }
 
             //create a file object with its hash. Moving file to its folder fires during prePersist.
@@ -676,7 +681,6 @@ class FileManagerController extends Controller
         }
 
         //should respond with name of file
-        //TODO: need to refresh the page on front-end.
         return new JsonResponse($response,200);
     }
 
@@ -691,6 +695,7 @@ class FileManagerController extends Controller
         $this->get('event_dispatcher')->dispatch($eventName, $event);
     }
 
+    //David's function. Might not need anymore because using service.
     private function createHash($file, $entityManager) {
         $file_path = '../public' . $file->url;
         $file_path = utf8_encode($file_path);
