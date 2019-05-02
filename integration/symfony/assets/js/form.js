@@ -114,7 +114,8 @@ $(document).ready(function () {
 
     function previewFile($previewModalButton) {
         var href = addParameterToURL($previewModalButton.data('href'), 'time=' + new Date().getTime());
-        $('#js-display-image').find('img').attr('src', href);
+        //$('#js-display-image').find('img').attr('src', href);
+        window.open(href,"newwindow",'left=410,height=610,width=860,top=200');
     }
 
     function addParameterToURL(_url, param) {
