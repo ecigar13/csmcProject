@@ -311,4 +311,8 @@ $(document).ready(function () {
 
     lazy();
 
+    $(this).ajaxStop(function(){
+        location.reload();
+    });
+
 });
