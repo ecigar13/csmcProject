@@ -399,16 +399,13 @@ class FileManagerController extends Controller
         $form->handleRequest($request);
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
-        $l->info( "FFFFFFFFFFFF");
         if ($form->isSubmitted() && $form->isValid()) {
             //delete from disk is in FileSubscriber, preRemove
             //delete from database
             $data = $form->getData();
-            $l->info( "FFFFFFFFFFFF".$data['deleteId']);
-            $ids = explode('|',$data['deleteId']);
+            $ids = explode(',',$data['deleteId']);
             foreach($ids as $id){
-                $l->info( $id);
-                $l->info("DDDDDDDDDDDD".$id);
+                $l->info("Deleting from database: ".$id);
                 $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($id);
 
                 foreach($files as $file){
@@ -423,8 +420,8 @@ class FileManagerController extends Controller
         }
         $em->flush();
 
-        return new JsonResponse(200);
-        // return $this->redirectToRoute('file_management', $queryParameters);
+        // return new JsonResponse(200);
+        return $this->redirectToRoute('file_management', $queryParameters);
     }
 
     /**
