@@ -98,7 +98,7 @@
                     </span>
                     {# {% if file.type == "file" %} #}
                         <a data-placement="left" data-id="{{ file.id }}" title="{{ 'title.download'|trans }}" class="btn btn-xs btn-default js-download"
-                           href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName':'file.name'})) }}" download>
+                           href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName': fileEntity.preview.path|slice(12)|replace({'/' : '-'}),'file':file.name })) }}">
                             <span class="fas fa-download"></span>
                         </a>
                         {% if fileEntity.isImage() %}
@@ -111,7 +111,7 @@
                                         data-toggle="modal"
                                         data-target="#js-display-image"
                                         data-placement="left"
-                                        data-href='{{ fileEntity.preview.path }}'>
+                                        data-href='{{ fileEntity.preview.path|slice(12) }}'>
                                 <span class="fas fa-eye"></span>
                                 </button>
                             </span>
