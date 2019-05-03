@@ -88,7 +88,7 @@ class FileTypeService
                 break;
             case is_array(@getimagesize($filePath)):
             case preg_match('/(gif|png|jpe?g|svg)$/i', $extension):
-                $query = parse_url($filePath, PHP_URL_QUERY);
+                /*$query = parse_url($filePath, PHP_URL_QUERY);
                 // $this->logger->info("query");
                 // $this->logger->info($query);
                 $time = 'time=' . time();
@@ -108,7 +108,9 @@ class FileTypeService
                     'path' => $filePath,
                     'html' => $html,
                     'image' => true
-                ];
+                ];*/
+                $fa = 'far fa-file-image';
+                break;
             case preg_match('/(pdf)$/i', $extension):
                 $fa = 'far fa-file-pdf';
                 break;
