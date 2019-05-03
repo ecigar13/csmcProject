@@ -645,8 +645,8 @@ class FileManagerController extends Controller
                 $this->addFlash('danger', "Can't add file, File already exist-".$uploadedFile->getClientOriginalName());
                 return new Response("Can't add file, File already exist-".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }else if($extensionCheck == false){
-                $this->addFlash('danger', "File must have an extension or name too long -".$uploadedFile->getClientOriginalName());
-                return new Response("File should have an extension - ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+                $this->addFlash('danger', "File must have an extension, no special character or name longer than 64 character -".$uploadedFile->getClientOriginalName());
+                return new Response("File must have an extension, no special character or name longer than 64 character - ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }else if($sizeCheck){
                 //check for file extension. If no, don't upload.
                 $this->addFlash('danger', "File must be smaller than 40 MB -".$uploadedFile->getClientSize());

@@ -10,7 +10,7 @@ parameters:
             default:
                 dir: "../public/uploads"
                 # regex overrides accept
-                regex: '^[^#%&{}\\<>*?\/\ $!'":@]{63}\.[^#%&{}\\<>*?\/\ $!'":@]+$'
+                regex: '^[^#%&{}\\<>*?\/$!'":@]{63}\.[^#%&{}\\<>*?\/\ $!'":@]+$'
                 accept: 'file'
                 upload:
                     max_file_size: 41943040
