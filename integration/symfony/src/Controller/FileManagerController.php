@@ -454,7 +454,7 @@ class FileManagerController extends Controller
                             $em->flush();
                         }
                         else{
-                            $Message = "You don't have permission to delete: ".  $file->getName(); 
+                            $Message = "You don't have permission to delete: ".  $file->getName();
                             $this->addFlash('danger', $Message);
                         }
 
@@ -637,6 +637,7 @@ class FileManagerController extends Controller
             $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
             $file=$fileClass->findByPath($filePath);
 
+            //TODO: does this return filename and file extension with a dot in between?
             $extensionCheck = preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName().$uploadedFile->getClientOriginalExtension());
             $logger->error(gettype($fileManager->getConfiguration()['upload']['max_file_size']));
 
@@ -646,10 +647,11 @@ class FileManagerController extends Controller
 
                 return new Response("Can't add file, File already exist-".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }else if($extensionCheck == false){
-
+                $this->addFlash('danger', "File should have an extension -".$uploadedFile->getClientOriginalName());
                 return new Response("File should have an extension - ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
                 //check for file extension. If no, don't upload.
             }else if($sizeCheck){
+                $this->addFlash('danger', "File size must be smaller than 40 MB -".$uploadedFile->getClientSize());
                 return new Response("File size must be smaller than 40 MB - ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
