@@ -12,6 +12,7 @@ use App\Entity\User\Role;
 use App\Entity\Course\Section;
 use App\Entity\Course\Course;
 use App\Entity\Course\Department;
+use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 //use Artgris\Bundle\FileManagerBundle\Helpers\FileManager;
 use App\Helpers\FileManager;
 use App\Twig\CSMCOrderExtension;
@@ -357,6 +358,7 @@ class FileManagerController extends Controller
             $em->persist($file);
         }
         else{
+
             $this->addFlash('danger', 'Did not provide a valid files.');
         }
 
@@ -433,7 +435,6 @@ class FileManagerController extends Controller
      */
     public function deleteAction(Request $request, LoggerInterface $l)
     {
-        if($this->isGranted('admin')){
             $form = $this->createDeleteForm();
             $form->handleRequest($request);
             $queryParameters = $request->query->all();
@@ -448,21 +449,20 @@ class FileManagerController extends Controller
                     $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($id);
 
                     foreach($files as $file){
-                        // echo $file->getParent()->getName();
-                        $file->setParent(null);
-                        $em->remove($file);  //this will remove files/folders inside this one.
+                        if($this->isGranted('admin')||$this->getUser()->getUsername()==$file->getOwner()->getUsername()){
+                            $em->remove($file);  //this will remove files/folders inside this one.
+                            $em->flush();
+                        }
+                        else{
+                            $Message = "You don't have permission to delete: ".  $file->getName(); 
+                            $this->addFlash('danger', $Message);
+                        }
+
                     }
 
                 }
-
-
             }
-            $em->flush();
-
-            // return new JsonResponse(200);
-        }else{
-            throw new MethodNotAllowedHttpException([]);
-        }
+            // $em->flush();
         return $this->redirectToRoute('file_management', $queryParameters);
     }
 

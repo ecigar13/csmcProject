@@ -319,6 +319,9 @@ class SessionController extends Controller {
                 $session->attachFile($file_data, $em,$metadata=[]);
             }
             $sessionFolder=$session->getDirectory();
+            $newName=$data['topic'];
+            $sessionFolder = $this->changeName($newName,$sessionFolder);
+            
             foreach($session->getFiles() as $file){
                 $file->setParent($sessionFolder);
                 $file->setPath($sessionFolder->getpath() . '/' .$file->getName()); 
@@ -415,6 +418,8 @@ class SessionController extends Controller {
                 $quiz->attachFile($file_data, $em,$metadata=[]);
             }
             $sessionFolder=$quiz->getDirectory();
+            $newName=$data['topic'];
+            $sessionFolder = $this->changeName($newName,$sessionFolder);
             foreach($quiz->getFiles() as $file){
                 $file->setParent($sessionFolder);
                 $file->setPath($sessionFolder->getpath() . '/' .$file->getName()); 
@@ -428,6 +433,34 @@ class SessionController extends Controller {
         }
     }
 
+
+    /**
+     * Change Folder Name.
+     *
+     *
+     * @param $newName
+     * @param $sessionFolder
+     *
+     * @return Directory
+     */
+    public function changeName(String $newName,Directory $sessionFolder ){
+            $newPath=$sessionFolder->getParent()->getPath(). '/' . $newName;
+            $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+            $sessionFolder_1=$directoryClass->findOneBy(array('path' => $newPath));
+            $i = 1;
+            while($sessionFolder_1) {
+                $newName = "{$newName}({$i})";
+                $newPath=$sessionFolder->getParent()->getPath(). '/' . $newName;
+                $sessionFolder_1=$directoryClass->findOneBy(array('path' => $newPath));
+                ++$i;
+            } 
+            if(!$sessionFolder_1){
+                $sessionFolder->setName($newName);
+                $sessionFolder->setPath($newPath);
+            }
+
+            return $sessionFolder;
+    }
     /**
      * @Route("/create/timeslot", name="create_time_slot")
      */
@@ -674,7 +707,7 @@ class SessionController extends Controller {
             'studentInstructions' => $session->getStudentInstructions(),
             'mentorInstructions' => $session->getMentorInstructions(),
             'description' => $session->getDescription(),
-             'uploadedFiles' => $session->getFiles(),
+            //'uploadedFiles' => $session->getFiles(),
             'sections' => $session->getSections(),
             'graded' => $session->getGraded(),
             'numericGrade' => $session->getNumericGrade(),
