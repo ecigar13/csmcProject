@@ -10,12 +10,12 @@ parameters:
             default:
                 dir: "../public/uploads"
                 # regex overrides accept
-                regex: '^[^#%&{}\\<>*?\/$!'":@]{63}\.[^#%&{}\\<>*?\/\ $!'":@]+$'
+                # file name in database only allows 64 characters. Will crash database if longer.
+                # file has in database only allows 191 characters, so long extension will crash database.
+                regex: '^[^#&{}()|\\<>*?\/$!:@"''%]{1,64}\.[^#&{}()|\\<>*?\/\ $!:@"''%]{1,149}$'
                 accept: 'file'
                 upload:
                     max_file_size: 41943040
-
-
 
 services:
     # default configuration for services in *this* file

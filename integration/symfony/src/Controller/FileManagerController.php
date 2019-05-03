@@ -633,24 +633,26 @@ class FileManagerController extends Controller
             // $logger->info("FilePath");
             // $logger->info($filePath);
 
-            //check if file with same name already exixt
             $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
             $file=$fileClass->findByPath($filePath);
-
-            //TODO: does this return filename and file extension with a dot in between?
-            $extensionCheck = !preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName().$uploadedFile->getClientOriginalExtension());
-
+            // $logger->error($fileManager->getRegex());
+            
+            $extensionCheck = !preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName());
             $sizeCheck = $uploadedFile->getClientSize() > $fileManager->getConfiguration()['upload']['max_file_size'];
+            //check if file with same name already exixt
+
             if($file){
-                $this->addFlash('danger', "Can't add file, File already exist-".$uploadedFile->getClientOriginalName());
-                return new Response("Can't add file, File already exist-".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
-            }else if($extensionCheck == false){
-                $this->addFlash('danger', "File must have an extension, no special character or name longer than 64 character -".$uploadedFile->getClientOriginalName());
-                return new Response("File must have an extension, no special character or name longer than 64 character - ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+                $this->addFlash('danger', "Can't add file, File already exist: ".$uploadedFile->getClientOriginalName());
+                return new Response("Can't add file, File already exist: ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+
+            }else if($extensionCheck){
+                $this->addFlash('danger', "File must have an extension, no special character and not name not too long: ".$uploadedFile->getClientOriginalName());
+                return new Response("File must have an extension, no special character or name longer than 64 character:  ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+
             }else if($sizeCheck){
                 //check for file extension. If no, don't upload.
-                $this->addFlash('danger', "File must be smaller than 40 MB -".$uploadedFile->getClientSize());
-                return new Response("File size must be smaller than 40 MB - ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
+                $this->addFlash('danger', "File must be smaller than 40 MB: ".$uploadedFile->getClientSize());
+                return new Response("File size must be smaller than 40 MB: ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
             //create a file object with its hash. Moving file to its folder fires during prePersist.
