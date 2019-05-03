@@ -11,6 +11,7 @@ class FileMetadata {
     /**
      * @ORM\Id()
      * @ORM\ManyToOne(targetEntity="File", inversedBy="metadata", cascade={"persist","remove"})
+     * @ORM\JoinColumn(name="file_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private $file;
 

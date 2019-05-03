@@ -5,6 +5,7 @@ namespace App\Entity\Session;
 use App\DataTransferObject\FileData;
 use App\Entity\Course\Section;
 use App\Entity\File\File;
+use App\Entity\File\Directory;
 use App\Entity\Traits\ModifiableTrait;
 use App\Entity\Interfaces\ModifiableInterface;
 use App\Entity\User\User;
@@ -88,8 +89,8 @@ abstract class Session implements ModifiableInterface {
     /**
      * @ORM\ManyToMany(targetEntity="\App\Entity\File\File", cascade={"persist", "remove"})
      * @ORM\JoinTable(name="session_files",
-     *      joinColumns={@ORM\JoinColumn(name="session_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="file_id", referencedColumnName="id")}
+     *      joinColumns={@ORM\JoinColumn(name="session_id", referencedColumnName="id",onDelete="CASCADE")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="file_id", referencedColumnName="id",onDelete="CASCADE")}
      *      )
      */
     private $files;
@@ -110,6 +111,13 @@ abstract class Session implements ModifiableInterface {
      */
     private $uploadedFiles;
 
+      /**
+     * 
+     * @ORM\OneToOne(targetEntity="App\Entity\File\Directory")
+     * @ORM\JoinColumn(name="directory", referencedColumnName="id",onDelete="SET NULL")
+     */
+    private $directory;
+
     /**
      * @ORM\Column(type="string", length=7, name="color", nullable=true)
      */
@@ -127,6 +135,7 @@ abstract class Session implements ModifiableInterface {
 
         $this->sections = new ArrayCollection();
         $this->files = new ArrayCollection();
+        $this->uploadedFiles = new ArrayCollection();
     }
 
     // could be useful
@@ -147,8 +156,8 @@ abstract class Session implements ModifiableInterface {
         $this->numericGrade = $numericGrade;
     }
 
-    public function attachFile(FileData $fileData, EntityManagerInterface $entityManager, array $metadata = null) {
-        $this->files[] = File::fromUploadData($fileData, $entityManager, $metadata);
+    public function attachFile(FileData $fileData, EntityManagerInterface $entityManager, array $metadata = []) {
+        $this->Files[] = File::fromUploadData($fileData, $entityManager, $metadata);
 
         return $this;
     }
@@ -157,6 +166,27 @@ abstract class Session implements ModifiableInterface {
         $this->files[] = $file;
         return $this;
     }
+
+
+    /**
+     * set Directory
+     *
+     * @return Session
+     */
+    public function setDirectory(Directory $directory) {
+        $this->directory=$directory;
+        return $this;
+   }
+
+   /**
+    * get Directory
+    *
+    * @return Directory
+    */
+   public function getDirectory() {
+       return $this->directory;
+       
+  }
 
     public function detachFile(File $file) {
         foreach($this->files as $f) {

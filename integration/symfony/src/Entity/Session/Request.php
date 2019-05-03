@@ -83,17 +83,12 @@ class Request {
     /**
      * @ORM\ManyToMany(targetEntity="\App\Entity\File\File", cascade={"persist"})
      * @ORM\JoinTable(name="request_files",
-     *      joinColumns={@ORM\JoinColumn(name="request_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@ORM\JoinColumn(name="file_id", referencedColumnName="id")}
+     *      joinColumns={@ORM\JoinColumn(name="request_id", referencedColumnName="id",onDelete="CASCADE")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="file_id", referencedColumnName="id",onDelete="CASCADE")}
      *      )
      */
     private $files;
-    /**
-     * 
-     * @ORM\OneToOne(targetEntity="App\Entity\File\Directory")
-     * @ORM\JoinColumn(name="directory", referencedColumnName="id")
-     */
-    private $directory;
+
 
     /**
      * Constructor
@@ -138,25 +133,6 @@ class Request {
         return $this->id;
     }
 
-    /**
-     * set Directory
-     *
-     * @return Request
-     */
-    public function setDirectory(Directory $directory) {
-         $this->directory=$directory;
-         return $this;
-    }
-
-    /**
-     * get Directory
-     *
-     * @return Directory
-     */
-    public function getDirectory() {
-        return $this->directory;
-        
-   }
 
     /**
      * Set timeRequested
