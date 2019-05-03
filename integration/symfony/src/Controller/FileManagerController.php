@@ -644,13 +644,12 @@ class FileManagerController extends Controller
             $sizeCheck = $uploadedFile->getClientSize() > $fileManager->getConfiguration()['upload']['max_file_size'];
             if($file){
                 $this->addFlash('danger', "Can't add file, File already exist-".$uploadedFile->getClientOriginalName());
-
                 return new Response("Can't add file, File already exist-".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }else if($extensionCheck == false){
                 $this->addFlash('danger', "File should have an extension -".$uploadedFile->getClientOriginalName());
                 return new Response("File should have an extension - ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
-                //check for file extension. If no, don't upload.
             }else if($sizeCheck){
+                //check for file extension. If no, don't upload.
                 $this->addFlash('danger', "File size must be smaller than 40 MB -".$uploadedFile->getClientSize());
                 return new Response("File size must be smaller than 40 MB - ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }
@@ -682,6 +681,7 @@ class FileManagerController extends Controller
         try{
             $em->flush();
         }
+
         catch (IOExceptionInterface $e) {
             $this->addFlash('danger', "Error while flushing to server");
             return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -703,26 +703,26 @@ class FileManagerController extends Controller
     }
 
     //David's function. Might not need anymore because using service.
-    private function createHash($file, $entityManager) {
-        $file_path = '../public' . $file->url;
-        $file_path = utf8_encode($file_path);
-        $hash = sha1_file($file_path);
-        $size = filesize($file_path);
-        $extension = $this->guessExtension($file);
-        $fileHash = $entityManager->getRepository(FileHash::class)
-            ->findOneByPath($hash . '.' . $extension);
-        if ($fileHash == null) {
-            $fileHash = new FileHash($hash, $extension, $size);
-        }
+    // private function createHash($file, $entityManager) {
+    //     $file_path = '../public' . $file->url;
+    //     $file_path = utf8_encode($file_path);
+    //     $hash = sha1_file($file_path);
+    //     $size = filesize($file_path);
+    //     $extension = $this->guessExtension($file);
+    //     $fileHash = $entityManager->getRepository(FileHash::class)
+    //         ->findOneByPath($hash . '.' . $extension);
+    //     if ($fileHash == null) {
+    //         $fileHash = new FileHash($hash, $extension, $size);
+    //     }
 
-        return $fileHash;
-    }
+    //     return $fileHash;
+    // }
 
-    public function guessExtension($file)
-    {
-        $guesser = ExtensionGuesser::getInstance();
-        return $guesser->guess($file->type);
-    }
+    // public function guessExtension($file)
+    // {
+    //     $guesser = ExtensionGuesser::getInstance();
+    //     return $guesser->guess($file->type);
+    // }
 
     /**
      * @param $path
