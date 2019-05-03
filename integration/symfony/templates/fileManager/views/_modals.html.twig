@@ -1,3 +1,4 @@
+{# These are modals for delete, rename, preview and create folder forms #}
 <div class="modal fade" id="js-confirm-delete" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -12,6 +13,7 @@
             <div class="modal-footer">
                 {{ form_start(formDelete, {"attr" : {'class':'pull-right'}}) }}
                 {{ form_widget(formDelete) }}
+                {{ form_row(formDelete.deleteId) }}
                 {{ form_end(formDelete) }}
                 <button type="button" class="btn btn-default pull-left" title="{{ 'button.cancel'|trans }}"
                         data-dismiss="modal"> {{ 'button.cancel'|trans }}</button>
@@ -30,6 +32,7 @@
             </div>
             <div class="modal-body">
                 {{ form_row(formRename.name) }}
+                {{ form_row(formRename.id) }}
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default pull-left"
@@ -63,6 +66,50 @@
         </div>
     </div>
 </div>
+{# move file start#}
+{% set querystring = '?'~app.request.queryString %}
+{% set action = path('fms_move') ~ querystring %}
+<div class="modal fade" id="moveFile" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            {{ form_start(form, {'name': 'move', 'action': action, 'method': 'POST'}) }}
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">{{ 'Move File'|trans }}</h4>
+            </div>
+
+            <div class="modal-body">
+                {{ form_row(form.name) }}
+                <div>
+                    <span style="font-size:20px;">Selected File</span>
+                    <input type="hidden" name="file_id" class="current_file_id" form-control" style="margin:10px;">
+                    <input type="text" disabled required="required" class="current form-control"  style="margin:10px;">
+                </div> 
+                <div>
+                    <span style="font-size:20px;">Move Directory</span>
+                    <input type="hidden" name="new_parent_id" class="new_parent_id" form-control">
+                    <div class="dest">
+                        <input type="text"  required="required" class="form-control"  style="margin:10px;">
+                    </div>
+                </div> 
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left"
+                        data-dismiss="modal">{{ 'button.cancel'|trans }}
+                </button>
+
+                <button type="submit" class="btn btn-primary btn">Move</button>
+
+                {{ form_row(form.send) }}
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{# move file end#}
 {# add link start#}
 <div class="modal fade" id="addLink" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
@@ -72,7 +119,7 @@
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">{{ 'Edit link'|trans }}</h4>
+                <h4 class="modal-title">{{ 'Add link'|trans }}</h4>
             </div>
 
             <div class="modal-body">
@@ -93,9 +140,7 @@
                         data-dismiss="modal">{{ 'button.cancel'|trans }}
                 </button>
 
-                <button type="submit" class="btn btn-primary btn">DELETE</button>
-                <button type="submit" class="btn btn-primary btn">RENAME</button>
-                <button type="submit" class="btn btn-primary btn">ADD</button>
+                <button type="submit" class="btn btn-primary btn">SAVE</button>
 
                 {{ form_row(form.send) }}
             </div>

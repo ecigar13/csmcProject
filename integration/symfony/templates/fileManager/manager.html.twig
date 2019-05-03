@@ -1,4 +1,4 @@
-{% extends 'fileManager/base.html.twig' %}
+{% extends 'shared/base.html.twig' %}
 {% block fmscontent %}
 {% form_theme form 'bootstrap_3_layout.html.twig' %}
 {% form_theme formRename 'bootstrap_3_layout.html.twig' %}
@@ -9,7 +9,9 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}File Manager{% endblock %}</title>
-        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css"
+              integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp"
+              crossorigin="anonymous">
         <link rel="stylesheet"
               href="{{ asset('bundles/artgrisfilemanager/libs/jstree/dist/themes/default/style.min.css') }}">
         <link rel="stylesheet"
@@ -17,6 +19,7 @@
         <link rel="stylesheet" href="{{ asset('bundles/artgrisfilemanager/css/manager.css') }}">
         <link rel="stylesheet"
               href="{{ asset('bundles/artgrisfilemanager/libs/jQuery-contextMenu/dist/jquery.contextMenu.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('build/css/fms.css') }}">
 
 </head>
 <body>
@@ -42,25 +45,30 @@
 
                 <span class="btn btn-success btn-sm fileinput-button btn-action">
                     <span class="far fa-file"></span>
-                    <span>{{ 'button.add.files'|trans }}</span>
-                        <input id="fileupload" type="file"
-                               data-url="{{ path('file_management_upload', fileManager.queryParameters) }}"
-                               name="files[]" multiple=""
-                               accept="{{ fileManager.configuration.accept is defined ? fileManager.configuration.accept : (fileManager.type ? accept(fileManager.type)) }}">
-                </span>
-                <button type="button" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#addFolder">
+                    <span>{{ 'Upload files'|trans }}</span>
+                        <input id="fileupload"
+                                type="file"
+                                data-url="{{ path('file_management_upload', fileManager.queryParameters) }}"
+                                name="files[]"
+                                multiple=""
+                                accept="{{ fileManager.configuration.accept is defined ? fileManager.configuration.accept : (fileManager.type ? accept(fileManager.type)) }}">
+                    </span>
+                <button type="button"
+                    class="btn btn-primary btn-sm btn-action"
+                    data-toggle="modal"
+                    data-target="#addFolder">
                     <span class="far fa-folder-open"></span>
                     <span>{{ 'button.add.folder'|trans }}</span>
                 </button>
                 {# new code add link button start#}
                 <button type="button" style="background-color:#c7b909;border-color:#f1f500;background-image:linear-gradient(to bottom,#f5d704 0,#c7b909 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#addLink">
                     <span class="fa fa-link"></span>
-                    <span>{{ 'Edit link...'|trans }}</span>
+                    <span>{{ 'New link...'|trans }}</span>
                 </button>
                 {# new add link button end#}
                 {# {% if fileManager.parent %} #}
                     <button type="button"
-                            class="btn btn-sm btn-danger btn-action js-delete-modal"
+                            class="btn btn-sm btn-danger btn-action js-delete-modal js-delete-folder"
                             data-trigger="click"
                             data-container="body"
                             data-toggle="modal"
@@ -71,7 +79,23 @@
                         <span class="far fa-trash-alt"></span>
                         <span>{{ 'button.delete.current'|trans }}</span>
                     </button>
+
+                    {# rename button #}
+                    <button type="button"
+                            class="btn btn-sm btn-default btn-action js-rename-modal js-rename-folder"
+                            data-trigger="click"
+                            data-container="body"
+                            data-toggle="modal"
+                            data-target="#js-confirm-rename"
+                            data-placement="left"
+                            data-html="true"
+                            data-href='{{ path('file_management_rename', fileManager.queryParameters) }}'>
+                        <span class="far fa-edit"></span>
+                        <span>{{ 'Rename this folder'|trans }}</span>
+                    </button>
+
                 {# {% endif %} #}
+                {# Delete selected files #}
                 <a id="js-delete-multiple-modal"
                    class="btn btn-sm btn-danger btn-action disabled"
                    type="button"
@@ -80,9 +104,10 @@
                    data-toggle="modal"
                    data-target="#js-confirm-delete"
                    data-placement="left"
-                   data-html="true">
+                   data-html="true"
+                   data-href='{{ path('file_management_delete', fileManager.queryParameters) }}'>
                     <span class="far fa-check-square"></span>
-                    <span>{{ 'button.delete.selected'|trans }}</span>
+                    <span>{{ 'Delete selected files'|trans }}</span>
                 </a>
                 {# new code share button start#}
                 <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareFolder">
@@ -103,14 +128,10 @@
                        class="btn btn-sm btn-default {{ fileManager.view == 'list' ? 'active' }}">
                         <span class="fas fa-th-list"></span>
                     </a>
-                    <a type="button" href="{{ path('file_management', fileManager.queryParameters|merge({'view':'thumbnail'})) }}"
-                       class="btn btn-sm btn-default {{ fileManager.view == 'thumbnail' ? 'active' }}">
-                        <span class="fas fa-th"></span>
-                    </a>
                 </div>
             {% endblock %}
         </div>
-        <div class="row">
+        <div class="row fms_main">
             {% if fileManager.tree %}
             <div class="col-xs-12  col-sm-4 col-md-3 col-lg-2">
                 {% block tree %}
@@ -119,7 +140,7 @@
                     </div>
                 {% endblock %}
             </div>
-            <div class="col-xs-12 col-sm-8 col-md-9 col-lg-10 no-tree-blk">
+            <div class="fms_view col-xs-12 col-sm-8 col-md-9 col-lg-10 no-tree-blk">
                 {% else %}
                 <div class="col-lg-12">
                     {% endif %}
@@ -144,7 +165,8 @@
     <script src="{{ asset('bundles/artgrisfilemanager/libs/sticky-kit/jquery.sticky-kit.min.js') }}"></script>
     <script src="{{ asset('bundles/artgrisfilemanager/libs/remarkable-bootstrap-notify/dist/bootstrap-notify.min.js') }}"></script>
     <script src="{{ asset('bundles/artgrisfilemanager/libs/jQuery-contextMenu/dist/jquery.contextMenu.min.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('bundles/artgrisfilemanager/libs/jquery-lazy/jquery.lazy.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('build/js/jquery.lazy-master/jquery.lazy.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('build/js/jquery.lazy-master/jquery.lazy.plugins.min.js') }}"></script>
     <script>
         var treedata = {{ treeData|raw }};
         var tree = {{ fileManager.tree ? 'true' : 'false' }}
@@ -183,12 +205,14 @@
 
         // display session flash messages
         {% for type, messages in app.session.flashbag.all %}
-        {% for message in messages %}
-        displayAlert('{{ type }}', '{{ message|trans|e('js') }}')
-        {% endfor %}
+            {% for message in messages %}
+            displayAlert('{{ type }}', '{{ message|trans|e('js') }}')
+            {% endfor %}
         {% endfor %}
     </script>
-    <script src="{{ asset('bundles/artgrisfilemanager/js/manager.js') }}"></script>
+    {# <script src="{{ asset('bundles/artgrisfilemanager/js/manager.js') }}"></script> #}
+    <script src="{{ asset('build/js/form.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('build/js/fms.js') }}" type="text/javascript"></script>
 {% endblock %}
 </body>
 </html>
