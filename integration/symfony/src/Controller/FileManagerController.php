@@ -638,19 +638,18 @@ class FileManagerController extends Controller
             $file=$fileClass->findByPath($filePath);
 
             //TODO: does this return filename and file extension with a dot in between?
-            $extensionCheck = preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName().$uploadedFile->getClientOriginalExtension());
-            $logger->error(gettype($fileManager->getConfiguration()['upload']['max_file_size']));
+            $extensionCheck = !preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName().$uploadedFile->getClientOriginalExtension());
 
             $sizeCheck = $uploadedFile->getClientSize() > $fileManager->getConfiguration()['upload']['max_file_size'];
             if($file){
                 $this->addFlash('danger', "Can't add file, File already exist-".$uploadedFile->getClientOriginalName());
                 return new Response("Can't add file, File already exist-".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }else if($extensionCheck == false){
-                $this->addFlash('danger', "File should have an extension -".$uploadedFile->getClientOriginalName());
+                $this->addFlash('danger', "File must have an extension or name too long -".$uploadedFile->getClientOriginalName());
                 return new Response("File should have an extension - ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }else if($sizeCheck){
                 //check for file extension. If no, don't upload.
-                $this->addFlash('danger', "File size must be smaller than 40 MB -".$uploadedFile->getClientSize());
+                $this->addFlash('danger', "File must be smaller than 40 MB -".$uploadedFile->getClientSize());
                 return new Response("File size must be smaller than 40 MB - ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
