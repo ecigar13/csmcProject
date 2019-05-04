@@ -9,3 +9,4 @@ docker-compose exec php php bin/console doctrine:fixtures:load
 docker-compose exec php yarn run encore dev
 
 docker-compose exec php php bin/console app:add-user dxl170030 developer
+docker-compose exec php php bin/console app:add-user yxp170730 developer
