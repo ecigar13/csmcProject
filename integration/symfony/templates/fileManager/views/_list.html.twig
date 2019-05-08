@@ -27,7 +27,30 @@
         </tr>
         </thead>
         <tbody>
-        {% for fileEntity in fileArray %}
+        
+		{% for linkEntity in linkArray %}
+            <!-- file can be its own link -->
+			<tr class="file">
+                <td><input type="checkbox" class="checkbox" name="delete[]" value="{{ linkEntity.name }}" title="{{ linkEntity.name }}"></td>
+                <td>Link</td>
+                <td data-value="{{ linkEntity.name }}" {{ linkEntity.Url }}>
+                    {{ linkEntity.name ~ ': ' ~ linkEntity.Url}}
+                </td>
+				<td class="hidden-xs">
+                    <small>{{ linkEntity.giveDate|date('m/d/Y') }}</small>
+                </td>
+				<td class="hidden-xs">
+                    <small>0</small>
+                </td>
+                <td class="text-right">
+                    
+                </td>
+            </tr>
+		{% endfor %}
+
+
+
+		{% for fileEntity in fileArray %}
             {% set file = fileEntity.file %}
             <tr class="{{ fileEntity.isImage() ? 'img' : 'file' }}">
                 <td><input type="checkbox" class="checkbox" name="delete[]" value="{{ file.name }}" title="{{ file.name }}"></td>
@@ -36,7 +59,7 @@
                     {{ (fileEntity.preview.folder is defined ? fileEntity.preview.folder : file.name ~ '.' ~ file.extension)|raw }}
                 </td>
                 <td class="hidden-xs">
-                    <small>{{ fileEntity.date|date('d/m/Y') }}</small>
+                    <small>{{ fileEntity.date|date('m/d/Y') }}</small>
                 </td>
                 <td class="hidden-xs">
                     <small>{{ fileEntity.HTMLSize|trans|raw }}</small>

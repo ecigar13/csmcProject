@@ -6,7 +6,6 @@ use Artgris\Bundle\FileManagerBundle\Event\FileManagerEvents;
 use App\Helpers\File;
 use Doctrine\ORM\EntityRepository;
 use App\Entity\File\Directory;
-use App\Entity\File\Link;
 use App\Entity\User\User;
 use App\Entity\User\Role;
 use App\Entity\Course\Section;
@@ -18,6 +17,7 @@ use App\Twig\CSMCOrderExtension;
 use App\Entity\File\FileHash;
 //need to rename this after gutting all Artgris File usage (if possible)
 use App\Entity\File\File as CSMCFile;
+use App\Entity\File\Link as CSMCLink;
 use App\Entity\File\VirtualFile;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -75,6 +75,8 @@ class FileManagerController extends Controller
         $logger->info($fileManager->getCurrentRoute());
         $finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
 
+		//dump($finderFiles);
+
         $regex = $fileManager->getRegex();
 	
         $orderBy   = $fileManager->getQueryParameter('orderby');
@@ -84,24 +86,24 @@ class FileManagerController extends Controller
                 // $finderFiles->sort(function (SplFileInfo $a, SplFileInfo $b) {
                 //     return strcmp(strtolower($b->getFileName()), strtolower($a->getFileName()));
                 // });
-                usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
+                usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
                     return strcmp(strtolower($first->getName()), strtolower($second->getName()));
                 }); 
                 break;
             case 'date':
                 // $finderFiles->sortByModifiedTime();
-                usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
+                usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
                     return ($first->giveDate() > $second->giveDate());
                 }); 
                 break;
             case 'size':
-            usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
+            usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
                     return $first->get('size') - $second->get('size');
                 });
                 break;
             default :
-            usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
-                return strcmp(strtolower($first->get('extension')) ,strtolower($second->get('extension')));
+            usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
+                return strcmp(strtolower($first->getName()) ,strtolower($second->getName()));
                 });
                 break;
         }
@@ -128,11 +130,20 @@ class FileManagerController extends Controller
 
         //create delete form for FMS
         $formDelete = $this->createDeleteForm()->createView();
-        $fileArray  = [];
+        $fileArray = [];
+		$linkArray = [];
         foreach ($finderFiles as $file) {
-            $logger->info("path");
-            $logger->info($file->getPhysicalDirectory());
-            $fileArray[] = new File($file, $this->get('translator'), $this->get('app.file_type_service'), $fileManager);
+			if($file instanceof CSMCLink) {
+				$logger->info("path");
+				$logger->info($file->getPath());
+				$linkArray[] = $file;
+			}
+
+            elseif($file instanceof CSMCFile) {
+				$logger->info("path");
+				$logger->info($file->getPhysicalDirectory());
+				$fileArray[] = new File($file, $this->get('translator'), $this->get('app.file_type_service'), $fileManager);
+			}
         }
 
         if ($orderDESC) {
@@ -142,13 +153,15 @@ class FileManagerController extends Controller
         $parameters = [
             'fileManager' => $fileManager,
             'fileArray'   => $fileArray,
+			'linkArray'   => $linkArray,
             'formDelete'  => $formDelete,
             'username'    => $this->getUser()->getUsername(),
         ];
 
+		dump($parameters);
+
         if ($isJson) {
             $fileList = $this->renderView('fileManager/_manager_view.html.twig', $parameters);
-
             return new JsonResponse(['data' => $fileList, 'badge' => $finderFiles->count(), 'treeData' => $directoriesArbo]);
         }
         $parameters['treeData'] = json_encode($directoriesArbo);
@@ -188,7 +201,7 @@ class FileManagerController extends Controller
             if(array_key_exists('route',$fileManager->getQueryParameters()) && !is_null($fileManager->getQueryParameters()['route'])){
                 $parentPath = $fileManager->getQueryParameters()['route'];
             }
-            $logger->info("parentDDDDDDDDDDDDD");
+            $logger->info("parent");
             $logger->info($parentPath);
             $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
 
@@ -669,14 +682,9 @@ class FileManagerController extends Controller
 
             return $directoriesList;
         }
-
+		 
         $parent=$directoryClass->findOneBy(array('path' => $parentPath));
         $directories = $directoryClass->findByParent($parent);
-
-		dump($this->getDoctrine()->getRepository(VirtualFile::class));
-
-        //List for tree
-		//dump($directories);
 
         foreach ($directories as $directory) {
 			
@@ -760,10 +768,15 @@ class FileManagerController extends Controller
     {
         //Find parent from id and children from parent
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $FileClass=$this->getDoctrine()->getRepository(CSMCFile::class);
-        $parent=$directoryClass->findByPath($path);
+        $parent = $directoryClass->findByPath($path);
+
+		$FileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
         $FileList = $FileClass->findByParent($parent);
-        return $FileList;
+
+		$LinkClass = $this->getDoctrine()->getRepository(CSMCLink::class);
+		$LinkList = $LinkClass->findByParent($parent);
+
+        return array_merge($FileList, $LinkList);
     }
 
     /**
@@ -812,6 +825,15 @@ class FileManagerController extends Controller
         $Admin = $roleClass->findOneByName('admin');
         $Student = $roleClass->findOneByName('student');
         $Developer = $roleClass->findOneByName('developer');
+
+		$sampleLinkDirectory = $directoryClass->findOneByPath("/root/admin");
+
+		if($sampleLinkDirectory) {
+			$sampleLink = new CSMCLink("Sample Link", $user, "www.utdallas.edu", "/root/admin/");
+			$sampleLink->setParent($sampleLinkDirectory);
+			$entityManager->persist($sampleLink);
+			$entityManager->flush();
+		}
 
         try{
             // Create root folder if it's not there
@@ -940,7 +962,5 @@ class FileManagerController extends Controller
         }
         return null;
     }
-
-
 
 }
