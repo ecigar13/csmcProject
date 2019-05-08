@@ -236,6 +236,9 @@ class FileManagerController extends Controller
         $parameters['formRename'] = $formRename->createView();
         $parameters['formMove']   = $formMove->createView();
 
+        //-----------find all netid----------------//
+        $userArray = $this->getDoctrine()->getRepository(User::class)->findall();
+        $parameters['userArray']   = $userArray;
         return $this->render('fileManager/manager.html.twig', $parameters);
     }
     /**

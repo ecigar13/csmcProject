@@ -170,41 +170,17 @@
                 </div>
                 <div style="display:inline-block">
 
-                <div style="border-color:#b3a7a7;height:350px;width:200px;float:left;margin:5px;padding:5px;border-style:solid;overflow-y:scroll;">
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-			  
+
+                <div style="border-color:#b3a7a7;float:left;margin:20px;padding:20px;border-style:solid;">
+                    {% for user in userArray %}
+                        <div style="padding:10px"><input type="checkbox"/><b>ID:  </b>{{ user.username }} <b>Name:  </b>{{user.firstName}}·{{user.lastName}}</div>
+
+                    {% endfor %}
                 </div>
                 <div style="border-color:#b3a7a7;height:350px;width:200px;float:left;margin:5px;padding:5px;border-style:solid;overflow-y:scroll;">
-                    <div style="padding:10px"><input type="checkbox" checked/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox" checked/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox" checked/>Name mxm0000006</div>
+                    <div style="padding:10px"><input type="checkbox" checked/>Hardcode mxm0000004</div>
+                    <div style="padding:10px"><input type="checkbox" checked/>Hardcode mxm0000005</div>
+                    <div style="padding:10px"><input type="checkbox" checked/>Hardcode mxm0000006</div>
                     </div>
                     </div>  
             </div>
