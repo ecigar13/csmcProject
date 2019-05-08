@@ -4,10 +4,9 @@
         <colgroup>
             <col>
             <col>
-            <col class="col-lg-7">
+            <col class="col-lg-5" style="width:400px">
             <col class="col-lg-1">
-            <col class="col-lg-1">
-            <col class="col-lg-1">
+            <col class="col-lg-2">
             <col class="col-lg-2">
         </colgroup>
         <thead class="thead-default">
@@ -36,8 +35,10 @@
                     value="{{ file.name }}"
                     title="{{ file.name }}"></td>
                 <td>{{ fileEntity.preview ? fileEntity.preview.html|raw }}</td>
-                <td data-value="{{ file.name }}" {{ fileEntity.attribut|raw }}>
-                    {{ (fileEntity.preview.folder is defined ? fileEntity.preview.folder : file.name ~ '.' ~ file.extension)|raw }}
+                <td data-value="{{ file.name }}" {{ fileEntity.attribut|raw }} style="width: 400px">
+                    <div style="width:400px;white-space:nowrap;text-overflow: ellipsis;overflow: hidden;">
+                        {{ (fileEntity.preview.folder is defined ? fileEntity.preview.folder : file.name ~ '.' ~ file.extension)|raw }}
+                    </div>
                 </td>
                 <td class="hidden-xs">
                     <small>{{ fileEntity.date|date('d/m/Y') }}</small>

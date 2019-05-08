@@ -151,15 +151,15 @@
     </div>
 </div>
 {# add link end#}
-{# share start#}
-<div class="modal fade" id="shareFolder" tabindex="-1" role="dialog" aria-hidden="true">
+{# share individual start#}
+<div class="modal fade" id="shareIndividualFolder" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             {{ form_start(form) }}
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">{{ 'Share'|trans }}</h4>
+                <h4 class="modal-title">{{ 'Select/Deselect a user to Share/Unshare'|trans }}</h4>
             </div>
             <div class="modal-body">
                 {{ form_row(form.name) }}
@@ -170,22 +170,41 @@
                 </div>
                 <div style="display:inline-block">
 
-                <div style="border-color:#b3a7a7;float:left;margin:20px;padding:20px;border-style:solid;">
-                    <div style="padding:10px"><input type="checkbox"/>id-# mxm0000001</div>
-                    <div style="padding:10px"><input type="checkbox"/>id-# mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>id-# mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>id-# mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>id-# mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>id-# mxm0000001</div>
-                    <div style="padding:10px"><input type="checkbox"/>id-# mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>id-# mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>id-# mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>id-# mxm0000006</div>
+                <div style="border-color:#b3a7a7;height:350px;width:200px;float:left;margin:5px;padding:5px;border-style:solid;overflow-y:scroll;">
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
+                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
+			  
                 </div>
-                <div style="border-color:#b3a7a7;float:right;margin:20px;padding:20px;border-style:solid;">
-                        <div style="padding:10px"><input type="checkbox"/>Mentor</div>
-                        <div style="padding:10px"><input type="checkbox"/>Student</div>
-                        <div style="padding:10px"><input type="checkbox"/>Instructor</div>
+                <div style="border-color:#b3a7a7;height:350px;width:200px;float:left;margin:5px;padding:5px;border-style:solid;overflow-y:scroll;">
+                    <div style="padding:10px"><input type="checkbox" checked/>Name mxm0000004</div>
+                    <div style="padding:10px"><input type="checkbox" checked/>Name mxm0000005</div>
+                    <div style="padding:10px"><input type="checkbox" checked/>Name mxm0000006</div>
                     </div>
                     </div>  
             </div>
@@ -193,14 +212,55 @@
                 <button type="button" class="btn btn-default pull-left"
                         data-dismiss="modal">{{ 'button.cancel'|trans }}
                 </button>
-                <button type="submit" class="btn btn-primary btn">send</button>
+                <button type="submit" class="btn btn-primary btn">Submit</button>
                 {{ form_row(form.send) }}
             </div>
             {{ form_end(form) }}
         </div>
     </div>
 </div>
-{# share end#}
+{# share individual end#}
+{# share role start#}
+<div class="modal fade" id="shareRoleFolder" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            {{ form_start(form) }}
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">{{ 'Select/Deselect a role to Share/Unshare'|trans }}</h4>
+            </div>
+            <div class="modal-body">
+                {{ form_row(form.name) }}
+                {# <div style="display:inline-block;width:100%;">
+                    <span style="font-size:20px;">Search</span>
+                    <input type="text"  required="required" class="form-control"  style="margin:10px;width:30%;float:left;">
+                    <span class="fa fa-search" style="float:right;margin-top:16px;font-size:20px;"></span>
+                </div> #}
+                <div style="display:inline-block">
+
+                <div style="border-color:#b3a7a7;float:left;margin:20px;padding:20px;border-style:solid;">
+                        <div style="padding:10px"><input type="checkbox"/>Mentor</div>
+                        <div style="padding:10px"><input type="checkbox"/>Student</div>
+
+                </div>
+                <div style="border-color:#b3a7a7;float:right;margin:20px;padding:20px;border-style:solid;">
+                        <div style="padding:10px"><input type="checkbox" checked/>Instructor</div>
+                    </div>
+                    </div>  
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-left"
+                        data-dismiss="modal">{{ 'button.cancel'|trans }}
+                </button>
+                <button type="submit" class="btn btn-primary btn">Submit</button>
+                {{ form_row(form.send) }}
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+</div>
+{# share role end#}
 <div class="modal fade" id="js-display-image" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

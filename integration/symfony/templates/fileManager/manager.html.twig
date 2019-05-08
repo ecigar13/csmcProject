@@ -109,12 +109,18 @@
                     <span class="far fa-check-square"></span>
                     <span>{{ 'Delete selected files'|trans }}</span>
                 </a>
-                {# new code share button start#}
-                <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareFolder">
+                {# new code share to individual button start#}
+                <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareIndividualFolder">
                     <span class="fa fa-share"></span>
-                    <span>{{ 'Share folder'|trans }}</span>
+                    <span>{{ 'Share to individual'|trans }}</span>
                 </button>
-                {# new code share button end#}
+                {# new code share to individual bbutton end#}
+                {# new code share to role button start#}
+                <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareRoleFolder">
+                    <span class="fa fa-share"></span>
+                    <span>{{ 'share to role'|trans }}</span>
+                </button>
+                {# new code share to role button end#}
             {% endblock %}
             {% block display %}
                 <div class="btn-group pull-right">
