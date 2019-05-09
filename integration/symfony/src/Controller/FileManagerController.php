@@ -822,7 +822,9 @@ class FileManagerController extends Controller
         //$parent=$directoryClass->findOneBy(array('path' => $parentPath));
         $directories = $directoryClass->findByParent($parent);
 
-        //List for tree
+        usort($directories,  function (VirtualFile $first,VirtualFile $second) {
+            return strcmp(strtolower($first->getName()), strtolower($second->getName()));
+        });
 
 
         foreach ($directories as $directory) {
