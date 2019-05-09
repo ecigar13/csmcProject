@@ -58,7 +58,7 @@ var _fms = function(){
             var path = `${parent}/${t.text}`;
             tree_array.push({
                 text: path,
-                value: t.id
+                value: t.a_attr.id
             })
             if(t.children && t.children.length > 0){
                 getTreeArray(tree_array, t.children, path);

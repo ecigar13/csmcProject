@@ -24,15 +24,15 @@ class Quiz extends Session {
      */
     private $attendances;
 
-    public function __construct(SessionType $type, string $topic, Room $location, \DateTime $start, \DateTime $end, string $description = null, string $studentInstructions = null, string $mentorInstructions = null, bool $graded = true, bool $numericGrade = true) {
+    public function __construct(SessionType $type, string $topic, Room $location, \DateTime $start, \DateTime $end, string $description = '', string $studentInstructions = '', string $mentorInstructions = '', bool $graded = true, bool $numericGrade = true) {
         parent::__construct($type, $topic, $description, $studentInstructions, $mentorInstructions, $graded, $numericGrade);
 
         $this->timeSlot = new QuizTimeSlot($this, $location, $start, $end);
     }
 
     public static function createFromFormData(array $data) {
-        $session = new Quiz($data['type'], $data['topic'], $data['room'], $data['startDate'], $data['endDate'], $data['description'], $data['studentInstructions'],
-            $data['mentorInstructions'], $data['graded'], $data['numericGrade']);
+        $session = new Quiz($data['type'], $data['topic'], $data['room'], $data['startDate'], $data['endDate'], $data['description']==null?'':$data['description'], $data['studentInstructions']==null?'':$data['studentInstructions'],
+        $data['mentorInstructions']==null?'':$data['mentorInstructions'], $data['graded'], $data['numericGrade']);
 
         // todo attach files
 

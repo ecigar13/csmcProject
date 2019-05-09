@@ -25,7 +25,7 @@ class File extends VirtualFile {
 
     /**
      * TODO: check with Steven if adding "remove" is the right choice for recusive delete.
-     * @ORM\ManyToOne(targetEntity="FileHash", cascade={"persist", "merge", "remove"})
+     * @ORM\ManyToOne(targetEntity="FileHash", cascade={"persist", "merge"})
      * @ORM\JoinColumn(name="hash_id", referencedColumnName="id")
      */
     private $hash;

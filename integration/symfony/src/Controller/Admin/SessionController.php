@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\DataTransferObject\FileData;
 use App\Entity\Misc\OperationHours;
 use App\Entity\Misc\Room;
+use Psr\Log\LoggerInterface;
 use App\Entity\Schedule\ShiftAssignment;
 use App\Entity\Session\Quiz;
 use App\Entity\Session\QuizAttendance;
@@ -14,9 +15,13 @@ use App\Entity\Session\RequestStatus;
 use App\Entity\Session\ScheduledSession;
 use App\Entity\Session\ScheduledSessionAttendance;
 use App\Entity\Session\Session;
+Use App\Entity\Course\Section;
 use App\Entity\Session\SessionTimeSlot;
 use App\Entity\Session\TimeSlot;
+use App\Entity\File\Directory;
+use App\Entity\File\File;
 use App\Entity\User\User;
+use App\Entity\User\Role;
 use App\Form\QuizType;
 use App\Form\RequestType;
 use App\Form\ScheduledSessionType;
@@ -74,31 +79,50 @@ class SessionController extends Controller {
     /**
      * @Route("/create/scheduled", name="create_scheduled")
      */
-    public function createScheduledSessionAction(\Symfony\Component\HttpFoundation\Request $request) {
+    public function createScheduledSessionAction(\Symfony\Component\HttpFoundation\Request $request,  LoggerInterface $logger) {
         $form = $this->createForm(ScheduledSessionType::class);
         $form->submit($request->request->get('scheduled_session'));
 
         if ($form->isSubmitted() && $form->isValid()) {
             $session_data = $form->getData();
 
-            $em = $this->getDoctrine()
-                ->getManager();
+            $em = $this->getDoctrine()->getManager();
 
             $session = ScheduledSession::createFromFormData($session_data);
+            $logger->info("Request");
+            $logger->info(json_encode($session_data['request']));
+            $Generic=true;
             if ($session_data['request'] != null) {
+                $Generic=false;
+                $logger->info("I'm here");
                 $session_request = $em->getRepository(Request::class)
                     ->find($session_data['request']);
                 $session->setRequest($session_request);
                 $session_request->setStatus('pending');
-
+                $sessionFolder = $this->createDirectory($session_data['topic'],$session_data['sections']->toArray()[0],$session_request->getUser(),$Generic,$logger);
                 foreach ($session_request->getFiles() as $file) {
                     $session->attachExistingFile($file);
                 }
+                
+                $session->setDirectory($sessionFolder);
+
+            }
+            else{
+                $sessionFolder = $this->createDirectory($session_data['topic'],$session_data['sections']->toArray()[0],$this->getUser(),$Generic,$logger);
+                $session->setDirectory($sessionFolder);
             }
 
-            foreach ($session_data['files'] as $file) {
-                $file_data = new FileData($file, $this->getUser());
-                $session->attachFile($file_data, $em);
+            $sessionFolder= $session->getDirectory();
+            foreach ($session_data['uploadedFiles'] as $file) {
+                $file_data = new FileData($file, $this->getUser(),$sessionFolder->getPath() . '/' . $file->getClientOriginalName());
+                $session->attachFile($file_data, $em, $metadata=[]);
+                $logger->info("nhiknhkI'm Here");
+            }
+            foreach($session->getFiles() as $file){
+                $file->setParent($sessionFolder);
+                $file->setPath($sessionFolder->getpath() . '/' .$file->getName()); 
+                $em->persist($file);
+
             }
 
             $em->persist($session);
@@ -108,6 +132,154 @@ class SessionController extends Controller {
         }
 
         return new Response('', Response::HTTP_BAD_REQUEST);
+    }
+
+    /**
+     * Automatic Folder Creation.
+     *
+     *
+     * @param $session
+     * @param $sections
+     * @param $user
+     *
+     * @return Directory
+     */
+    public function createDirectory(string $session,Section $section ,User $user,bool $Generic, LoggerInterface $logger){
+        $logger->info('UserName');
+        $logger->info($user->getUsername());
+        $netId = $user->getUsername();
+        $firstName = $user->getFirstName();
+        $lastName = $user->getLastName();
+        $entityManager = $this->getDoctrine()->getManager();
+        $userClass = $this->getDoctrine()->getRepository(User::class);
+        $roleClass = $this->getDoctrine()->getRepository(Role::class);
+        $UserName = $this->getParameter('file_manager')['superUser'];
+        $admin = $userClass->findOneBy(array('username' => $UserName));
+        $Instructor = $roleClass->findOneByName('instructor');
+        $Mentor = $roleClass->findOneByName('mentor');
+        $Admin = $roleClass->findOneByName('admin');
+        $Student = $roleClass->findOneByName('student');
+        $Developer = $roleClass->findOneByName('developer');
+        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+        try{
+            // Create root folder it's Not there
+            $root=$directoryClass->findOneBy(array('path' => '/root'));
+            if(!$root){
+                $root  = new Directory('root',$admin,'/root',);        
+                $entityManager->persist($root);
+                $entityManager->flush();
+            }
+            $instructor=false;
+            if(!$Generic){
+                $instructor=true;
+                $instructorFolderPath = '/root/Instructors';
+                $instructorFolder=$directoryClass->findOneBy(array('path' => $instructorFolderPath ));
+                if(!$instructorFolder){
+                    $instructorFolder  = new Directory('Instructors',$admin,$instructorFolderPath);
+                    $instructorFolder->setParent($root);
+                    $instructorFolder->addRole($Instructor);
+                    $instructorFolder->addRole($Admin);
+                    $instructorFolder->addRole($Mentor);
+                    $instructorFolder->addRole($Developer);
+                    $entityManager->persist($instructorFolder);
+                    $entityManager->flush();
+                }
+                $instructorName = $netId. '_' .$lastName;
+                $nameFolderPath = $instructorFolderPath . '/' . $instructorName;
+                $nameFolder = $directoryClass->findOneBy(array('path' => $nameFolderPath));
+                if(!$nameFolder){
+                    $nameFolder = new Directory($instructorName,$user,$nameFolderPath);
+                    $nameFolder->setParent($instructorFolder);
+                    $nameFolder->addUser($user);
+                    $nameFolder->addRole($Mentor);
+                    $nameFolder->addRole($Developer);
+                    $nameFolder->addRole($Admin);
+                    $entityManager->persist($nameFolder);
+                    $entityManager->flush();
+                }
+                $parent=$nameFolder;
+                $parentPath=$nameFolderPath;
+            }
+            else{
+                $folderPath = '/root/Sessions';
+                $sessionGeneric=$directoryClass->findOneBy(array('path' => $folderPath ));
+                if(!$sessionGeneric){
+                    $sessionGeneric  = new Directory('Sessions',$admin,$folderPath);
+                    $sessionGeneric->setParent($root);
+                    $sessionGeneric->addRole($Instructor);
+                    $sessionGeneric->addRole($Admin);
+                    $sessionGeneric->addRole($Mentor);
+                    $sessionGeneric->addRole($Developer);
+                    $entityManager->persist($sessionGeneric);
+                    $entityManager->flush();
+                }
+                $parent=$sessionGeneric;
+                $parentPath=$folderPath;
+            }
+            
+
+            $seasonName=$section->getSemester()->getSeason(). '_' . $section->getSemester()->getYear();
+            $seasonPath= $parentPath . '/' .  $seasonName;
+            $season = $directoryClass->findOneBy(array('path' => $seasonPath));
+            if(!$season){
+                $season = new Directory($seasonName,$admin,$seasonPath);
+                $season->setParent($parent);
+                if($instructor)
+                    $season->addUser($user);
+                else
+                    $season->addRole($Instructor);
+                $season->addRole($Mentor);
+                $season->addRole($Developer);
+                $season->addRole($Admin);
+                $entityManager->persist($season);
+                $entityManager->flush();
+            }
+            $sectionName = $section->getCourse()->getDepartment()->getAbbreviation(). '_' . $section->getCourse()->getNumber();
+            $sectionPath = $seasonPath . '/' .  $sectionName;
+            $sectionFolder = $directoryClass->findOneBy(array('path' => $sectionPath));
+            if(!$sectionFolder){
+                $sectionFolder = new Directory( $sectionName,$admin,$sectionPath);
+                $sectionFolder->setParent($season);
+                if($instructor)
+                    $sectionFolder->addUser($user);
+                else
+                    $sectionFolder->addRole($Instructor);
+                $sectionFolder->addRole($Mentor);
+                $sectionFolder->addRole($Developer);
+                $sectionFolder->addRole($Admin);
+                $entityManager->persist($sectionFolder);
+                $entityManager->flush();
+            }
+
+            $sessionName=$session;
+            $sessionPath=$sectionPath . '/' . $sessionName;
+            $sessionFolder=$directoryClass->findOneBy(array('path' => $sessionPath));
+            $i = 1;
+            while($sessionFolder) {
+                $sessionName = "{$sessionName}({$i})";
+                $sessionPath= $sectionPath  . '/' .  $sessionName;
+                $sessionFolder=$directoryClass->findOneBy(array('path' => $sessionPath));
+                ++$i;
+            } 
+            $sessionFolder = new Directory($sessionName,$user,$sessionPath);
+            $sessionFolder->setParent($sectionFolder);
+            $sessionFolder->addRole($Mentor);
+            $sessionFolder->addRole($Developer);
+            $sessionFolder->addRole($Admin);
+            if($instructor)
+                    $sessionFolder->addUser($user);
+                else
+                    $sessionFolder->addRole($Instructor);
+            $entityManager->persist($sessionFolder);
+            $entityManager->flush();
+
+        }
+        catch (IOExceptionInterface $e) {
+            return null;
+        }
+
+            
+        return $sessionFolder;
     }
 
     /**
@@ -143,9 +315,21 @@ class SessionController extends Controller {
             }
 
             foreach ($data['files'] as $file) {
-                $file_data = new FileData($file, $this->getUser());
-                $session->attachFile($file_data, $em);
+                $file_data = new FileData($file, $this->getUser(),'');
+                $session->attachFile($file_data, $em,$metadata=[]);
             }
+            $sessionFolder=$session->getDirectory();
+            $newName=$data['topic'];
+            $sessionFolder = $this->changeName($newName,$sessionFolder);
+            
+            foreach($session->getFiles() as $file){
+                $file->setParent($sessionFolder);
+                $file->setPath($sessionFolder->getpath() . '/' .$file->getName()); 
+                $em->persist($file);
+
+            }
+
+            $em->persist($session);
 
             $em->flush();
 
@@ -158,7 +342,7 @@ class SessionController extends Controller {
     /**
      * @Route("/create/quiz", name="create_quiz")
      */
-    public function createQuizAction(\Symfony\Component\HttpFoundation\Request $request) {
+    public function createQuizAction(\Symfony\Component\HttpFoundation\Request $request, LoggerInterface $logger) {
         $form = $this->createForm(QuizType::class);
         $form->submit($request->request->get('quiz'));
 
@@ -169,18 +353,38 @@ class SessionController extends Controller {
                 ->getManager();
 
             $quiz = Quiz::createFromFormData($quiz_data);
+
+            $logger->info("in Quiz");
+            $Generic=true;
             if ($quiz_data['request'] != null) {
+                $Generic=false;
                 $session_request = $em->getRepository(Request::class)
                     ->find($quiz_data['request']);
                 $quiz->setRequest($session_request);
                 $session_request->setStatus('completed');
+                $sessionFolder = $this->createDirectory($quiz_data['topic'],$quiz_data['sections']->toArray()[0],$session_request->getUser(),$Generic,$logger);
+                foreach ($session_request->getFiles() as $file) {
+                    $quiz->attachExistingFile($file);
+                }
+                
+                $quiz->setDirectory($sessionFolder);
+            }
+            else
+            {
+                $sessionFolder = $this->createDirectory($quiz_data['topic'],$quiz_data['sections']->toArray()[0],$this->getUser(),$Generic,$logger);
+                $quiz->setDirectory($sessionFolder);
             }
 
             foreach ($quiz_data['files'] as $file) {
-                $file_data = new FileData($file, $this->getUser());
-                $quiz->attachFile($file_data, $em);
+                $file_data = new FileData($file, $this->getUser(),$sessionFolder->getPath() . '/' . $file->getClientOriginalName());
+                $quiz->attachFile($file_data, $em,$metadata=[]);
             }
+            foreach($quiz->getFiles() as $file){
+                $file->setParent($sessionFolder);
+                $file->setPath($sessionFolder->getpath() . '/' .$file->getName()); 
+                $em->persist($file);
 
+            }
             $em->persist($quiz);
             $em->flush();
 
@@ -210,16 +414,53 @@ class SessionController extends Controller {
             $quiz->updateLocation($data['room']);
 
             foreach ($data['files'] as $file) {
-                $file_data = new FileData($file, $this->getUser());
-                $quiz->attachFile($file_data, $em);
+                $file_data = new FileData($file, $this->getUser(),'');
+                $quiz->attachFile($file_data, $em,$metadata=[]);
             }
+            $sessionFolder=$quiz->getDirectory();
+            $newName=$data['topic'];
+            $sessionFolder = $this->changeName($newName,$sessionFolder);
+            foreach($quiz->getFiles() as $file){
+                $file->setParent($sessionFolder);
+                $file->setPath($sessionFolder->getpath() . '/' .$file->getName()); 
+                $em->persist($file);
 
+            }
+            $em->persist($quiz);
             $em->flush();
 
             return $this->redirectToRoute('admin_session_calendar');
         }
     }
 
+
+    /**
+     * Change Folder Name.
+     *
+     *
+     * @param $newName
+     * @param $sessionFolder
+     *
+     * @return Directory
+     */
+    public function changeName(String $newName,Directory $sessionFolder ){
+            $newPath=$sessionFolder->getParent()->getPath(). '/' . $newName;
+            $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+            $sessionFolder_1=$directoryClass->findOneBy(array('path' => $newPath));
+            $i = 1;
+            while($sessionFolder_1) {
+                $newName = "{$newName}({$i})";
+                $newPath=$sessionFolder->getParent()->getPath(). '/' . $newName;
+                $sessionFolder_1=$directoryClass->findOneBy(array('path' => $newPath));
+                ++$i;
+            } 
+            if(!$sessionFolder_1){
+                $sessionFolder->setName($newName);
+                $sessionFolder->setPath($newPath);
+            }
+
+            return $sessionFolder;
+    }
     /**
      * @Route("/create/timeslot", name="create_time_slot")
      */
@@ -337,7 +578,7 @@ class SessionController extends Controller {
             'endDate' => $session_request->getEndDate(),
             'studentInstructions' => $session_request->getStudentInstructions(),
             'sections' => $session_request->getSections(),
-            // 'uploadedFiles' => $session_request->getFiles()
+            'uploadedFiles' => $session_request->getFiles()
         );
 
         $form = $this->createForm(RequestType::class, $data, array('user' => $session_request->getUser()));
@@ -354,12 +595,13 @@ class SessionController extends Controller {
                 $session_request_data['endDate'],
                 $session_request_data['studentInstructions'],
                 $session_request_data['sections']->toArray());
-
             foreach ($session_request_data['files'] as $file) {
-                $file_data = new FileData($file, $this->getUser());
-                $session_request->attachFile($file_data, $em);
+                $file_data = new FileData($file, $this->getUser(),'');
+                $session_request->attachFile($file_data, $em,$metadata=[]);
             }
 
+
+            $em->persist($session_request);
             $em->flush();
 
             $this->addFlash('notice', 'Successfully requested session!');
@@ -465,7 +707,7 @@ class SessionController extends Controller {
             'studentInstructions' => $session->getStudentInstructions(),
             'mentorInstructions' => $session->getMentorInstructions(),
             'description' => $session->getDescription(),
-            // 'uploadedFiles' => $session->getFiles(),
+            //'uploadedFiles' => $session->getFiles(),
             'sections' => $session->getSections(),
             'graded' => $session->getGraded(),
             'numericGrade' => $session->getNumericGrade(),

@@ -41,7 +41,7 @@ class ScheduledSession extends Session {
      */
     private $defaultDuration;
 
-    public function __construct(SessionType $type, string $topic, int $repeats, string $description = null, string $studentInstructions = null, string $mentorInstructions = null, bool $graded = false, bool $numericGrade = false) {
+    public function __construct(SessionType $type, string $topic, int $repeats, string $description = '', string $studentInstructions = '', string $mentorInstructions = '', bool $graded = false, bool $numericGrade = false) {
         parent::__construct($type, $topic, $description, $studentInstructions, $mentorInstructions, $graded, $numericGrade);
 
         $this->repeats = $repeats;
@@ -49,8 +49,8 @@ class ScheduledSession extends Session {
     }
 
     public static function createFromFormData(array $data) {
-        $session = new ScheduledSession($data['type'], $data['topic'], $data['repeats'], $data['description'], $data['studentInstructions'],
-            $data['mentorInstructions'], $data['graded'], $data['numericGrade']);
+        $session = new ScheduledSession($data['type'], $data['topic'], $data['repeats'], $data['description']==null?'':$data['description'], $data['studentInstructions']==null?'':$data['studentInstructions'],
+            $data['mentorInstructions']==null?'':$data['mentorInstructions'], $data['graded'], $data['numericGrade']);
 
         foreach ($data['sections'] as $section) {
             $session->addSection($section);
