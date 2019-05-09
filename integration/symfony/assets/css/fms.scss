@@ -6,3 +6,17 @@
     height: 35px;
     width: 100%;
 }
+.share_table tr.selected {
+    background-color: darkgreen !important;
+    color: #f80;
+}
+.share_table tr.selected td{
+    background-color: darkgreen !important;
+    color: #f80;
+}
+.share_table_wrapper .dataTables_paginate .paginate_button{
+    cursor: pointer;
+}
+.type_select button.selected{
+    border: 2px solid orange;
+}

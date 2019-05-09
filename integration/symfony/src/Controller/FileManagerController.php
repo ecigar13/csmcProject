@@ -238,7 +238,9 @@ class FileManagerController extends Controller
 
         //-----------find all netid----------------//
         $userArray = $this->getDoctrine()->getRepository(User::class)->findall();
+        $roleArray = $this->getDoctrine()->getRepository(Role::class)->findall();
         $parameters['userArray']   = $userArray;
+        $parameters['roleArray']   = $roleArray;
         return $this->render('fileManager/manager.html.twig', $parameters);
     }
     /**
@@ -706,28 +708,6 @@ class FileManagerController extends Controller
         $this->get('event_dispatcher')->dispatch($eventName, $event);
     }
 
-    //David's function. Might not need anymore because using service.
-    // private function createHash($file, $entityManager) {
-    //     $file_path = '../public' . $file->url;
-    //     $file_path = utf8_encode($file_path);
-    //     $hash = sha1_file($file_path);
-    //     $size = filesize($file_path);
-    //     $extension = $this->guessExtension($file);
-    //     $fileHash = $entityManager->getRepository(FileHash::class)
-    //         ->findOneByPath($hash . '.' . $extension);
-    //     if ($fileHash == null) {
-    //         $fileHash = new FileHash($hash, $extension, $size);
-    //     }
-
-    //     return $fileHash;
-    // }
-
-    // public function guessExtension($file)
-    // {
-    //     $guesser = ExtensionGuesser::getInstance();
-    //     return $guesser->guess($file->type);
-    // }
-
     /**
      * @param $path
      * @param string $parent
@@ -1033,6 +1013,53 @@ class FileManagerController extends Controller
             return new Response(Response::HTTP_NOT_IMPLEMENTED);
         }
         return null;
+    }
+
+    /**
+     * @Route("/fms/share", name="fms_share")
+     *
+     * TODO: check if the person who initiated is admin or the owner.
+     * TODO: it is possible to change extension too.
+     *
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     *
+     * @throws \Exception
+     */
+    public function shareFileActiopn(Request $request)
+    {
+        $share_ids = $request->request->get('ids');
+        $type = $request->request->get('type');
+        $folder_id = $request->request->get('folder_id');
+        $status = true;
+        $translator = $this->get('translator');
+        $em = $this->getDoctrine()->getManager();
+        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+        $parent = $directoryClass->findOneBy(array('id' => $folder_id));
+
+        if(!empty($share_ids)){
+            if($parent->getPath() != 'root'){
+                if($type == 'user'){
+                    //run the function that shares by user ids
+                }
+                if($type == 'role'){
+                    //run the function that shares by role ids
+                }
+            }
+        }
+        else{
+            $status = false;
+            $this->addFlash('danger', 'Did not provide any users to share with.');
+        }
+
+        $em->flush();
+
+        return new JsonResponse([
+            'data' => $share_ids,
+            'success' => $status,
+            'folder_path' => $parent->getPath()
+        ]);
     }
 
 
