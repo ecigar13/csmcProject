@@ -5,6 +5,9 @@ namespace App\DoctrineEventSubscriber;
 use App\Annotation\Uploadable;
 use App\Utils\FileUploader;
 use App\Entity\File\File;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Filesystem\Filesystem;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\Common\Persistence\Event\LifecycleEventArgs;
@@ -18,11 +21,13 @@ class FileSubscriber implements EventSubscriber {
     private $reader;
     private $logger;
     private $uploader;
+    private $kernelRoot;
 
-    public function __construct(Reader $reader, FileUploader $fileUploader, LoggerInterface $logger) {
+    public function __construct(Reader $reader, FileUploader $fileUploader, string $kernelRoot, LoggerInterface $logger) {
         $this->reader = $reader;
         $this->uploader = $fileUploader;
         $this->logger = $logger;
+        $this->kernelRoot = $kernelRoot;
     }
 
     /**
@@ -61,21 +66,22 @@ class FileSubscriber implements EventSubscriber {
         $entity = $args->getObject();
 
         if(!$entity instanceof File){
-            return;
+            return "Cannot find file.";
         }
 
-        $em = $this->getDoctrine()->getManager();
-        $hashId = $entity->getHash();
-        $fileHash = $this->getDoctrine()->getRepository(FileHash::class)->findOneBy(array('id' => $hashId));
-        if($fileHash !== null){
+        try{
             $fileSystem = new Filesystem();
-            $fileSystem->remove($fileHash->getFullPath());
+            $this->logger->info("Deleting file: ".$this->kernelRoot.'/public/uploads/'.$entity->getPhysicalPath());
+            $fileSystem->remove($this->kernelRoot.'/public/uploads/'.$entity->getPhysicalPath());
+
+        }catch(IOExceptionInterface $e){
+            return $e->getPath();
         }
     }
 
 
     /**
-     * Don't need this because file is hashed. Any update happens in database. 
+     * Don't need this because file is hashed. Any update happens in database.
      */
     public function preUpdate(LifecycleEventArgs $args) {
     }

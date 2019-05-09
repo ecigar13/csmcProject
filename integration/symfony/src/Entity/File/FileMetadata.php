@@ -10,7 +10,7 @@ use Doctrine\ORM\Mapping as ORM;
 class FileMetadata {
     /**
      * @ORM\Id()
-     * @ORM\ManyToOne(targetEntity="File", inversedBy="metadata", cascade={"persist"})
+     * @ORM\ManyToOne(targetEntity="File", inversedBy="metadata", cascade={"persist","remove"})
      */
     private $file;
 

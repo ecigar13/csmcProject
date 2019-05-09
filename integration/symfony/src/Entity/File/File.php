@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 class File extends VirtualFile {
 
     /**
-     * @ORM\OneToMany(targetEntity="FileMetadata", mappedBy="file", cascade={"persist"})
+     * @ORM\OneToMany(targetEntity="FileMetadata", mappedBy="file", cascade={"persist","remove"})
      */
     private $metadata;
 

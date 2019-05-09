@@ -15,8 +15,6 @@ class Directory extends VirtualFile {
 
     private $directory;
 
-    private $path;
-
     public function __construct(string $name,User $owner, string $path) {
         parent::__construct($name, $owner, $path);
     }

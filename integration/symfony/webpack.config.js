@@ -11,6 +11,8 @@ Encore
     .addEntry('js/form', './assets/js/form.js')
     .addEntry('js/fms', './assets/js/fms.js')
     .addEntry('js/fastclick', 'fastclick/lib/fastclick.js')
+    .addEntry('js/jquery.lazy-master/jquery.lazy.min', './assets/js/jquery.lazy-master/jquery.lazy.min.js')
+    .addEntry('js/jquery.lazy-master/jquery.lazy.plugins.min', './assets/js/jquery.lazy-master/jquery.lazy.plugins.min.js')
     .addEntry('js/nprogress', 'nprogress/nprogress.js')
     .addStyleEntry('css/fms', './assets/css/fms.scss')
     .addStyleEntry('css/global', './assets/css/global.scss')

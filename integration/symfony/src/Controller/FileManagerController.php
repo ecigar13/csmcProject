@@ -39,6 +39,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\File\MimeType\ExtensionGuesser;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use App\DataTransferObject\FileData;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FileManagerController extends Controller
 {
@@ -76,7 +77,11 @@ class FileManagerController extends Controller
         // $logger->info($fileManager->getDirName());
         // $logger->info($fileManager->getBaseName());
         // Folder search
-       $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,true);
+
+        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+        $root=$directoryClass->findOneBy(array('path' => '/root'));
+		// $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,true); // Commented out conflict
+        $directoriesArbo = $this->retrieveSubDirectories($fileManager, $root,$logger,true);
 
         // File search
         $logger->info($fileManager->getCurrentRoute());
@@ -91,12 +96,12 @@ class FileManagerController extends Controller
             case 'name':
                 usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
                     return strcmp(strtolower($first->getName()), strtolower($second->getName()));
-                }); 
+                });
                 break;
             case 'date':
                 usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
                     return ($first->giveDate() > $second->giveDate());
-                }); 
+                });
                 break;
             case 'size':
             usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
@@ -189,7 +194,7 @@ class FileManagerController extends Controller
         $formRename = $this->createRenameForm();
         $formMove = $this->createMoveForm();
 		$formLink = $this->createLinkForm();
-        
+
 
         //Uploading Folder---------------------------------------->
         if ($form->isSubmitted() && $form->isValid()) {
@@ -197,15 +202,16 @@ class FileManagerController extends Controller
 
             // Get Name and Parent Path
             $directoryName = $data['name'];
-            $logger->info("UploadDirectory");
 
             // print_r($fileManager->getQueryParameters());
             $parentPath= 'root';
             if(array_key_exists('route',$fileManager->getQueryParameters()) && !is_null($fileManager->getQueryParameters()['route'])){
                 $parentPath = $fileManager->getQueryParameters()['route'];
             }
+
             $logger->info("parent");
             $logger->info($parentPath);
+
             $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
 
             //Search for Directory in Table
@@ -217,16 +223,25 @@ class FileManagerController extends Controller
             }
 
             //Get Parent, create directory, set parent
-            
+
             $parent=$directoryClass->findOneBy(array('path' => $parentPath));
             if (!$parent) {
                 $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
                 return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
-                
+
             }
+            // $user = $this->getUser();
+            // $role = $user->getRole();
+            // $roleClass = $this->getDoctrine()->getRepository(Role::class);
+            // $Admin = $roleClass->findOneByName('admin');
             try{
-                $directory  = new Directory($directoryName,$this->getUser(),$directoryPath,);
+                $directory  = new Directory($directoryName,$this->getUser(),$directoryPath);
+
                 $directory->setParent($parent);
+                foreach($parent->getUsers() as $user)
+                    $directory->addUser($user);
+                foreach($parent->getRoles() as $role)
+                    $directory->addRole($role);
                 $entityManager = $this->getDoctrine()->getManager();
                 $entityManager->persist($directory);
                 $entityManager->flush();
@@ -249,10 +264,9 @@ class FileManagerController extends Controller
      * @Route("/fms/rename/", name="file_management_rename")
      *
      * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name.
-     * Need to fix this in the future.
      *
      * TODO: check if the person who initiated is admin or the owner.
-     * TODO: it is possible to change extension too.
+     * TODO: it is possible to change extension because front-end sends extension and file ID.
      *
      * @param Request $request
      *
@@ -267,39 +281,69 @@ class FileManagerController extends Controller
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
+        $response = [];
 
-        /* @var Form $formRename */
+        /** @var Form $formRename **/
         $formRename->handleRequest($request);
         if ($formRename->isSubmitted() && $formRename->isValid()) {
-            //perform updating database
             $data = $formRename->getData();
-            
-            if(isset($data['id'])){
-                //TODO: find by ID, or hash. Not by file name
-                //TODO: avoid sending file name in query parameter.
-                $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id' => $data['id']));
-                if(is_null($file)){
-                    //TODO: what if file doesn't exist in database?
+
+            if(isset($data['id']) && isset($data['name'])){
+                $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($data['id']);
+                $children = $this->getDoctrine()->getRepository(VirtualFile::class)->findByParent($data['id']);
+
+                //if file doesn't exist in database?
+                if(count($files) == 0){
                     $this->addFlash('warning', "Can't find the file to rename: ".$data['id']);
                     return $this->redirectToRoute('file_management', $queryParameters);
                 }
-                
+
                 //update name
-                if (isset($data['name']) && $data['name'] !== $file->getName()) {
-                    //can be multiple because files are not unique. Can't fix it for now.
-                    $file->setName($data['name']);
-                    $em->persist($file);
-                } else {
-                    $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                $newName = $data['name'];
+                $oldName = '';
+
+                //there should only be 1 record.
+                foreach($files as $file){
+                    $oldName = $file->getName();
+
+                    if ($newName !== $oldName) {
+                        //can be multiple because files are not unique. Can't fix it for now.
+                        $response[] = [
+                            $file->getName() => [
+                                'oldPath' => $file->getPath(),
+                                'newPath' => str_replace("/".$oldName , "/".$newName, $file->getPath()),
+                            ],
+                        ];
+                        // $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                        $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                        $em->persist($file);
+
+
+                    } else {
+                        $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                    }
                 }
+                //TODO: update children.
+                foreach($children as $child){
+                    $response[] = [
+                        $child->getName() => [
+                            'oldPath' => $child->getPath(),
+                            'newPath' => str_replace("/".$oldName , "/".$newName, $child->getPath()),
+                        ],
+                    ];
+                    $child->setPath(str_replace("/".$oldName , "/".$newName, $child->getPath()));
+                    $em->persist($child);
+                }
+
+
             }else{
                 $this->addFlash('danger', 'Did not provide a file name.');
             }
         }
         $em->flush();
 
-
         return $this->redirectToRoute('file_management', $queryParameters);
+        // return new JsonResponse($response, 200);
     }
 
     /**
@@ -346,54 +390,98 @@ class FileManagerController extends Controller
     }
 
     /**
-     * @Route("/fms/file/{fileName}", name="file_management_file")
+     * @Route("/fms/file/{fileName}/{file}", name="file_management_file")
      *
      * @param Request $request
      * @param $fileName
+     * @param $file
      *
      * @return BinaryFileResponse
      *
      * @throws \Exception
      */
-    public function binaryFileResponseAction(Request $request, $fileName)
+    public function binaryFileResponseAction(Request $request, $fileName, $file)
     {
         $fileManager = $this->newFileManager($request->query->all());
+        $type = explode('.', $fileName)[1]; 
+        $path = substr($fileName,1);
+        $file_path = strtr($path,'-','/');
+        //$file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('id'=> $array['id']));
 
-        return new BinaryFileResponse($fileManager->getCurrentPath().DIRECTORY_SEPARATOR.urldecode($fileName));
+        //return new BinaryFileResponse($fileManager->getCurrentPath().urldecode($file -> getPath()));
+        //if($type == 'pdf'){
+        //    return new BinaryFileResponse($file_path);
+        //}
+        //return new BinaryFileResponse($file_path);
+        //return new BinaryFileResponse($fileManager->getCurrentPath().DIRECTORY_SEPARATOR.urldecode('abc.png'));
+
+        header("Content-type:text/html;charset=utf-8"); 
+		//$file_path="testMe.txt"; 
+		//$file_name=iconv("utf-8","gb2312",$file_name);
+		//$file_sub_path=$_SERVER['DOCUMENT_ROOT']."marcofly/phpstudy/down/down/"; 
+		//$file_path=$file_sub_path.$file_name; 
+		
+		if(!file_exists($file_path)){
+			echo "NoSuchFile"; 
+			return ; 
+		}
+		$fp=fopen($file_path,"r");
+		$file_size=filesize($file_path);
+		
+		Header("Content-type: application/octet-stream");
+		Header("Accept-Ranges: bytes"); 
+		Header("Accept-Length:".$file_size); 
+		Header("Content-Disposition: attachment; filename=".$file.".".$type);
+		$buffer=1024; 
+		$file_count=0; 
+		
+		while(!feof($fp) && $file_count<$file_size){ 
+			$file_con=fread($fp,$buffer); 
+			$file_count+=$buffer; 
+			echo $file_con; 
+		}
+		fclose($fp);
     }
 
     /**
      * @Route("/fms/delete/", name="file_management_delete", methods={"DELETE"})
      *
      * Should expect a file/folder name array to delete. Assumming file names are unique.
-     * TODO: check with Steven. Does recursive delete in database also trigger multiple preRemove event?
+     * Recursive delete in database also trigger multiple preRemove events.
      *
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      *
      * @throws \Exception
      */
-    public function deleteAction(Request $request)
+    public function deleteAction(Request $request, LoggerInterface $l)
     {
         $form = $this->createDeleteForm();
         $form->handleRequest($request);
         $queryParameters = $request->query->all();
-
         $em = $this->getDoctrine()->getManager();
         if ($form->isSubmitted() && $form->isValid()) {
-            if (isset($queryParameters['delete'])) {
-                //delete from disk is in FileSubscriber, preRemove
-                //delete from database
-                foreach ($queryParameters['delete'] as $fileName) {
-                    $file = $this->getDoctrine()->getRepository(VirtualFile::class)->findOneBy(array('name'=>$fileName));
-                    if($file !== null) $em->remove($file);  //this will remove files/folders inside this one.
+            //delete from disk is in FileSubscriber, preRemove
+            //delete from database
+            $data = $form->getData();
+            $ids = explode(',',$data['deleteId']);
+            foreach($ids as $id){
+                $l->info("Deleting from database: ".$id);
+                $files = $this->getDoctrine()->getRepository(VirtualFile::class)->findById($id);
+
+                foreach($files as $file){
+                    // echo $file->getParent()->getName();
+                    $file->setParent(null);
+                    $em->remove($file);  //this will remove files/folders inside this one.
                 }
 
-                unset($queryParameters['delete']);
             }
+
+
         }
         $em->flush();
 
+        // return new JsonResponse(200);
         return $this->redirectToRoute('file_management', $queryParameters);
     }
 
@@ -410,7 +498,7 @@ class FileManagerController extends Controller
             //echo "conf variable not set. Switching to default.";
             $queryParameters['conf'] = 'default';
         }
-        $webDir = $this->getParameter('artgris_file_manager')['web_dir'];
+        $webDir = $this->getParameter('file_manager')['web_dir'];
 
         $this->fileManager = new FileManager($queryParameters, $this->getBasePath($queryParameters), $this->getKernelRoute(), $this->get('router'), $webDir);
 
@@ -429,7 +517,7 @@ class FileManagerController extends Controller
         }
 
         $conf        = $queryParameters['conf'];
-        $managerConf = $this->getParameter('artgris_file_manager')['conf'];
+        $managerConf = $this->getParameter('file_manager')['conf'];
         if (isset($managerConf[$conf]['dir'])) {
             return $managerConf[$conf];
         }
@@ -453,10 +541,6 @@ class FileManagerController extends Controller
         return $this->getParameter('kernel.root_dir');
     }
 
-
-
-
-
     /**
      * @return Form|\Symfony\Component\Form\FormInterface
      */
@@ -470,6 +554,11 @@ class FileManagerController extends Controller
                     'class' => 'btn btn-danger',
                 ],
                 'label'              => 'button.delete.action',
+            ])->add('deleteId', HiddenType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
             ])
             ->getForm();
     }
@@ -586,19 +675,19 @@ class FileManagerController extends Controller
         $response = [];
         foreach ($uploadedFiles as $uploadedFile){
             $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
-            $logger->info("FilePath");
-            $logger->info($filePath);
+            // $logger->info("FilePath");
+            // $logger->info($filePath);
 
             //check if file with same name already exixt
             $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
-            
+
             $file=$fileClass->findByPath($filePath);
             if($file){
-                $this->addFlash('danger', "can't add file, File already exist-".$data['name']);
+                $this->addFlash('danger', "Can't add file, File already exist-".$uploadedFile->getClientOriginalName());
                 return new Response(401);
-                
+
             }
-            
+
             //create a file object with its hash. Moving file to its folder fires during prePersist.
             try{
                 $fileData = new FileData($uploadedFile, $this->getUser(),$filePath);
@@ -607,7 +696,7 @@ class FileManagerController extends Controller
                 $em->persist($file);
             }
             catch (IOExceptionInterface $e) {
-                $this->addFlash('danger', "cant add file-".$data['name']);
+                $this->addFlash('danger', "can't add file-".$uploadedFile->getClientOriginalName());
                 return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
@@ -632,10 +721,10 @@ class FileManagerController extends Controller
         }
 
         //should respond with name of file
-        //TODO: need to refresh the page on front-end. 
+        //TODO: need to refresh the page on front-end.
         return new JsonResponse($response,200);
     }
-    
+
     protected function dispatch($eventName, array $arguments = [])
     {
         $arguments = array_replace([
@@ -673,122 +762,114 @@ class FileManagerController extends Controller
      * @param string $parent
      *
      * @return array|null
-     * 
-     * 
+     *
+     *
      */
-    protected function retrieveSubDirectories(FileManager $fileManager, $parentPath = DIRECTORY_SEPARATOR,LoggerInterface $logger,$baseFolderName = false)
+    protected function retrieveSubDirectories(FileManager $fileManager, $parent,LoggerInterface $logger,$baseFolderName = false)
     {
         $directoriesList = null;
         $logger->info("RetrieveDirectory");
-        $logger->info($parentPath);
+
+        $logger->info($parent->getpath());
+
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $root=$directoryClass->findOneBy(array('path' => '/root'));
 
         //Find parent from id and children from parent
         if($baseFolderName){
+
+            //$root=$directoryClass->findOneBy(array('path' => '/root'));
             $logger->info("in Base Folder");
-            $fileName = DIRECTORY_SEPARATOR . 'root';
+            $fileName = DIRECTORY_SEPARATOR . $parent->getName();
             //$fileName = '/root';
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
-            $queryParametersRoute     = $queryParameters;
-            unset($queryParametersRoute['route']);
-
-            // $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
-            // $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
+            // $queryParameters['id'] = $parent->getId();
 
             $directoriesList[] = [
-                'text'     => 'root',
-                'id'     => $root->getId(),
+                'text'     => $parent->getName(),
+                // 'id'     =>   $parent->getId(),
                 'icon'     => 'far fa-folder-open',
-                'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
+                'children' => $this->retrieveSubDirectories($fileManager, $parent,$logger),
                 'a_attr'   => [
-                    'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                    'href' => $this->generateUrl('file_management', $queryParameters),
+                    'id'   => $parent->getId(),
                 ], 'state' => [
                     'selected' => $fileManager->getCurrentRoute() === $fileName,
-                    'opened'   => $fileManager->getCurrentRoute() === $fileName,
+                    'opened'   => false,
                 ],
             ];
 
             return $directoriesList;
         }
-		 
-        $parent=$directoryClass->findOneBy(array('path' => $parentPath));
+
+        //$parent=$directoryClass->findOneBy(array('path' => $parentPath));
         $directories = $directoryClass->findByParent($parent);
 
+        //List for tree
+
+
         foreach ($directories as $directory) {
-			
-            $fileName = $parentPath . '/' . $directory->getName();
+            $fileName = $parent->getPath() . '/' . $directory->getName();
             $queryParameters          = $fileManager->getQueryParameters();
             $queryParameters['route'] = $fileName;
-            $queryParametersRoute     = $queryParameters;
-            unset($queryParametersRoute['route']);
+            // $queryParameters['id'] = $directory->getId();
 
-            // $filesNumber = $this->retrieveFilesNumber($directory->getPathname(), $fileManager->getRegex());
-            // $fileSpan    = $filesNumber > 0 ? " <span class='label label-default'>{$filesNumber}</span>" : '';
-            $directoryRoles=[];
-            foreach($directory->getRoles() as $role){
-                array_push($directoryRoles, $role->getName());
-            }
 
-            $directoryUsers=[];
-            foreach($directory->getUsers() as $user){
-                array_push($directoryUsers, $user->getUsername());
-            }
-            
-			$userRoles=[];
-            foreach($this->getUser()->getRoles() as $role){
-                array_push($userRoles, $role->getName());
-            }
+            if($this->getViewAccess($directory)){
 
-			// Regulate who see what directories / files here
-
-			$isAdmin = false;
-
-			if(in_array('admin', $userRoles)) {
-				$isAdmin = true; // If the user is considered an admin, set this variable true
-			}
-
-            $access = $isAdmin || false; // Admins should be able to see every folder
-
-			if(!$access) {
-				if (in_array($this->getUser()->getUsername(), $directoryUsers)){
-
-					    $access=true;
-				}
-				else{
-	                foreach($userRoles as $r){
-						if(in_array($r, $directoryRoles)){
-	                        $access=true;
-							break;
-						}
-						$access=false;
-					}
-				}	
-			}
-            if($access){
                 $directoriesList[] = [
                     'text'     => $directory->getName(),
-                    'id'       => $directory->getId(),
+                    // 'id'     =>   $directory->getId(),
                     'icon'     => 'far fa-folder-open',
-                    'children' => $this->retrieveSubDirectories($fileManager, $fileName,$logger),
+                    'children' => $this->retrieveSubDirectories($fileManager, $directory,$logger),
                     'a_attr'   => [
-                        'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                        // 'href' => $fileName ? $this->generateUrl('file_management', $queryParameters) : $this->generateUrl('file_management', $queryParametersRoute),
+                        'href' => $this->generateUrl('file_management', $queryParameters),
+                        'id'   => $directory->getId(),
                     ], 'state' => [
                         'selected' => $fileManager->getCurrentRoute() === $fileName,
-                        'opened'   => $fileManager->getCurrentRoute() === $fileName,
+                        'opened'   => false,
 
                     ],
                 ];
-        }
+            }
         }
 
         return $directoriesList;
     }
 
+    public function getViewAccess(Directory $directory){
+        $access=false;
+        $directoryRoles=[];
+        foreach($directory->getRoles() as $role){
+            array_push($directoryRoles, $role->getName());
+        }
+        $directoryUsers=[];
+        foreach($directory->getUsers() as $user){
+            array_push($directoryUsers, $user->getUsername());
+        }
+        $userRoles=[];
+        foreach($this->getUser()->getRoles() as $role){
+            array_push($userRoles, $role->getName());
+        }
+        if (in_array($this->getUser()->getUsername(), $directoryUsers)){
+                $access=true;
+        }
+        else{
+            foreach($userRoles as $r){
+                if(in_array($r, $directoryRoles)){
+                    $access=true;
+                    break;
+                }
+                $access=false;
+            }
+        }
+        return $access;
+
+    }
     /**
      * Retrive all files in a directory/path
-     * 
+     *
      * @param $path
      * @param string $parent
      *
@@ -848,8 +929,10 @@ class FileManagerController extends Controller
         $userClass = $this->getDoctrine()->getRepository(User::class);
         $roleClass = $this->getDoctrine()->getRepository(Role::class);
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $admin = $userClass->findOneBy(array('username' => $netId));
-        $sectionClass = $userClass->findOneBy(array('username' => $netId));
+
+        $UserName = $this->getParameter('file_manager')['superUser'];
+        $admin = $userClass->findOneBy(array('username' => $UserName));
+
         $Instructor = $roleClass->findOneByName('instructor');
         $Mentor = $roleClass->findOneByName('mentor');
         $Admin = $roleClass->findOneByName('admin');
@@ -861,28 +944,47 @@ class FileManagerController extends Controller
             $root=$directoryClass->findOneBy(array('path' => '/root'));
             if(!$root){
                 $root  = new Directory('root',$admin,'/root');        
+
                 $entityManager->persist($root);
                 $entityManager->flush();
             }
 
             // check for instructor role if not there create section directory
             if (in_array("instructor", $roles)){
-                $sections=$directoryClass->findOneBy(array('path' => '/root/sections'));
-                if(!$sections){
-                    $sections  = new Directory('sections',$admin,'/root/sections');
-                    $sections->setParent($root);
-                    $sections->addRole($Instructor);
-                    $sections->addRole($Admin);
-                    $sections->addRole($Mentor);
-                    $sections->addRole($Developer);
-                    $entityManager->persist($sections);
+
+                $instructorFolderPath = '/root/Instructors';
+                $instructorFolder=$directoryClass->findOneBy(array('path' => $instructorFolderPath ));
+                if(!$instructorFolder){
+                    $instructorFolder  = new Directory('Instructors',$admin,$instructorFolderPath);
+                    $instructorFolder->setParent($root);
+                    $instructorFolder->addRole($Instructor);
+                    $instructorFolder->addRole($Admin);
+                    $instructorFolder->addRole($Mentor);
+                    $instructorFolder->addRole($Developer);
+                    $entityManager->persist($instructorFolder);
                     $entityManager->flush();
                 }
-                    // Find all sections related to Instructor and create directories for them
-                $SectionForInstructor = $user->getSections();
-                foreach($SectionForInstructor as $section){
+
+                $instructorName = $netId. '_' .$lastName;
+                $nameFolderPath = $instructorFolderPath . '/' . $instructorName;
+                $nameFolder = $directoryClass->findOneBy(array('path' => $nameFolderPath));
+                if(!$nameFolder){
+                            $nameFolder = new Directory($instructorName,$user,$nameFolderPath);
+                            $nameFolder->setParent($instructorFolder);
+                            $nameFolder->addUser($user);
+                            $nameFolder->addRole($Mentor);
+                            $nameFolder->addRole($Developer);
+                            $nameFolder->addRole($Admin);
+                            $entityManager->persist($nameFolder);
+                            $entityManager->flush();
+                }
+
+                //Find all sections related to Instructor and create directories for them
+                $Sections = $user->getSections();
+                foreach($Sections as $section){
+
                         $seasonName=$section->getSemester()->getSeason(). '_' . $section->getSemester()->getYear();
-                        $seasonPath='/root/sections/' . $seasonName;
+                        $seasonPath= $nameFolderPath . '/' .  $seasonName;
                         $logger->info("Season");
                         $logger->info($seasonName);
                         $logger->info("seasonPath");
@@ -890,14 +992,14 @@ class FileManagerController extends Controller
                         $season = $directoryClass->findOneBy(array('path' => $seasonPath));
                         if(!$season){
                             $season = new Directory($seasonName,$admin,$seasonPath);
-                            $season->setParent($sections);
-                            $season->addRole($Instructor);
+                            $season->setParent($nameFolder);
+                            $season->addUser($user);
                             $season->addRole($Mentor);
                             $season->addRole($Developer);
                             $season->addRole($Admin);
                             $entityManager->persist($season);
                         }
-                        $sectionName = $section->getCourse()->getDepartment()->getAbbreviation(). '_' . $section->getCourse()->getNumber(). '_' .$section->getNumber();
+                        $sectionName = $section->getCourse()->getDepartment()->getAbbreviation(). '_' . $section->getCourse()->getNumber();
                         $sectionPath = $seasonPath . '/' .  $sectionName;
                         $sectionFolder = $directoryClass->findOneBy(array('path' => $sectionPath));
                         if(!$sectionFolder){
@@ -909,18 +1011,7 @@ class FileManagerController extends Controller
                             $sectionFolder->addRole($Admin);
                             $entityManager->persist($sectionFolder);
                         }
-                        $instructorName = $netId. '_' .$lastName;
-                        $instructionPath = $sectionPath . '/' . $instructorName;
-                        $instructorFolder = $directoryClass->findOneBy(array('path' => $instructionPath));
-                        if(!$instructorFolder){
-                            $instructorFolder = new Directory($instructorName,$user,$instructionPath);
-                            $instructorFolder->setParent($sectionFolder);
-                            $instructorFolder->addUser($user);
-                            $instructorFolder->addRole($Mentor);
-                            $instructorFolder->addRole($Developer);
-                            $instructorFolder->addRole($Admin);
-                            $entityManager->persist($instructorFolder);
-                        }
+
                         $entityManager->flush();
                 }
 
@@ -934,7 +1025,7 @@ class FileManagerController extends Controller
                     $folder->addRole($Admin);
                     $folder->addRole($Developer);
                     switch ($r) {
-                        case 'admin': 
+                        case 'admin':
                         $entityManager->persist($folder);
                         break;
                         case 'mentor':
@@ -960,7 +1051,7 @@ class FileManagerController extends Controller
                         $NameFolder->addRole($Admin);
                         $NameFolder->addRole($Developer);
                         switch ($r) {
-                            case 'admin': 
+                            case 'admin':
                             $entityManager->persist($NameFolder);
                             break;
                             case 'mentor':
@@ -976,14 +1067,13 @@ class FileManagerController extends Controller
                 }
                 $entityManager->flush();
             }
-            
+
         }
         catch (IOExceptionInterface $e) {
             return new Response(Response::HTTP_NOT_IMPLEMENTED);
         }
         return null;
     }
-
 
 	/**
      * Creates + adds new links to the system

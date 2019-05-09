@@ -27,7 +27,6 @@
         </tr>
         </thead>
         <tbody>
-        
 		{% for item in fileArray %}
 			{% if item is isCSMCLink %}
 			{% set linkEntity = item %}
@@ -51,14 +50,19 @@
 			{% if item is isCSMCFile %}	
 				{% set fileEntity = item %}
 				{% set file = fileEntity.file %}
+
 					<tr class="{{ fileEntity.isImage() ? 'img' : 'file' }}">
-					<td><input type="checkbox" class="checkbox" name="delete[]" value="{{ file.name }}" title="{{ file.name }}"></td>
+					<td><input type="checkbox"
+						class="checkbox" name="delete[]"
+						data-id="{{ file.id }}"
+						value="{{ file.name }}"
+						title="{{ file.name }}"></td>
 					<td>{{ fileEntity.preview ? fileEntity.preview.html|raw }}</td>
 					<td data-value="{{ file.name }}" {{ fileEntity.attribut|raw }}>
 						{{ (fileEntity.preview.folder is defined ? fileEntity.preview.folder : file.name ~ '.' ~ file.extension)|raw }}
 					</td>
 					<td class="hidden-xs">
-						<small>{{ fileEntity.date|date('m/d/Y') }}</small>
+						<small>{{ fileEntity.date|date('d/m/Y') }}</small>
 					</td>
 					<td class="hidden-xs">
 						<small>{{ fileEntity.HTMLSize|trans|raw }}</small>
@@ -71,21 +75,21 @@
 						<span data-toggle="tooltip" title="{{ 'title.delete'|trans }}">
 							<button type="button"
 									class="btn btn-xs btn-danger js-delete-modal"
-									data-id='{{ file.id }}'
+									data-id="{{ file.id }}"
 									data-trigger="click"
 									data-container="body"
 									data-toggle="modal"
 									data-target="#js-confirm-delete"
 									data-placement="left"
 									data-html="true"
-									data-href='{{ path('file_management_delete', fileManager.queryParameters|merge({'delete[]': file.name })) }}'>
+									data-href='{{ path('file_management_delete', fileManager.queryParameters) }}'>
 							<span class="far fa-trash-alt"></span>
 							</button>
 						</span>
 						<span data-toggle="tooltip" title="{{ 'title.rename.file'|trans }}">
 							<button type="button"
 									class="btn btn-xs btn-default js-rename-modal"
-									data-id='{{ file.id }}'
+									data-id="{{ file.id }}"
 									data-trigger="click"
 									data-container="body"
 									data-toggle="modal"
@@ -94,7 +98,7 @@
 									data-html="true"
 									data-name='{{ file.name}}'
 									data-extension='{{ file.extension }}'
-									data-href='{{ path('file_management_rename', fileManager.queryParameters|merge({'oldName':file.name})) }}'>
+									data-href='{{ path('file_management_rename', fileManager.queryParameters) }}'>
 							<span class="far fa-edit"></span>
 							</button>
 						</span>
@@ -115,26 +119,38 @@
 							</button>
 						</span>
 						{# {% if file.type == "file" %} #}
-							<a data-placement="left" data-id='{{ file.id }}' title="{{ 'title.download'|trans }}" class="btn btn-xs btn-default js-download"
-							   href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName':'file.name'})) }}" download>
+							<a data-placement="left" data-id="{{ file.id }}" title="{{ 'title.download'|trans }}" class="btn btn-xs btn-default js-download"
+							   href="{{ path('file_management_file', fileManager.queryParameters|merge({'fileName': fileEntity.preview.path|slice(12)|replace({'/' : '-'}),'file':file.name })) }}">
 								<span class="fas fa-download"></span>
 							</a>
-							{% if fileEntity.isImage() %}
+							{#{% if fileEntity.isImage() %}
 								<span data-toggle="tooltip" title="{{ 'title.preview.file'|trans }}">
 									<button type="button"
 											class="btn btn-xs btn-default js-open-modal"
-											data-id='{{ file.id }}'
+											data-id="{{ file.id }}"
 											data-trigger="click"
 											data-container="body"
 											data-toggle="modal"
 											data-target="#js-display-image"
 											data-placement="left"
-											data-href='{{ fileEntity.preview.path }}'>
+											data-href='{{ fileEntity.preview.path|slice(12) }}'>
 									<span class="fas fa-eye"></span>
 									</button>
 								</span>
-							{% endif %}
-						{# {% endif %} #}
+							{% endif %}#}
+
+							<span data-toggle="tooltip" title="{{ 'title.preview.file'|trans }}">
+								<button type="button"
+										class="btn btn-xs btn-default js-open-modal"
+										data-trigger="click"
+										 data-container="body"
+										data-toggle="modal"
+                                    
+										ata-placement="left"
+										data-href='{{ fileEntity.preview.path|slice(12) }}'>
+										<span class="fas fa-eye"></span>
+								</button>
+							 </span>
 					</td>
 				</tr>
 			{% endif %}

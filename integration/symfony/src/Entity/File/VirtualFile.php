@@ -46,10 +46,15 @@ class VirtualFile {
      *
 	 */
     private $roles;
+    /**
+     * .
+     * @ORM\OneToMany(targetEntity="VirtualFile", mappedBy="parent")
+     */
+    private $children;
 
     /**
-     * @ORM\ManyToOne(targetEntity="VirtualFile")
-     * @ORM\JoinColumn(name="parent_id", referencedColumnName="id")
+     * @ORM\ManyToOne(targetEntity="VirtualFile", inversedBy="children")
+     * @ORM\JoinColumn(name="parent_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private $parent;
 
@@ -72,6 +77,7 @@ class VirtualFile {
         $this->path = $path;
         $this->users = new \Doctrine\Common\Collections\ArrayCollection();
         $this->roles = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->children = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**
@@ -83,6 +89,18 @@ class VirtualFile {
      */
     public function addUser(User $user) {
         $this->users->add($user);
+        return $this;
+    }
+
+    /**
+     * Set instructor
+     *
+     * @param VirtualFile $child
+     *
+     * @return VirtualFile
+     */
+    public function addChild(VirtualFile $child) {
+        $this->children->add($child);
         return $this;
     }
     /**
@@ -118,6 +136,11 @@ class VirtualFile {
         return $this->id;
     }
 
+    public function getOwner()
+    {
+        return $this->owner;
+    }
+
     public function getUsers()
     {
         return $this->users->toArray();;
@@ -128,6 +151,11 @@ class VirtualFile {
         return $this->roles->toArray();;
     }
 
+    public function getChildren()
+    {
+        return $this->children->toArray();;
+    }
+
     /**
      * @return mixed
      */
@@ -136,10 +164,12 @@ class VirtualFile {
         return $this->name;
     }
     /**
+     * @return self
      */
     public function setName(string $name)
     {
-        return $this->name = $name;
+        $this->name = $name;
+        return $this;
     }
     /**
      * @return mixed
