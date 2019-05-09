@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 /**
  * @ORM\Entity
  * @ORM\Table(name="link")
+ *
  */
 class Link extends VirtualFile {
 
@@ -21,12 +22,21 @@ class Link extends VirtualFile {
      */
     private $url;
 
-    private $link;
+	private $size;
 
-    public function __construct(string $name, User $owner,string $url) {
-        parent::__construct($name, $owner);
+    public function __construct(string $name, User $owner = null, string $url, string $path) {
+        parent::__construct($name . ": " . $url, $owner, $path . $name . ".lnk");
         $this->url = $url;
+		$this->size = 0;
     }
+
+	public function getUrl() {
+		return $this->url;
+	}
+
+	public function getSize() {
+		return $this->size;
+	}
 
     // /**
     //  * Get the file info from upload data. Create fie name, hash, get metadata of the file.

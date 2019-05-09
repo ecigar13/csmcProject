@@ -125,7 +125,7 @@ class User implements UserInterface, \Serializable {
      * @ORM\ManyToMany(targetEntity="App\Entity\File\VirtualFile",  mappedBy="users")
      */
 
-    private $vitualFiles;
+    private $virtualFiles;
 
     /**
      * @ORM\ManyToMany(targetEntity="App\Entity\Course\Section",  mappedBy="instructors")
