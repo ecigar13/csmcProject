@@ -126,7 +126,7 @@
                     {% endif %}
                     {% block content %}
                         <form id="form-multiple-delete">
-                            {% include 'fileManager/views/_manager_view.html.twig' with {'fileManager' :fileManager,  'fileArray' : fileArray, 'linkArray' : linkArray, 'formDelete' : formDelete} only %}
+                            {% include 'fileManager/views/_manager_view.html.twig' with {'fileManager' :fileManager,  'fileArray' : fileArray, 'formDelete' : formDelete} only %}
                         </form>
                     {% endblock %}
                 </div>

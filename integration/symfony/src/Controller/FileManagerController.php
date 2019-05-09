@@ -56,6 +56,13 @@ class FileManagerController extends Controller
     public function indexAction(Request $request, LoggerInterface $logger)
     {
         $queryParameters = $request->query->all();
+		$postParameters = $request->request->all();
+
+		dump($queryParameters);
+		dump($postParameters);
+		
+		$this->checkForNewLinks($queryParameters, $postParameters);
+
         $translator      = $this->get('translator');
        // $isJson          = $request->get('json') ? true : false;
         $isJson          = $request->get('json') ? true : false;
@@ -75,39 +82,37 @@ class FileManagerController extends Controller
         $logger->info($fileManager->getCurrentRoute());
         $finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
 
-		//dump($finderFiles);
-
         $regex = $fileManager->getRegex();
 	
         $orderBy   = $fileManager->getQueryParameter('orderby');
         $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
-        switch ($orderBy) {
+        
+		switch ($orderBy) {
             case 'name':
-                // $finderFiles->sort(function (SplFileInfo $a, SplFileInfo $b) {
-                //     return strcmp(strtolower($b->getFileName()), strtolower($a->getFileName()));
-                // });
                 usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
                     return strcmp(strtolower($first->getName()), strtolower($second->getName()));
                 }); 
                 break;
             case 'date':
-                // $finderFiles->sortByModifiedTime();
                 usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
                     return ($first->giveDate() > $second->giveDate());
                 }); 
                 break;
             case 'size':
             usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
-                    return $first->get('size') - $second->get('size');
+					$firstSize = $first instanceof CSMCLink ? 0 : $first->get('size');
+					$secondSize = $second instanceof CSMCLink ? 0 : $second->get('size');
+                    return $firstSize - $secondSize;
                 });
                 break;
             default :
             usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
-                return strcmp(strtolower($first->getName()) ,strtolower($second->getName()));
+					return ($first->giveDate() > $second->giveDate());
                 });
                 break;
         }
 
+		dump($finderFiles);
         //to be enabled while using regex for file type matching
 
         // if ($fileManager->getTree()) {
@@ -130,13 +135,13 @@ class FileManagerController extends Controller
 
         //create delete form for FMS
         $formDelete = $this->createDeleteForm()->createView();
+
         $fileArray = [];
-		$linkArray = [];
         foreach ($finderFiles as $file) {
 			if($file instanceof CSMCLink) {
 				$logger->info("path");
 				$logger->info($file->getPath());
-				$linkArray[] = $file;
+				$fileArray[] = $file;
 			}
 
             elseif($file instanceof CSMCFile) {
@@ -153,12 +158,9 @@ class FileManagerController extends Controller
         $parameters = [
             'fileManager' => $fileManager,
             'fileArray'   => $fileArray,
-			'linkArray'   => $linkArray,
             'formDelete'  => $formDelete,
             'username'    => $this->getUser()->getUsername(),
         ];
-
-		dump($parameters);
 
         if ($isJson) {
             $fileList = $this->renderView('fileManager/_manager_view.html.twig', $parameters);
@@ -186,6 +188,7 @@ class FileManagerController extends Controller
         /** @var Form $formRename */
         $formRename = $this->createRenameForm();
         $formMove = $this->createMoveForm();
+		$formLink = $this->createLinkForm();
         
 
         //Uploading Folder---------------------------------------->
@@ -238,6 +241,7 @@ class FileManagerController extends Controller
         $parameters['form']       = $form->createView();
         $parameters['formRename'] = $formRename->createView();
         $parameters['formMove']   = $formMove->createView();
+		$parameters['formLink']   = $formLink->createView();
 
         return $this->render('fileManager/manager.html.twig', $parameters);
     }
@@ -494,6 +498,32 @@ class FileManagerController extends Controller
             ])
             ->getForm();
     }
+
+	/**
+     * @return mixed
+     */
+    protected function createLinkForm()
+    {
+        return $this->createFormBuilder()
+            ->add('title', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('url', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('send', SubmitType::class, [
+                'attr'  => [
+                    'class' => 'btn btn-primary',
+                ],
+                'label' => 'button.addLink.action',
+            ])
+            ->getForm();
+    }
+
 
     /**
      * @return mixed
@@ -826,15 +856,6 @@ class FileManagerController extends Controller
         $Student = $roleClass->findOneByName('student');
         $Developer = $roleClass->findOneByName('developer');
 
-		$sampleLinkDirectory = $directoryClass->findOneByPath("/root/admin");
-
-		if($sampleLinkDirectory) {
-			$sampleLink = new CSMCLink("Sample Link", $user, "www.utdallas.edu", "/root/admin/");
-			$sampleLink->setParent($sampleLinkDirectory);
-			$entityManager->persist($sampleLink);
-			$entityManager->flush();
-		}
-
         try{
             // Create root folder if it's not there
             $root=$directoryClass->findOneBy(array('path' => '/root'));
@@ -962,5 +983,37 @@ class FileManagerController extends Controller
         }
         return null;
     }
+
+
+	/**
+     * Creates + adds new links to the system
+     *
+     *
+     * @param $queryParameters
+	 * @param $postParameters
+     *
+     * @return null
+     */
+	protected function checkForNewLinks(array $queryParameters, array $postParameters) {
+		
+		if(array_key_exists("route", $queryParameters) and array_key_exists("linkTitle", $postParameters) and array_key_exists("linkURL", $postParameters) ) {
+
+		// Insert other checks as necessary before this block
+		// Create + Add link - Start
+			$directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+			$linkParent = $directoryClass->findOneByPath($queryParameters["route"]);
+			$rootParent = $directoryClass->findOneByPath("/root");
+
+			if($linkParent and $linkParent !== $rootParent) {
+				$newLink= new CSMCLink($postParameters["linkTitle"], $this->getUser(), $postParameters["linkURL"], $queryParameters["route"]);
+				$newLink->setParent($linkParent);
+				$entityManager = $this->getDoctrine()->getManager();
+				$entityManager->persist($newLink);
+				$entityManager->flush();
+			}	
+		// Create + Add link - End
+		
+		}
+	}
 
 }

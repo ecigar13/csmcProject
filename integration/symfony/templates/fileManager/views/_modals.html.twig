@@ -67,6 +67,7 @@
         </div>
     </div>
 </div>
+
 {# move file start#}
 {% set querystring = '?'~app.request.queryString %}
 {% set action = path('fms_move') ~ querystring %}
@@ -111,6 +112,7 @@
     </div>
 </div>
 {# move file end#}
+
 {# add link start#}
 <div class="modal fade" id="addLink" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
@@ -127,11 +129,11 @@
                 {{ form_row(form.name) }}
                 <div>
                     <span style="font-size:20px;">Title</span>
-                    <input type="text"  required="required" class="form-control"  style="margin:10px;">
+                    <input type="text" name="linkTitle" required="required" class="form-control"  style="margin:10px;">
                 </div> 
                 <div>
                     <span style="font-size:20px;">URL</span>
-                    <input type="text"  required="required" class="form-control"  style="margin:10px;">
+                    <input type="text" name="linkURL" required="required" class="form-control"  style="margin:10px;">
                 </div> 
 
             </div>
@@ -150,6 +152,7 @@
     </div>
 </div>
 {# add link end#}
+
 {# share start#}
 <div class="modal fade" id="shareFolder" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
