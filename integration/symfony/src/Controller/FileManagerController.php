@@ -796,7 +796,7 @@ class FileManagerController extends Controller
      */
     public function uploadFileAction(Request $request, LoggerInterface $logger)
     {
-        if(!$this->isGranted('student')){
+        if($this->isGranted('admin') || $this->isGranted('mentor') || $this->isGranted('instructor') || $this->isGranted('developer')){
             //only accept httpRequest
             $translator = $this->get('translator');
             if (!$request->isXmlHttpRequest()) {
@@ -884,7 +884,7 @@ class FileManagerController extends Controller
         }
         else
         {
-            $Message = "You don't have permission to Upload";
+            $Message = "You don't have permission to upload files";
             $this->addFlash('danger', $Message);
         }
     }
@@ -1263,7 +1263,7 @@ class FileManagerController extends Controller
      *
      * @throws \Exception
      */
-    public function shareFileActiopn(Request $request)
+    public function shareFileAction(Request $request)
     {
         $share_users = $request->request->get('users');
         $share_roles = $request->request->get('roles');
