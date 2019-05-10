@@ -59,9 +59,6 @@ class FileManagerController extends Controller
     {
         $queryParameters = $request->query->all();
 		$postParameters = $request->request->all();
-
-		dump($queryParameters);
-		dump($postParameters);
 		
 		$this->checkForNewLinks($queryParameters, $postParameters);
 
@@ -335,6 +332,7 @@ class FileManagerController extends Controller
                             // $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
                             $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
                             $em->persist($file);
+							$this->addFlash('success', "File successfully renamed!");
 
 
                         } else {
@@ -417,8 +415,9 @@ class FileManagerController extends Controller
                 //there should only be 1 record.
                 foreach($links as $link){
                     $oldName = $link->getName();
+					$oldUrl = $link->getUrl();
 
-                    if ($newName !== $oldName && $newUrl !== $oldUrl) {
+                    if ($newName !== $oldName || $newUrl !== $oldUrl) {
                         //can be multiple because files are not unique. Can't fix it for now.
                         $response[] = [
                             $link->getName() => [
@@ -431,9 +430,11 @@ class FileManagerController extends Controller
 						$link->setPath(str_replace("/".$oldName , "/".$newName, $link->getPath()));
 						$link->setUrl($newUrl);
                         $em->persist($link);
+						
 						$this->addFlash('success', "Link successfully renamed!");
 
                     } else {
+						
                         $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
 
                     }
