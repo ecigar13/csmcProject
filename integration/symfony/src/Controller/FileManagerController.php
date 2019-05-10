@@ -316,23 +316,28 @@ class FileManagerController extends Controller
 
                 //there should only be 1 record.
                 foreach($files as $file){
-                    $oldName = $file->getName();
+                    if($this->isGranted('admin')||$this->getUser()->getUsername()==$file->getOwner()->getUsername()){
+                        $oldName = $file->getName();
 
-                    if ($newName !== $oldName) {
-                        //can be multiple because files are not unique. Can't fix it for now.
-                        $response[] = [
-                            $file->getName() => [
-                                'oldPath' => $file->getPath(),
-                                'newPath' => str_replace("/".$oldName , "/".$newName, $file->getPath()),
-                            ],
-                        ];
-                        // $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
-                        $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
-                        $em->persist($file);
+                        if ($newName !== $oldName) {
+                            //can be multiple because files are not unique. Can't fix it for now.
+                            $response[] = [
+                                $file->getName() => [
+                                    'oldPath' => $file->getPath(),
+                                    'newPath' => str_replace("/".$oldName , "/".$newName, $file->getPath()),
+                                ],
+                            ];
+                            // $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                            $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                            $em->persist($file);
 
 
-                    } else {
-                        $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                        } else {
+                            $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                        }
+                    }
+                    else{
+                        $this->addFlash('warning', "You don't have permission to rename files");
                     }
                 }
                 //TODO: update children.
@@ -378,26 +383,29 @@ class FileManagerController extends Controller
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
+        
 
-        if(!empty($file_id)){
-            $file = $this->getDoctrine()
-                ->getRepository(VirtualFile::class)
-                ->findOneBy(array('id' => $file_id));
+            if(!empty($file_id)){
+                $file = $this->getDoctrine()
+                    ->getRepository(VirtualFile::class)
+                    ->findOneBy(array('id' => $file_id));
+                if($this->isGranted('admin')||$this->getUser()->getUsername()==$file->getOwner()->getUsername()){
+                    $parent = $this->getDoctrine()
+                        ->getRepository(Directory::class)
+                        ->findOneBy(array('id' => $parent_id));
 
-            $parent = $this->getDoctrine()
-                ->getRepository(Directory::class)
-                ->findOneBy(array('id' => $parent_id));
+                    $file->setParent($parent);
+                    $em->persist($file);
+                    $em->flush();
+                }
+                else{
+                    $this->addFlash('danger', 'you dont have permission to move file');
+                }
+            }
+            else{
 
-            $file->setParent($parent);
-            $em->persist($file);
-        }
-        else{
-
-            $this->addFlash('danger', 'Did not provide a valid files.');
-        }
-
-        $em->flush();
-
+                $this->addFlash('danger', 'Did not provide a valid files.');
+            }
 
         return $this->redirectToRoute('file_management', $queryParameters);
     }
@@ -782,7 +790,6 @@ class FileManagerController extends Controller
     {
         $directoriesList = null;
         $logger->info("RetrieveDirectory");
-
         $logger->info($parent->getpath());
 
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
@@ -1148,35 +1155,43 @@ class FileManagerController extends Controller
         $folder = $directoryClass->findOneBy(array('id' => $folder_id));
 
         if(!empty($share_users) || !empty($share_roles)){
-            if($parent->getPath() != 'root'){
-                try{
-                    // $folder =  $directoryClass->findOneById($folder_id);
-                    $folder->clearUsers();
-                    foreach($share_users as $id){
-                        $user = $userClass->findOneById($id);
-                        $folder->addUser($user);
-                    }
+            if($folder->getPath() != 'root'){
+                if($type=='user'){
+                        try{
+                            // $folder =  $directoryClass->findOneById($folder_id);
+                            $folder->clearUsers();
+                            foreach($share_users as $id){
+                                $user = $userClass->findOneById($id);
+                                $folder->addUser($user);
+                            }
+                            $status=true;
+                            $em->persist($folder);
+                            $em->flush();
+                        }
+                        catch(IOExceptionInterface $e){
+                            $status=false;
+                            $this->addFlash('danger', 'Not able to process request');
+                        }
                 }
-                catch(IOExceptionInterface $e){
-                    $status=false;
-                    $this->addFlash('danger', 'Not able to process request');
-                }
+                else{
                 //run the function that shares by role ids
-                try{
-                    // $folder =  $directoryClass->findOneById($folder_id);
-                    $folder->clearRoles();
-                    foreach($share_roles as $id){
-                        $role = $roleClass->findOneById($id);
-                        $folder->addRole($role);
-                    }
+                        try{
+                            // $folder =  $directoryClass->findOneById($folder_id);
+                            $folder->clearRoles();
+                            foreach($share_roles as $id){
+                                $role = $roleClass->findOneById($id);
+                                $folder->addRole($role);
+                            }
+                            $status=true;
+                            $em->persist($folder);
+                            $em->flush();
+                        }
+                        catch(IOExceptionInterface $e){
+                            $status=false;
+                            $this->addFlash('danger', 'Not able to process request');
+                        }
                 }
-                catch(IOExceptionInterface $e){
-                    $status=false;
-                    $this->addFlash('danger', 'Not able to process request');
-                }
-                $status=true;
-                $em->persist($folder);
-                $em->flush();
+                
             }
         }
         else{

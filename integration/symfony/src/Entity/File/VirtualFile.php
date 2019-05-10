@@ -153,12 +153,20 @@ class VirtualFile {
 
     public function clearUsers()
     {
-        $this->getUsers()->clear();
+
+        foreach($this->users as $user)   
+            $this->users->removeElement($user);
+        // $category->removeProject($this);
     }
 
     public function clearRoles()
     {
-        $this->getRoles()->clear();
+        // if (!$this->roles->contains($role)) {
+        //     return;
+        // }   
+        foreach($this->roles as $role)  
+            $this->roles->removeElement($role);
+        // $category->removeProject($this);
     }
 
     
