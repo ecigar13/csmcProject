@@ -1291,7 +1291,6 @@ class FileManagerController extends Controller
 
         if(!empty($share_users) || !empty($share_roles)){
             if($folder->getPath() != 'root'){
-                if($type=='user'){
                         try{
                             // $folder =  $directoryClass->findOneById($folder_id);
                             $folder->clearUsers();
@@ -1307,8 +1306,6 @@ class FileManagerController extends Controller
                             $status=false;
                             $this->addFlash('danger', 'Not able to process request');
                         }
-                }
-                else{
                 //run the function that shares by role ids
                         try{
                             // $folder =  $directoryClass->findOneById($folder_id);
@@ -1325,7 +1322,6 @@ class FileManagerController extends Controller
                             $status=false;
                             $this->addFlash('danger', 'Not able to process request');
                         }
-                }
                 
             }
         }
