@@ -118,7 +118,6 @@ class FileManagerController extends Controller
                 break;
         }
 
-		dump($finderFiles);
         //to be enabled while using regex for file type matching
 
         // if ($fileManager->getTree()) {
@@ -191,9 +190,13 @@ class FileManagerController extends Controller
 
         /* @var Form $form */
         $form->handleRequest($request);
-        /** @var Form $formRename */
+        /* @var Form $formRename */
         $formRename = $this->createRenameForm();
-        $formMove = $this->createMoveForm();
+        
+		/* @var Form $formRenameLink */
+        $formRenameLink = $this->createRenameFormLink();
+
+		$formMove = $this->createMoveForm();
 		$formLink = $this->createLinkForm();
 
 
@@ -262,6 +265,7 @@ class FileManagerController extends Controller
         }
         $parameters['form']       = $form->createView();
         $parameters['formRename'] = $formRename->createView();
+		$parameters['formRenameLink'] = $formRenameLink->createView();
         $parameters['formMove']   = $formMove->createView();
 		$parameters['formLink']   = $formLink->createView();
 
@@ -272,7 +276,8 @@ class FileManagerController extends Controller
         $parameters['roleArray']   = $roleArray;
         return $this->render('fileManager/manager.html.twig', $parameters);
     }
-    /**
+    
+	/**
      * @Route("/fms/rename/", name="file_management_rename")
      *
      * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name.
@@ -288,14 +293,14 @@ class FileManagerController extends Controller
      */
     public function renameFileAction(Request $request, LoggerInterface $l)
     {
-        /** @var Form $formRename */
+        /* @var Form $formRename */
         $formRename = $this->createRenameForm();
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
         $response = [];
 
-        /** @var Form $formRename **/
+        /* @var Form $formRename */
         $formRename->handleRequest($request);
         if ($formRename->isSubmitted() && $formRename->isValid()) {
             $data = $formRename->getData();
@@ -316,23 +321,28 @@ class FileManagerController extends Controller
 
                 //there should only be 1 record.
                 foreach($files as $file){
-                    $oldName = $file->getName();
+                    if($this->isGranted('admin')||$this->getUser()->getUsername()==$file->getOwner()->getUsername()){
+                        $oldName = $file->getName();
 
-                    if ($newName !== $oldName) {
-                        //can be multiple because files are not unique. Can't fix it for now.
-                        $response[] = [
-                            $file->getName() => [
-                                'oldPath' => $file->getPath(),
-                                'newPath' => str_replace("/".$oldName , "/".$newName, $file->getPath()),
-                            ],
-                        ];
-                        // $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
-                        $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
-                        $em->persist($file);
+                        if ($newName !== $oldName) {
+                            //can be multiple because files are not unique. Can't fix it for now.
+                            $response[] = [
+                                $file->getName() => [
+                                    'oldPath' => $file->getPath(),
+                                    'newPath' => str_replace("/".$oldName , "/".$newName, $file->getPath()),
+                                ],
+                            ];
+                            // $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                            $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                            $em->persist($file);
 
 
-                    } else {
-                        $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                        } else {
+                            $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                        }
+                    }
+                    else{
+                        $this->addFlash('warning', "You don't have permission to rename files");
                     }
                 }
                 //TODO: update children.
@@ -352,6 +362,103 @@ class FileManagerController extends Controller
                 $this->addFlash('danger', 'Did not provide a file name.');
             }
         }
+        $em->flush();
+
+        return $this->redirectToRoute('file_management', $queryParameters);
+        // return new JsonResponse($response, 200);
+    }
+
+	/**
+     * @Route("/fms/rename-link/", name="file_management_link_rename")
+     *
+     *
+     * TODO: check if the person who initiated is admin or the owner.
+     * TODO: it is possible to change extension because front-end sends extension and file ID.
+     *
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     *
+     * @throws \Exception
+     */
+    public function renameLinkAction(Request $request, LoggerInterface $l)
+    {
+        /* @var Form $formRenameLink */
+        $formRenameLink = $this->createRenameFormLink();
+        $translator = $this->get('translator');
+        $queryParameters = $request->query->all();
+        $em = $this->getDoctrine()->getManager();
+        $response = [];
+
+        /* @var Form $formRenameLink */
+        $formRenameLink->handleRequest($request);
+        if ($formRenameLink->isSubmitted() && $formRenameLink->isValid()) {
+            $data = $formRenameLink->getData();
+			
+            if(isset($data['linkId']) && isset($data['rename']) && isset($data['url'])){
+
+                $links= $this->getDoctrine()->getRepository(VirtualFile::class)->findById($data['linkId']);
+                $children = $this->getDoctrine()->getRepository(VirtualFile::class)->findByParent($data['linkId']);
+
+                //if file doesn't exist in database?
+                if(count($links) == 0){
+                    $this->addFlash('warning', "Can't find the link to rename: ".$data['linkId']);
+                    return $this->redirectToRoute('file_management', $queryParameters);
+                }
+
+                //update name
+                $newName = $data['rename'];
+                $oldName = '';
+
+				$newUrl = $data['url'];
+				$oldUrl = '';
+
+                //there should only be 1 record.
+                foreach($links as $link){
+                    $oldName = $link->getName();
+
+                    if ($newName !== $oldName && $newUrl !== $oldUrl) {
+                        //can be multiple because files are not unique. Can't fix it for now.
+                        $response[] = [
+                            $link->getName() => [
+                                'oldPath' => $link->getPath(),
+                                'newPath' => str_replace("/".$oldName , "/".$newName, $link->getPath()),
+                            ],
+                        ];
+
+                        $link->setName($newName);
+						$link->setPath(str_replace("/".$oldName , "/".$newName, $link->getPath()));
+						$link->setUrl($newUrl);
+                        $em->persist($link);
+						$this->addFlash('success', "Link successfully renamed!");
+
+                    } else {
+                        $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                    }
+                }
+                //TODO: update children.
+                foreach($children as $child){
+                    $response[] = [
+                        $child->getName() => [
+                            'oldPath' => $child->getPath(),
+                            'newPath' => str_replace("/".$oldName , "/".$newName, $child->getPath()),
+                        ],
+                    ];
+                    $child->setPath(str_replace("/".$oldName , "/".$newName, $child->getPath()));
+                    $em->persist($child);
+                }
+
+
+            }else{
+				$this->addFlash('danger', 'Did not provide a link name.');    
+            }
+        } else {
+			$data = $formRenameLink->getData();
+			$this->addFlash('warning', "Invalid link rename request detected");
+				$this->addFlash('danger', $data['url']);
+				$this->addFlash('danger', $data['rename']);
+				$this->addFlash('danger', $data['linkId']);
+		}
         $em->flush();
 
         return $this->redirectToRoute('file_management', $queryParameters);
@@ -378,26 +485,29 @@ class FileManagerController extends Controller
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
+        
 
-        if(!empty($file_id)){
-            $file = $this->getDoctrine()
-                ->getRepository(VirtualFile::class)
-                ->findOneBy(array('id' => $file_id));
+            if(!empty($file_id)){
+                $file = $this->getDoctrine()
+                    ->getRepository(VirtualFile::class)
+                    ->findOneBy(array('id' => $file_id));
+                if($this->isGranted('admin')||$this->getUser()->getUsername()==$file->getOwner()->getUsername()){
+                    $parent = $this->getDoctrine()
+                        ->getRepository(Directory::class)
+                        ->findOneBy(array('id' => $parent_id));
 
-            $parent = $this->getDoctrine()
-                ->getRepository(Directory::class)
-                ->findOneBy(array('id' => $parent_id));
+                    $file->setParent($parent);
+                    $em->persist($file);
+                    $em->flush();
+                }
+                else{
+                    $this->addFlash('danger', 'you dont have permission to move file');
+                }
+            }
+            else{
 
-            $file->setParent($parent);
-            $em->persist($file);
-        }
-        else{
-
-            $this->addFlash('danger', 'Did not provide a valid files.');
-        }
-
-        $em->flush();
-
+                $this->addFlash('danger', 'Did not provide a valid files.');
+            }
 
         return $this->redirectToRoute('file_management', $queryParameters);
     }
@@ -486,6 +596,7 @@ class FileManagerController extends Controller
                         if($this->isGranted('admin')||$this->getUser()->getUsername()==$file->getOwner()->getUsername()){
                             $em->remove($file);  //this will remove files/folders inside this one.
                             $em->flush();
+							$this->addFlash('success', "Successfully deleted / removed the item");
                         }
                         else{
                             $Message = "You don't have permission to delete: ".  $file->getName();
@@ -628,6 +739,35 @@ class FileManagerController extends Controller
             ->getForm();
     }
 
+	 /**
+     * @return mixed
+     */
+    protected function createRenameFormLink()
+    {
+        return $this->createFormBuilder()
+            ->add('rename', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('url', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('linkId', HiddenType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('send', SubmitType::class, [
+                'attr'  => [
+                    'class' => 'btn btn-primary',
+                ],
+                'label' => 'button.rename.action',
+            ])
+            ->getForm();
+    }
 
     /**
      * @return mixed
@@ -666,7 +806,7 @@ class FileManagerController extends Controller
      */
     public function uploadFileAction(Request $request, LoggerInterface $logger)
     {
-        if(!$this->isGranted('student')){
+        if($this->isGranted('admin') || $this->isGranted('mentor') || $this->isGranted('instructor') || $this->isGranted('developer')){
             //only accept httpRequest
             $translator = $this->get('translator');
             if (!$request->isXmlHttpRequest()) {
@@ -754,7 +894,7 @@ class FileManagerController extends Controller
         }
         else
         {
-            $Message = "You don't have permission to Upload";
+            $Message = "You don't have permission to upload files";
             $this->addFlash('danger', $Message);
         }
     }
@@ -1115,6 +1255,7 @@ class FileManagerController extends Controller
 				$entityManager = $this->getDoctrine()->getManager();
 				$entityManager->persist($newLink);
 				$entityManager->flush();
+				$this->addFlash('success', "Successfully added new link: ". $postParameters["linkURL"]);
 			}	
 		// Create + Add link - End
 		
@@ -1133,7 +1274,7 @@ class FileManagerController extends Controller
      *
      * @throws \Exception
      */
-    public function shareFileActiopn(Request $request)
+    public function shareFileAction(Request $request)
     {
         $share_users = $request->request->get('users');
         $share_roles = $request->request->get('roles');
@@ -1148,35 +1289,43 @@ class FileManagerController extends Controller
         $folder = $directoryClass->findOneBy(array('id' => $folder_id));
 
         if(!empty($share_users) || !empty($share_roles)){
-            if($parent->getPath() != 'root'){
-                try{
-                    // $folder =  $directoryClass->findOneById($folder_id);
-                    $folder->clearUsers();
-                    foreach($share_users as $id){
-                        $user = $userClass->findOneById($id);
-                        $folder->addUser($user);
-                    }
+            if($folder->getPath() != 'root'){
+                if($type=='user'){
+                        try{
+                            // $folder =  $directoryClass->findOneById($folder_id);
+                            $folder->clearUsers();
+                            foreach($share_users as $id){
+                                $user = $userClass->findOneById($id);
+                                $folder->addUser($user);
+                            }
+                            $status=true;
+                            $em->persist($folder);
+                            $em->flush();
+                        }
+                        catch(IOExceptionInterface $e){
+                            $status=false;
+                            $this->addFlash('danger', 'Not able to process request');
+                        }
                 }
-                catch(IOExceptionInterface $e){
-                    $status=false;
-                    $this->addFlash('danger', 'Not able to process request');
-                }
+                else{
                 //run the function that shares by role ids
-                try{
-                    // $folder =  $directoryClass->findOneById($folder_id);
-                    $folder->clearRoles();
-                    foreach($share_roles as $id){
-                        $role = $roleClass->findOneById($id);
-                        $folder->addRole($role);
-                    }
+                        try{
+                            // $folder =  $directoryClass->findOneById($folder_id);
+                            $folder->clearRoles();
+                            foreach($share_roles as $id){
+                                $role = $roleClass->findOneById($id);
+                                $folder->addRole($role);
+                            }
+                            $status=true;
+                            $em->persist($folder);
+                            $em->flush();
+                        }
+                        catch(IOExceptionInterface $e){
+                            $status=false;
+                            $this->addFlash('danger', 'Not able to process request');
+                        }
                 }
-                catch(IOExceptionInterface $e){
-                    $status=false;
-                    $this->addFlash('danger', 'Not able to process request');
-                }
-                $status=true;
-                $em->persist($folder);
-                $em->flush();
+                
             }
         }
         else{

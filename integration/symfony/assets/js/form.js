@@ -1,6 +1,7 @@
 $(document).ready(function () {
 
     var $renameModal = $('#js-confirm-rename');
+    var $renameModalLink = $('#js-confirm-link');
     var $deleteModal = $('#js-confirm-delete');
     var $displayModal = $('#js-display-image');
 
@@ -11,6 +12,11 @@ $(document).ready(function () {
                 renameFile($renameModalButton)
                 $renameModal.modal("show");
                 break;
+            case 'link-edit':
+                var $renameModalButtonLink = opt.$trigger.find(".js-rename-link")
+                renameLink($renameModalButtonLink)
+                $renameModalLink.modal("show");
+                break;
             case 'delete':
                 var $deleteModalButton = opt.$trigger.find(".js-delete-modal")
                 deleteFile($deleteModalButton)
@@ -18,7 +24,7 @@ $(document).ready(function () {
                 break;
             case 'download':
                 var $downloadButton = opt.$trigger.find(".js-download")
-                downloadFile($downloadButton)
+                downloadFile($downloadButton);
                 break;
             case 'preview':
                 var $previewModalButton = opt.$trigger.find(".js-open-modal")
@@ -46,6 +52,22 @@ $(document).ready(function () {
             },
         }
     });
+
+    $.contextMenu({
+        selector: '.link',
+        callback: callback,
+        items: {
+            "delete": {
+                name: deleteMessage,
+                icon: "far fa-trash-alt"
+            },
+            "link-edit": {
+                name: renameMessage,
+                icon: "far fa-edit"
+            },
+        }
+    });
+
     $.contextMenu({
         selector: '.img',
         callback: callback,
@@ -92,6 +114,13 @@ $(document).ready(function () {
     function deleteFolder($deleteModalButton) {
         $('#form_deleteId').val($('.jstree-clicked').attr('id'));
         $('#js-confirm-delete').find('form').attr('action', $deleteModalButton.data('href'));
+    }
+
+    function renameLink($renameModalButton) {
+        $('#form_rename').val($renameModalButton.data('rename'));
+        $('#form_linkId').val($renameModalButton.data('linkid'));
+        $('#form_url').val($renameModalButton.data('url'));
+        $renameModalLink.find('form').attr('action', $renameModalButton.data('href'))
     }
 
     function renameFile($renameModalButton) {
@@ -169,6 +198,10 @@ $(document).ready(function () {
         .on('click', '.js-open-modal', function () {
             previewFile($(this));
         })
+        // rename link modal buttons
+        .on('click', '.js-rename-link', function () {
+            renameLink($(this));
+        })
         // rename modal buttons
         .on('click', '.js-rename-modal', function () {
             renameFile($(this));
@@ -183,7 +216,6 @@ $(document).ready(function () {
                 return $(this).attr('data-id');
             }).get();//.join('|');
             console.log(deleteId);
-
 
             $('#form_deleteId').val(deleteId);
             $('#js-confirm-delete').find('form').attr('action', $('#js-delete-multiple-modal').data('href'));

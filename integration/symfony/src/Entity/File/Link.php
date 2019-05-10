@@ -25,13 +25,17 @@ class Link extends VirtualFile {
 	private $size;
 
     public function __construct(string $name, User $owner = null, string $url, string $path) {
-        parent::__construct($name . ": " . $url, $owner, $path . $name . ".lnk");
+        parent::__construct($name, $owner, $path . $name . ".lnk");
         $this->url = $url;
 		$this->size = 0;
     }
 
 	public function getUrl() {
 		return $this->url;
+	}
+
+	public function setUrl($url) {
+		$this->url = $url;
 	}
 
 	public function getSize() {
