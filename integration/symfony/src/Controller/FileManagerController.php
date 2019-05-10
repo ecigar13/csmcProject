@@ -1091,6 +1091,37 @@ class FileManagerController extends Controller
     }
 
     /**
+     * Creates + adds new links to the system
+     *
+     *
+     * @param $queryParameters
+	 * @param $postParameters
+     *
+     * @return null
+     */
+	protected function checkForNewLinks(array $queryParameters, array $postParameters) {
+		
+		if(array_key_exists("route", $queryParameters) and array_key_exists("linkTitle", $postParameters) and array_key_exists("linkURL", $postParameters) ) {
+
+		// Insert other checks as necessary before this block
+		// Create + Add link - Start
+			$directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+			$linkParent = $directoryClass->findOneByPath($queryParameters["route"]);
+			$rootParent = $directoryClass->findOneByPath("/root");
+
+			if($linkParent and $linkParent !== $rootParent) {
+				$newLink= new CSMCLink($postParameters["linkTitle"], $this->getUser(), $postParameters["linkURL"], $queryParameters["route"]);
+				$newLink->setParent($linkParent);
+				$entityManager = $this->getDoctrine()->getManager();
+				$entityManager->persist($newLink);
+				$entityManager->flush();
+			}	
+		// Create + Add link - End
+		
+		}
+	}
+
+    /**
      * @Route("/fms/share", name="fms_share")
      *
      * TODO: check if the person who initiated is admin or the owner.
