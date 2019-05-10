@@ -29,7 +29,7 @@
 		{% for item in fileArray %}
 			{% if item is isCSMCLink %}
 			{% set linkEntity = item %}
-				<tr class="file">
+				<tr class="link">
 					<td><input type="checkbox" class="checkbox" name="delete[]" value="{{ linkEntity.name }}" title="{{ linkEntity.name }}"></td>
 					<td>--</td>
 					<td data-value="{{ linkEntity.name }}" {{ linkEntity.Url }}>
@@ -45,7 +45,7 @@
 						<span data-toggle="tooltip" title="{{ 'title.delete'|trans }}">
 							<button type="button"
 									class="btn btn-xs btn-danger js-delete-modal"
-									data-id="{{ file.id }}"
+									data-id="{{ linkEntity.id }}"
 									data-trigger="click"
 									data-container="body"
 									data-toggle="modal"
@@ -58,17 +58,17 @@
 						</span>
 						<span data-toggle="tooltip" title="{{ 'title.rename.file'|trans }}">
 							<button type="button"
-									class="btn btn-xs btn-default js-rename-modal"
-									data-id="{{ file.id }}"
+									class="btn btn-xs btn-default js-rename-modal-link"
+									data-id="{{ linkEntity.id }}"
 									data-trigger="click"
 									data-container="body"
 									data-toggle="modal"
-									data-target="#js-confirm-rename"
+									data-target="#js-confirm-rename-link"
 									data-placement="left"
 									data-html="true"
-									data-name='{{ file.name}}'
-									data-extension='{{ file.extension }}'
-									data-href='{{ path('file_management_rename', fileManager.queryParameters) }}'>
+									data-name='{{ linkEntity.name }}'
+									data-url='{{ linkEntity.url }}'
+									data-href='{{ path('file_management_rename_link', fileManager.queryParameters) }}'>
 							<span class="far fa-edit"></span>
 							</button>
 						</span>
@@ -125,7 +125,7 @@
 									data-target="#js-confirm-rename"
 									data-placement="left"
 									data-html="true"
-									data-name='{{ file.name}}'
+									data-name='{{ file.name }}'
 									data-extension='{{ file.extension }}'
 									data-href='{{ path('file_management_rename', fileManager.queryParameters) }}'>
 							<span class="far fa-edit"></span>

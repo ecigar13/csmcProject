@@ -118,7 +118,6 @@ class FileManagerController extends Controller
                 break;
         }
 
-		dump($finderFiles);
         //to be enabled while using regex for file type matching
 
         // if ($fileManager->getTree()) {
@@ -191,9 +190,13 @@ class FileManagerController extends Controller
 
         /* @var Form $form */
         $form->handleRequest($request);
-        /** @var Form $formRename */
+        /* @var Form $formRename */
         $formRename = $this->createRenameForm();
-        $formMove = $this->createMoveForm();
+        
+		/* @var Form $formRenameLink */
+        $formRenameLink = $this->createRenameFormLink();
+
+		$formMove = $this->createMoveForm();
 		$formLink = $this->createLinkForm();
 
 
@@ -256,12 +259,14 @@ class FileManagerController extends Controller
         }
         $parameters['form']       = $form->createView();
         $parameters['formRename'] = $formRename->createView();
+		$parameters['formRenameLink'] = $formRenameLink->createView();
         $parameters['formMove']   = $formMove->createView();
 		$parameters['formLink']   = $formLink->createView();
 
         return $this->render('fileManager/manager.html.twig', $parameters);
     }
-    /**
+    
+	/**
      * @Route("/fms/rename/", name="file_management_rename")
      *
      * rename the file in the database. Does not deal with moving files or changing file path. Request will contain old file name, new file name.
@@ -277,14 +282,14 @@ class FileManagerController extends Controller
      */
     public function renameFileAction(Request $request, LoggerInterface $l)
     {
-        /** @var Form $formRename */
+        /* @var Form $formRename */
         $formRename = $this->createRenameForm();
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
         $response = [];
 
-        /** @var Form $formRename **/
+        /* @var Form $formRename */
         $formRename->handleRequest($request);
         if ($formRename->isSubmitted() && $formRename->isValid()) {
             $data = $formRename->getData();
@@ -318,6 +323,94 @@ class FileManagerController extends Controller
                         // $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
                         $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
                         $em->persist($file);
+
+
+                    } else {
+                        $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                    }
+                }
+                //TODO: update children.
+                foreach($children as $child){
+                    $response[] = [
+                        $child->getName() => [
+                            'oldPath' => $child->getPath(),
+                            'newPath' => str_replace("/".$oldName , "/".$newName, $child->getPath()),
+                        ],
+                    ];
+                    $child->setPath(str_replace("/".$oldName , "/".$newName, $child->getPath()));
+                    $em->persist($child);
+                }
+
+
+            }else{
+                $this->addFlash('danger', 'Did not provide a file name.');
+            }
+        }
+        $em->flush();
+
+        return $this->redirectToRoute('file_management', $queryParameters);
+        // return new JsonResponse($response, 200);
+    }
+
+	/**
+     * @Route("/fms/rename-link/", name="file_management_rename_link")
+     *
+     *
+     * TODO: check if the person who initiated is admin or the owner.
+     * TODO: it is possible to change extension because front-end sends extension and file ID.
+     *
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     *
+     * @throws \Exception
+     */
+    public function renameLinkAction(Request $request, LoggerInterface $l)
+    {
+		dump("rename-links is now finally working!");
+        /* @var Form $formRenameLink */
+        $formRenameLink = $this->createRenameFormLink();
+        $translator = $this->get('translator');
+        $queryParameters = $request->query->all();
+        $em = $this->getDoctrine()->getManager();
+        $response = [];
+
+        /* @var Form $formRenameLink */
+        $formRenameLink->handleRequest($request);
+        if ($formRenameLink->isSubmitted() && $formRenameLink->isValid()) {
+            $data = $formRenameLink->getData();
+
+            if(isset($data['id']) && isset($data['name']) && isset($data['url'])){
+                $links= $this->getDoctrine()->getRepository(VirtualFile::class)->findById($data['id']);
+                $children = $this->getDoctrine()->getRepository(VirtualFile::class)->findByParent($data['id']);
+
+                //if file doesn't exist in database?
+                if(count($links) == 0){
+                    $this->addFlash('warning', "Can't find the link to rename: ".$data['id']);
+                    return $this->redirectToRoute('file_management', $queryParameters);
+                }
+
+                //update name
+                $newName = $data['name'];
+                $oldName = '';
+
+				$newUrl = $dadta['url'];
+
+                //there should only be 1 record.
+                foreach($links as $link){
+                    $oldName = $link->getName();
+
+                    if ($newName !== $oldName) {
+                        //can be multiple because files are not unique. Can't fix it for now.
+                        $response[] = [
+                            $link->getName() => [
+                                'oldPath' => $link->getPath(),
+                                'newPath' => str_replace("/".$oldName , "/".$newName, $link->getPath()),
+                            ],
+                        ];
+
+                        $link->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $link->getPath()))->setUrl($newUrl);
+                        $em->persist($link);
 
 
                     } else {
@@ -617,6 +710,35 @@ class FileManagerController extends Controller
             ->getForm();
     }
 
+	    /**
+     * @return mixed
+     */
+    protected function createRenameFormLink()
+    {
+        return $this->createFormBuilder()
+            ->add('name', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('url', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('id', HiddenType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('send', SubmitType::class, [
+                'attr'  => [
+                    'class' => 'btn btn-primary',
+                ],
+                'label' => 'button.rename.action',
+            ])
+            ->getForm();
+    }
 
     /**
      * @return mixed

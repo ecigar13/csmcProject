@@ -1,6 +1,7 @@
 $(document).ready(function () {
 
     var $renameModal = $('#js-confirm-rename');
+    var $renameModalLink = $('#js-confirm-rename-link');
     var $deleteModal = $('#js-confirm-delete');
     var $displayModal = $('#js-display-image');
 
@@ -10,6 +11,11 @@ $(document).ready(function () {
                 var $renameModalButton = opt.$trigger.find(".js-rename-modal")
                 renameFile($renameModalButton)
                 $renameModal.modal("show");
+                break;
+            case 'link-edit':
+                var $renameModalButtonLink = opt.$trigger.find(".js-rename-modal-link")
+                renameLink($renameModalButtonLink)
+                $renameModalLink.modal("show");
                 break;
             case 'delete':
                 var $deleteModalButton = opt.$trigger.find(".js-delete-modal")
@@ -46,6 +52,22 @@ $(document).ready(function () {
             },
         }
     });
+
+    $.contextMenu({
+        selector: '.link',
+        callback: callback,
+        items: {
+            "delete": {
+                name: deleteMessage,
+                icon: "far fa-trash-alt"
+            },
+            "link-edit": {
+                name: renameMessage,
+                icon: "far fa-edit"
+            },
+        }
+    });
+
     $.contextMenu({
         selector: '.img',
         callback: callback,
@@ -94,8 +116,15 @@ $(document).ready(function () {
         $('#js-confirm-delete').find('form').attr('action', $deleteModalButton.data('href'));
     }
 
-    function renameFile($renameModalButton) {
+    function renameLink($renameModalButton) {
         $('#form_name').val($renameModalButton.data('name'));
+        $('#form_id').val($renameModalButton.data('id'));
+        $('#form_url').val($renameModalButton.data('url'));
+        $renameModal.find('form').attr('action', $renameModalButton.data('href'))
+    }
+
+    function renameFile($renameModalButton) {
+        $('#form_name').val("testing");
         $('#form_id').val($renameModalButton.data('id'));
         $('#form_extension').val($renameModalButton.data('extension'));
         $renameModal.find('form').attr('action', $renameModalButton.data('href'))
@@ -168,6 +197,10 @@ $(document).ready(function () {
         // preview modal buttons
         .on('click', '.js-open-modal', function () {
             previewFile($(this));
+        })
+        // rename link modal buttons
+        .on('click', '.js-rename-modal-link', function () {
+            renameLink($(this));
         })
         // rename modal buttons
         .on('click', '.js-rename-modal', function () {
