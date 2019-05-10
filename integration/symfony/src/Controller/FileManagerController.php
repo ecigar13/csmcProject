@@ -378,7 +378,7 @@ class FileManagerController extends Controller
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
-
+        
         if(!empty($file_id)){
             $file = $this->getDoctrine()
                 ->getRepository(VirtualFile::class)
@@ -1148,35 +1148,43 @@ class FileManagerController extends Controller
         $folder = $directoryClass->findOneBy(array('id' => $folder_id));
 
         if(!empty($share_users) || !empty($share_roles)){
-            if($parent->getPath() != 'root'){
-                try{
-                    // $folder =  $directoryClass->findOneById($folder_id);
-                    $folder->clearUsers();
-                    foreach($share_users as $id){
-                        $user = $userClass->findOneById($id);
-                        $folder->addUser($user);
-                    }
+            if($folder->getPath() != 'root'){
+                if($type=='user'){
+                        try{
+                            // $folder =  $directoryClass->findOneById($folder_id);
+                            $folder->clearUsers();
+                            foreach($share_users as $id){
+                                $user = $userClass->findOneById($id);
+                                $folder->addUser($user);
+                            }
+                            $status=true;
+                            $em->persist($folder);
+                            $em->flush();
+                        }
+                        catch(IOExceptionInterface $e){
+                            $status=false;
+                            $this->addFlash('danger', 'Not able to process request');
+                        }
                 }
-                catch(IOExceptionInterface $e){
-                    $status=false;
-                    $this->addFlash('danger', 'Not able to process request');
-                }
+                else{
                 //run the function that shares by role ids
-                try{
-                    // $folder =  $directoryClass->findOneById($folder_id);
-                    $folder->clearRoles();
-                    foreach($share_roles as $id){
-                        $role = $roleClass->findOneById($id);
-                        $folder->addRole($role);
-                    }
+                        try{
+                            // $folder =  $directoryClass->findOneById($folder_id);
+                            $folder->clearRoles();
+                            foreach($share_roles as $id){
+                                $role = $roleClass->findOneById($id);
+                                $folder->addRole($role);
+                            }
+                            $status=true;
+                            $em->persist($folder);
+                            $em->flush();
+                        }
+                        catch(IOExceptionInterface $e){
+                            $status=false;
+                            $this->addFlash('danger', 'Not able to process request');
+                        }
                 }
-                catch(IOExceptionInterface $e){
-                    $status=false;
-                    $this->addFlash('danger', 'Not able to process request');
-                }
-                $status=true;
-                $em->persist($folder);
-                $em->flush();
+                
             }
         }
         else{
