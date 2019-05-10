@@ -151,6 +151,25 @@ class VirtualFile {
         return $this->roles->toArray();;
     }
 
+    public function clearUsers()
+    {
+
+        foreach($this->users as $user)   
+            $this->users->removeElement($user);
+        // $category->removeProject($this);
+    }
+
+    public function clearRoles()
+    {
+        // if (!$this->roles->contains($role)) {
+        //     return;
+        // }   
+        foreach($this->roles as $role)  
+            $this->roles->removeElement($role);
+        // $category->removeProject($this);
+    }
+
+    
     public function getChildren()
     {
         return $this->children->toArray();;

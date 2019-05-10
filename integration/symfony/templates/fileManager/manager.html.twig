@@ -9,17 +9,18 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}File Manager{% endblock %}</title>
+    {% block stylesheets %}
+        {{ parent() }}
         <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css"
               integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp"
               crossorigin="anonymous">
-        <link rel="stylesheet"
-              href="{{ asset('bundles/artgrisfilemanager/libs/jstree/dist/themes/default/style.min.css') }}">
-        <link rel="stylesheet"
-              href="{{ asset('bundles/artgrisfilemanager/libs/blueimp-file-upload/css/jquery.fileupload.css') }}">
+        <link rel="stylesheet" href="{{ asset('bundles/artgrisfilemanager/libs/jstree/dist/themes/default/style.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('bundles/artgrisfilemanager/libs/blueimp-file-upload/css/jquery.fileupload.css') }}">
         <link rel="stylesheet" href="{{ asset('bundles/artgrisfilemanager/css/manager.css') }}">
-        <link rel="stylesheet"
-              href="{{ asset('bundles/artgrisfilemanager/libs/jQuery-contextMenu/dist/jquery.contextMenu.min.css') }}">
+        <link rel="stylesheet" href="{{ asset('bundles/artgrisfilemanager/libs/jQuery-contextMenu/dist/jquery.contextMenu.min.css') }}">
         <link rel="stylesheet" href="{{ asset('build/css/fms.css') }}">
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css">
+    {% endblock %}
 
 </head>
 <body>
@@ -110,15 +111,9 @@
                     <span>{{ 'Delete selected files'|trans }}</span>
                 </a>
                 {# new code share to individual button start#}
-                <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareIndividualFolder">
+                <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="share_button btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareIndividualFolder">
                     <span class="fa fa-share"></span>
-                    <span>{{ 'Share to individual'|trans }}</span>
-                </button>
-                {# new code share to individual bbutton end#}
-                {# new code share to role button start#}
-                <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareRoleFolder">
-                    <span class="fa fa-share"></span>
-                    <span>{{ 'share to role'|trans }}</span>
+                    <span>{{ 'Share Current Folder'|trans }}</span>
                 </button>
                 {# new code share to role button end#}
             {% endblock %}
@@ -173,8 +168,9 @@
     <script src="{{ asset('bundles/artgrisfilemanager/libs/jQuery-contextMenu/dist/jquery.contextMenu.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('build/js/jquery.lazy-master/jquery.lazy.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('build/js/jquery.lazy-master/jquery.lazy.plugins.min.js') }}"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
     <script>
-        var treedata = {{ treeData|raw }};
+        var treedata = {{ treeData|raw }}
         var tree = {{ fileManager.tree ? 'true' : 'false' }}
         var moduleName = '{{ fileManager.module ? fileManager.module : 0 }}';
         var successMessage = '{{ 'file.add.success'|trans }}';

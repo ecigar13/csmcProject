@@ -213,49 +213,55 @@ class FileManagerController extends Controller
                 $parentPath = $fileManager->getQueryParameters()['route'];
             }
 
-            $logger->info("parent");
-            $logger->info($parentPath);
-
-            $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
-
-            //Search for Directory in Table
-            $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-            $directory=$directoryClass->findByPath($directoryPath);
-            if($directory){
-                $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
+            // $logger->info("parent");
+            // $logger->info($parentPath);
+            if(!$this->isGranted('student')){
+                $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
+                
+                //Search for Directory in Table
+                $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+                $directory=$directoryClass->findByPath($directoryPath);
+                if($directory){
+                    $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
+                    return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
+                }
+            
+                //Get Parent, create directory, set parent
+            
+                $parent=$directoryClass->findOneBy(array('path' => $parentPath));
+                if (!$parent) {
+                    $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
+                    return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
+                
+                }
+                // $user = $this->getUser();
+                // $role = $user->getRole();
+                // $roleClass = $this->getDoctrine()->getRepository(Role::class);
+                // $Admin = $roleClass->findOneByName('admin');
+                try{
+                    $directory  = new Directory($directoryName,$this->getUser(),$directoryPath);
+                
+                    $directory->setParent($parent);
+                    foreach($parent->getUsers() as $user)
+                        $directory->addUser($user);
+                    foreach($parent->getRoles() as $role)
+                        $directory->addRole($role);
+                    $entityManager = $this->getDoctrine()->getManager();
+                    $entityManager->persist($directory);
+                    $entityManager->flush();
+                    $this->addFlash('success', $translator->trans('folder.add.success'));
+                }
+                catch (IOExceptionInterface $e) {
+                    $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
+                }
+            
                 return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
             }
-
-            //Get Parent, create directory, set parent
-
-            $parent=$directoryClass->findOneBy(array('path' => $parentPath));
-            if (!$parent) {
-                $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
-                return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
-
-            }
-            // $user = $this->getUser();
-            // $role = $user->getRole();
-            // $roleClass = $this->getDoctrine()->getRepository(Role::class);
-            // $Admin = $roleClass->findOneByName('admin');
-            try{
-                $directory  = new Directory($directoryName,$this->getUser(),$directoryPath);
-
-                $directory->setParent($parent);
-                foreach($parent->getUsers() as $user)
-                    $directory->addUser($user);
-                foreach($parent->getRoles() as $role)
-                    $directory->addRole($role);
-                $entityManager = $this->getDoctrine()->getManager();
-                $entityManager->persist($directory);
-                $entityManager->flush();
-                $this->addFlash('success', $translator->trans('folder.add.success'));
-            }
-            catch (IOExceptionInterface $e) {
-                $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
+            else{
+                $Message = "You don't have permission to Upload";
+                $this->addFlash('danger', $Message);
             }
 
-            return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
         }
         $parameters['form']       = $form->createView();
         $parameters['formRename'] = $formRename->createView();
@@ -263,6 +269,11 @@ class FileManagerController extends Controller
         $parameters['formMove']   = $formMove->createView();
 		$parameters['formLink']   = $formLink->createView();
 
+        //-----------find all netid----------------//
+        $userArray = $this->getDoctrine()->getRepository(User::class)->findall();
+        $roleArray = $this->getDoctrine()->getRepository(Role::class)->findall();
+        $parameters['userArray']   = $userArray;
+        $parameters['roleArray']   = $roleArray;
         return $this->render('fileManager/manager.html.twig', $parameters);
     }
     
@@ -310,23 +321,28 @@ class FileManagerController extends Controller
 
                 //there should only be 1 record.
                 foreach($files as $file){
-                    $oldName = $file->getName();
+                    if($this->isGranted('admin')||$this->getUser()->getUsername()==$file->getOwner()->getUsername()){
+                        $oldName = $file->getName();
 
-                    if ($newName !== $oldName) {
-                        //can be multiple because files are not unique. Can't fix it for now.
-                        $response[] = [
-                            $file->getName() => [
-                                'oldPath' => $file->getPath(),
-                                'newPath' => str_replace("/".$oldName , "/".$newName, $file->getPath()),
-                            ],
-                        ];
-                        // $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
-                        $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
-                        $em->persist($file);
+                        if ($newName !== $oldName) {
+                            //can be multiple because files are not unique. Can't fix it for now.
+                            $response[] = [
+                                $file->getName() => [
+                                    'oldPath' => $file->getPath(),
+                                    'newPath' => str_replace("/".$oldName , "/".$newName, $file->getPath()),
+                                ],
+                            ];
+                            // $l->info(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                            $file->setName($newName)->setPath(str_replace("/".$oldName , "/".$newName, $file->getPath()));
+                            $em->persist($file);
 
 
-                    } else {
-                        $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                        } else {
+                            $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+                        }
+                    }
+                    else{
+                        $this->addFlash('warning', "You don't have permission to rename files");
                     }
                 }
                 //TODO: update children.
@@ -460,26 +476,29 @@ class FileManagerController extends Controller
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
+        
 
-        if(!empty($file_id)){
-            $file = $this->getDoctrine()
-                ->getRepository(VirtualFile::class)
-                ->findOneBy(array('id' => $file_id));
+            if(!empty($file_id)){
+                $file = $this->getDoctrine()
+                    ->getRepository(VirtualFile::class)
+                    ->findOneBy(array('id' => $file_id));
+                if($this->isGranted('admin')||$this->getUser()->getUsername()==$file->getOwner()->getUsername()){
+                    $parent = $this->getDoctrine()
+                        ->getRepository(Directory::class)
+                        ->findOneBy(array('id' => $parent_id));
 
-            $parent = $this->getDoctrine()
-                ->getRepository(Directory::class)
-                ->findOneBy(array('id' => $parent_id));
+                    $file->setParent($parent);
+                    $em->persist($file);
+                    $em->flush();
+                }
+                else{
+                    $this->addFlash('danger', 'you dont have permission to move file');
+                }
+            }
+            else{
 
-            $file->setParent($parent);
-            $em->persist($file);
-        }
-        else{
-
-            $this->addFlash('danger', 'Did not provide a valid files.');
-        }
-
-        $em->flush();
-
+                $this->addFlash('danger', 'Did not provide a valid files.');
+            }
 
         return $this->redirectToRoute('file_management', $queryParameters);
     }
@@ -777,90 +796,97 @@ class FileManagerController extends Controller
      */
     public function uploadFileAction(Request $request, LoggerInterface $logger)
     {
-        //only accept httpRequest
-        $translator = $this->get('translator');
-        if (!$request->isXmlHttpRequest()) {
-            throw new MethodNotAllowedException();
-        }
-
-        //create File Manager
-        $em = $this->getDoctrine()->getManager();
-        $queryParameters = $request->query->all();
-        $fileManager = $this->newFileManager($queryParameters);
-
-        //TODO: Check that parent exist to prevent crashing. Maybe front-end.
-        $parentPath = $fileManager->getQueryParameters()['route'];
-        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $parent=$directoryClass->findOneBy(array('path' => $parentPath));
-        if (!$parent) {
-            $this->addFlash('danger', "Parent not found");
-            return new Response(Response::HTTP_NOT_FOUND);
-
-        }
-        $uploadedFiles = $request->files->get('files');
-        $response = [];
-        foreach ($uploadedFiles as $uploadedFile){
-            $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
-            // $logger->info("FilePath");
-            // $logger->info($filePath);
-
-            $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
-            $file=$fileClass->findByPath($filePath);
-            // $logger->error($fileManager->getRegex());
-            
-            $extensionCheck = !preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName());
-            $sizeCheck = $uploadedFile->getClientSize() > $fileManager->getConfiguration()['upload']['max_file_size'];
-            //check if file with same name already exixt
-
-            if($file){
-                $this->addFlash('danger', "Can't add file, File already exist: ".$uploadedFile->getClientOriginalName());
-                return new Response("Can't add file, File already exist: ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            }else if($extensionCheck){
-                $this->addFlash('danger', "File must have an extension, no special character and not name not too long: ".$uploadedFile->getClientOriginalName());
-                return new Response("File must have an extension, no special character or name longer than 64 character:  ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            }else if($sizeCheck){
-                //check for file extension. If no, don't upload.
-                $this->addFlash('danger', "File must be smaller than 40 MB: ".$uploadedFile->getClientSize());
-                return new Response("File size must be smaller than 40 MB: ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
+        if(!$this->isGranted('student')){
+            //only accept httpRequest
+            $translator = $this->get('translator');
+            if (!$request->isXmlHttpRequest()) {
+                throw new MethodNotAllowedException();
             }
 
-            //create a file object with its hash. Moving file to its folder fires during prePersist.
+            //create File Manager
+            $em = $this->getDoctrine()->getManager();
+            $queryParameters = $request->query->all();
+            $fileManager = $this->newFileManager($queryParameters);
+
+            //TODO: Check that parent exist to prevent crashing. Maybe front-end.
+            $parentPath = $fileManager->getQueryParameters()['route'];
+            $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+            $parent=$directoryClass->findOneBy(array('path' => $parentPath));
+            if (!$parent) {
+                $this->addFlash('danger', "Parent not found");
+                return new Response(Response::HTTP_NOT_FOUND);
+
+            }
+            $uploadedFiles = $request->files->get('files');
+            $response = [];
+            foreach ($uploadedFiles as $uploadedFile){
+                $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
+                // $logger->info("FilePath");
+                // $logger->info($filePath);
+
+                $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
+                $file=$fileClass->findByPath($filePath);
+                // $logger->error($fileManager->getRegex());
+
+                $extensionCheck = !preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName());
+                $sizeCheck = $uploadedFile->getClientSize() > $fileManager->getConfiguration()['upload']['max_file_size'];
+                //check if file with same name already exixt
+
+                if($file){
+                    $this->addFlash('danger', "Can't add file, File already exist: ".$uploadedFile->getClientOriginalName());
+                    return new Response("Can't add file, File already exist: ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+
+                }else if($extensionCheck){
+                    $this->addFlash('danger', "File must have an extension, no special character and not name not too long: ".$uploadedFile->getClientOriginalName());
+                    return new Response("File must have an extension, no special character or name longer than 64 character:  ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+
+                }else if($sizeCheck){
+                    //check for file extension. If no, don't upload.
+                    $this->addFlash('danger', "File must be smaller than 40 MB: ".$uploadedFile->getClientSize());
+                    return new Response("File size must be smaller than 40 MB: ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+
+                //create a file object with its hash. Moving file to its folder fires during prePersist.
+                try{
+                    $fileData = new FileData($uploadedFile, $this->getUser(),$filePath);
+                    $file = CSMCFile::fromUploadData($fileData, $em);
+                    $file->setParent($parent);
+                    $em->persist($file);
+                }
+                catch (IOExceptionInterface $e) {
+                    $this->addFlash('danger', "can't add file-".$uploadedFile->getClientOriginalName());
+                    return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+
+                $response[] = [
+                    'files'=>[
+                        [
+                        'originalName'=> $uploadedFile->getClientOriginalName(),
+                        'fileExtension' => $uploadedFile->getClientOriginalExtension(),
+                        'size'=> $uploadedFile->getClientSize(),
+                        'mimeType'=> $uploadedFile->getClientMimeType()
+                        ],
+                    ]
+                ];
+            }
+
             try{
-                $fileData = new FileData($uploadedFile, $this->getUser(),$filePath);
-                $file = CSMCFile::fromUploadData($fileData, $em);
-                $file->setParent($parent);
-                $em->persist($file);
+                $em->flush();
             }
+
             catch (IOExceptionInterface $e) {
-                $this->addFlash('danger', "can't add file-".$uploadedFile->getClientOriginalName());
+                $this->addFlash('danger', "Error while flushing to server");
                 return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
-            $response[] = [
-                'files'=>[
-                    [
-                    'originalName'=> $uploadedFile->getClientOriginalName(),
-                    'fileExtension' => $uploadedFile->getClientOriginalExtension(),
-                    'size'=> $uploadedFile->getClientSize(),
-                    'mimeType'=> $uploadedFile->getClientMimeType()
-                    ],
-                ]
-            ];
+            //should respond with name of file
+            return new JsonResponse($response,200);
         }
-
-        try{
-            $em->flush();
+        else
+        {
+            $Message = "You don't have permission to Upload";
+            $this->addFlash('danger', $Message);
         }
-
-        catch (IOExceptionInterface $e) {
-            $this->addFlash('danger', "Error while flushing to server");
-            return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        //should respond with name of file
-        return new JsonResponse($response,200);
     }
 
     protected function dispatch($eventName, array $arguments = [])
@@ -873,28 +899,6 @@ class FileManagerController extends Controller
         $event = new GenericEvent($subject, $arguments);
         $this->get('event_dispatcher')->dispatch($eventName, $event);
     }
-
-    //David's function. Might not need anymore because using service.
-    // private function createHash($file, $entityManager) {
-    //     $file_path = '../public' . $file->url;
-    //     $file_path = utf8_encode($file_path);
-    //     $hash = sha1_file($file_path);
-    //     $size = filesize($file_path);
-    //     $extension = $this->guessExtension($file);
-    //     $fileHash = $entityManager->getRepository(FileHash::class)
-    //         ->findOneByPath($hash . '.' . $extension);
-    //     if ($fileHash == null) {
-    //         $fileHash = new FileHash($hash, $extension, $size);
-    //     }
-
-    //     return $fileHash;
-    // }
-
-    // public function guessExtension($file)
-    // {
-    //     $guesser = ExtensionGuesser::getInstance();
-    //     return $guesser->guess($file->type);
-    // }
 
     /**
      * @param $path
@@ -1216,7 +1220,7 @@ class FileManagerController extends Controller
         return null;
     }
 
-	/**
+    /**
      * Creates + adds new links to the system
      *
      *
@@ -1247,4 +1251,117 @@ class FileManagerController extends Controller
 		}
 	}
 
+    /**
+     * @Route("/fms/share", name="fms_share")
+     *
+     * TODO: check if the person who initiated is admin or the owner.
+     * TODO: it is possible to change extension too.
+     *
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     *
+     * @throws \Exception
+     */
+    public function shareFileActiopn(Request $request)
+    {
+        $share_users = $request->request->get('users');
+        $share_roles = $request->request->get('roles');
+        $type = $request->request->get('type');
+        $folder_id = $request->request->get('folder_id');
+        $status = true;
+        $translator = $this->get('translator');
+        $em = $this->getDoctrine()->getManager();
+        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+        $userClass = $this->getDoctrine()->getRepository(User::class);
+        $roleClass = $this->getDoctrine()->getRepository(Role::class);
+        $folder = $directoryClass->findOneBy(array('id' => $folder_id));
+
+        if(!empty($share_users) || !empty($share_roles)){
+            if($folder->getPath() != 'root'){
+                if($type=='user'){
+                        try{
+                            // $folder =  $directoryClass->findOneById($folder_id);
+                            $folder->clearUsers();
+                            foreach($share_users as $id){
+                                $user = $userClass->findOneById($id);
+                                $folder->addUser($user);
+                            }
+                            $status=true;
+                            $em->persist($folder);
+                            $em->flush();
+                        }
+                        catch(IOExceptionInterface $e){
+                            $status=false;
+                            $this->addFlash('danger', 'Not able to process request');
+                        }
+                }
+                else{
+                //run the function that shares by role ids
+                        try{
+                            // $folder =  $directoryClass->findOneById($folder_id);
+                            $folder->clearRoles();
+                            foreach($share_roles as $id){
+                                $role = $roleClass->findOneById($id);
+                                $folder->addRole($role);
+                            }
+                            $status=true;
+                            $em->persist($folder);
+                            $em->flush();
+                        }
+                        catch(IOExceptionInterface $e){
+                            $status=false;
+                            $this->addFlash('danger', 'Not able to process request');
+                        }
+                }
+                
+            }
+        }
+        else{
+            $status = false;
+            $this->addFlash('danger', 'Did not provide any input to share with.');
+        }
+
+        // $em->flush();
+
+        return new JsonResponse([
+            'users' => $share_users,
+            'roles' => $share_roles,
+            'success' => $status,
+            'folder_path' => $folder->getPath()
+        ]);
+    }
+
+    /**
+     * @Route("/fms/shared")
+     * 
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     *
+     * @throws \Exception
+     */
+    public function sharedUsersAndRoles(Request $request)
+    {
+        $queryParameters = $request->query->all();
+        $shared_users=[];
+        $shared_roles=[];
+        if(!empty($queryParameters['existing'])){
+            if(!empty($queryParameters['folder_id'])){
+                $folder_id = $queryParameters['folder_id'];
+                $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+                $folder = $directoryClass->findOneBy(array('id' => $folder_id));
+                foreach($folder->getUsers() as $user){
+                    array_push($shared_users, $user->getId());
+                }
+                foreach($folder->getRoles() as $role){
+                    array_push($shared_roles, $role->getId());
+                }
+            }
+        }
+        return new JsonResponse([
+            'users' => $shared_users,
+            'roles' => $shared_roles,
+        ]);
+    }
 }

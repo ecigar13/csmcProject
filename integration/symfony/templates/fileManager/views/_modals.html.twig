@@ -179,67 +179,57 @@
 <div class="modal fade" id="shareIndividualFolder" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            {{ form_start(form) }}
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title">{{ 'Select/Deselect a user to Share/Unshare'|trans }}</h4>
             </div>
             <div class="modal-body">
-                {{ form_row(form.name) }}
-                <div style="display:inline-block;width:100%;">
-                    <span style="font-size:20px;">Search</span>
-                    <input type="text"  required="required" class="form-control"  style="margin:10px;width:30%;float:left;">
-                    <span class="fa fa-search" style="float:right;margin-top:16px;font-size:20px;"></span>
-                </div>
                 <div style="display:inline-block">
-
-                <div style="border-color:#b3a7a7;height:350px;width:200px;float:left;margin:5px;padding:5px;border-style:solid;overflow-y:scroll;">
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000001</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000002</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox"/>Name mxm0000006</div>
-			  
+                    <span class="type_select">
+                        Share by:
+                        <button type="button" class="user btn btn-default" data-type="user">User</button>
+                        <button type="button" class="role btn btn-default" data-type="role">Role</button>
+                    </span>
+                    
+                    <table class="user share_table display">
+                        <thead>
+                            <tr>
+                                <th>Net ID</th>
+                                <th>Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in userArray %}
+                            <tr data-type="user" data-id="{{user.id}}">
+                                <td class="net_id">{{ user.username }}</td>
+                                <td class="name">{{user.firstName}}·{{user.lastName}}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <table class="role share_table display">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for role in roleArray %}
+                            <tr data-type="role" data-id="{{role.id}}">
+                                <td class="name">{{role.name}}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <div style="border-color:#b3a7a7;height:350px;width:200px;float:left;margin:5px;padding:5px;border-style:solid;overflow-y:scroll;">
-                    <div style="padding:10px"><input type="checkbox" checked/>Name mxm0000004</div>
-                    <div style="padding:10px"><input type="checkbox" checked/>Name mxm0000005</div>
-                    <div style="padding:10px"><input type="checkbox" checked/>Name mxm0000006</div>
-                    </div>
-                    </div>  
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default pull-left"
                         data-dismiss="modal">{{ 'button.cancel'|trans }}
                 </button>
-                <button type="submit" class="btn btn-primary btn">Submit</button>
-                {{ form_row(form.send) }}
+                <button type="button" class="share btn btn-primary btn">Submit</button>
             </div>
-            {{ form_end(form) }}
         </div>
     </div>
 </div>
@@ -248,14 +238,12 @@
 <div class="modal fade" id="shareRoleFolder" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            {{ form_start(form) }}
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
                             aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title">{{ 'Select/Deselect a role to Share/Unshare'|trans }}</h4>
             </div>
             <div class="modal-body">
-                {{ form_row(form.name) }}
                 {# <div style="display:inline-block;width:100%;">
                     <span style="font-size:20px;">Search</span>
                     <input type="text"  required="required" class="form-control"  style="margin:10px;width:30%;float:left;">
@@ -278,9 +266,7 @@
                         data-dismiss="modal">{{ 'button.cancel'|trans }}
                 </button>
                 <button type="submit" class="btn btn-primary btn">Submit</button>
-                {{ form_row(form.send) }}
             </div>
-            {{ form_end(form) }}
         </div>
     </div>
 </div>

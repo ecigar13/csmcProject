@@ -322,16 +322,18 @@ $(document).ready(function () {
 
                     $('#select-all').prop('checked', false);
                     $('#js-delete-multiple-modal').addClass('disabled');
-
                 }).fail(function (jqXHR, textStatus, errorThrown) {
                     displayError('<strong>Ajax call error :</strong> ' + jqXHR.status + ' ' + errorThrown)
                 });
 
             } else if (file.error) {
-                displayError('<strong>' + file.name + '</strong> ' + file.error)
+                displayError('<strong>' + file.name + '</strong> ' + file.error);
+                counter = 0;
             }
         });
+        multipleUploads(data.files.length);
     }).on('fileuploadfail', function (e, data) {
+        counter = 0;
         $.each(data.files, function (index, file) {
             displayError('File upload failed.')
         });
@@ -344,8 +346,12 @@ $(document).ready(function () {
 
     lazy();
 
-    $(this).ajaxStop(function(){
-        location.reload();
-    });
+    var counter = 0;
+    function multipleUploads(total){
+        counter = counter + 1;
+        if(counter == total){
+            location.reload();
+        }
+    }
 
 });

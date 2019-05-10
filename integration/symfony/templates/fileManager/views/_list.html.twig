@@ -36,7 +36,7 @@
 						<b><u> <a target="_blank" href="{{ linkEntity.Url }}"> {{ linkEntity.name }} </a></u></b>
 					</td>
 					<td class="hidden-xs">
-						<small>{{ linkEntity.giveDate|date('m/d/Y') }}</small>
+						<small>{{ linkEntity.giveDate|date('d/m/Y') }}</small>
 					</td>
 					<td class="hidden-xs">
 						<small>0.0 kB</small>
@@ -45,7 +45,9 @@
 						<span data-toggle="tooltip" title="{{ 'title.delete'|trans }}">
 							<button type="button"
 									class="btn btn-xs btn-danger js-delete-modal"
+
 									data-id="{{ linkEntity.id }}"
+
 									data-trigger="click"
 									data-container="body"
 									data-toggle="modal"
@@ -58,17 +60,21 @@
 						</span>
 						<span data-toggle="tooltip" title="{{ 'title.rename.file'|trans }}">
 							<button type="button"
+
 									class="btn btn-xs btn-default js-rename-modal-link"
 									data-id="{{ linkEntity.id }}"
+
 									data-trigger="click"
 									data-container="body"
 									data-toggle="modal"
 									data-target="#js-confirm-rename-link"
 									data-placement="left"
 									data-html="true"
+
 									data-name='{{ linkEntity.name }}'
 									data-url='{{ linkEntity.url }}'
 									data-href='{{ path('file_management_rename_link', fileManager.queryParameters) }}'>
+
 							<span class="far fa-edit"></span>
 							</button>
 						</span>
