@@ -6,7 +6,6 @@ use Artgris\Bundle\FileManagerBundle\Event\FileManagerEvents;
 use App\Helpers\File;
 use Doctrine\ORM\EntityRepository;
 use App\Entity\File\Directory;
-use App\Entity\File\Link;
 use App\Entity\User\User;
 use App\Entity\User\Role;
 use App\Entity\Course\Section;
@@ -19,6 +18,7 @@ use App\Twig\CSMCOrderExtension;
 use App\Entity\File\FileHash;
 //need to rename this after gutting all Artgris File usage (if possible)
 use App\Entity\File\File as CSMCFile;
+use App\Entity\File\Link as CSMCLink;
 use App\Entity\File\VirtualFile;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -58,6 +58,13 @@ class FileManagerController extends Controller
     public function indexAction(Request $request, LoggerInterface $logger)
     {
         $queryParameters = $request->query->all();
+		$postParameters = $request->request->all();
+
+		dump($queryParameters);
+		dump($postParameters);
+		
+		$this->checkForNewLinks($queryParameters, $postParameters);
+
         $translator      = $this->get('translator');
        // $isJson          = $request->get('json') ? true : false;
         $isJson          = $request->get('json') ? true : false;
@@ -71,43 +78,47 @@ class FileManagerController extends Controller
         // $logger->info($fileManager->getDirName());
         // $logger->info($fileManager->getBaseName());
         // Folder search
+
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $root=$directoryClass->findOneBy(array('path' => '/root'));
+		// $directoriesArbo = $this->retrieveSubDirectories($fileManager, DIRECTORY_SEPARATOR,$logger,true); // Commented out conflict
         $directoriesArbo = $this->retrieveSubDirectories($fileManager, $root,$logger,true);
 
         // File search
         $logger->info($fileManager->getCurrentRoute());
         $finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
+
         $regex = $fileManager->getRegex();
+	
         $orderBy   = $fileManager->getQueryParameter('orderby');
         $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
-        switch ($orderBy) {
+        
+		switch ($orderBy) {
             case 'name':
-                // $finderFiles->sort(function (SplFileInfo $a, SplFileInfo $b) {
-                //     return strcmp(strtolower($b->getFileName()), strtolower($a->getFileName()));
-                // });
-                usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
+                usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
                     return strcmp(strtolower($first->getName()), strtolower($second->getName()));
                 });
                 break;
             case 'date':
-                // $finderFiles->sortByModifiedTime();
-                usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
+                usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
                     return ($first->giveDate() > $second->giveDate());
                 });
                 break;
             case 'size':
-            usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
-                    return $first->get('size') - $second->get('size');
+            usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
+					$firstSize = $first instanceof CSMCLink ? 0 : $first->get('size');
+					$secondSize = $second instanceof CSMCLink ? 0 : $second->get('size');
+                    return $firstSize - $secondSize;
                 });
                 break;
             default :
-            usort($finderFiles,  function (CSMCFile $first,CSMCFile $second) {
-                return strcmp(strtolower($first->get('extension')) ,strtolower($second->get('extension')));
+            usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
+					return ($first->giveDate() > $second->giveDate());
                 });
                 break;
         }
 
+		dump($finderFiles);
         //to be enabled while using regex for file type matching
 
         // if ($fileManager->getTree()) {
@@ -130,11 +141,20 @@ class FileManagerController extends Controller
 
         //create delete form for FMS
         $formDelete = $this->createDeleteForm()->createView();
-        $fileArray  = [];
+
+        $fileArray = [];
         foreach ($finderFiles as $file) {
-            $logger->info("path");
-            $logger->info($file->getPhysicalDirectory());
-            $fileArray[] = new File($file, $this->get('translator'), $this->get('app.file_type_service'), $fileManager);
+			if($file instanceof CSMCLink) {
+				$logger->info("path");
+				$logger->info($file->getPath());
+				$fileArray[] = $file;
+			}
+
+            elseif($file instanceof CSMCFile) {
+				$logger->info("path");
+				$logger->info($file->getPhysicalDirectory());
+				$fileArray[] = new File($file, $this->get('translator'), $this->get('app.file_type_service'), $fileManager);
+			}
         }
 
         if ($orderDESC) {
@@ -150,11 +170,9 @@ class FileManagerController extends Controller
 
         if ($isJson) {
             $fileList = $this->renderView('fileManager/_manager_view.html.twig', $parameters);
-
             return new JsonResponse(['data' => $fileList, 'badge' => $finderFiles->count(), 'treeData' => $directoriesArbo]);
         }
         $parameters['treeData'] = json_encode($directoriesArbo);
-
         $form = $this->get('form.factory')->createNamedBuilder('rename', FormType::class)
             ->add('name', TextType::class, [
                 'constraints' => [
@@ -176,6 +194,7 @@ class FileManagerController extends Controller
         /** @var Form $formRename */
         $formRename = $this->createRenameForm();
         $formMove = $this->createMoveForm();
+		$formLink = $this->createLinkForm();
 
 
         //Uploading Folder---------------------------------------->
@@ -191,50 +210,60 @@ class FileManagerController extends Controller
                 $parentPath = $fileManager->getQueryParameters()['route'];
             }
 
-            $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
-
-            //Search for Directory in Table
-            $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-            $directory=$directoryClass->findByPath($directoryPath);
-            if($directory){
-                $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
+            // $logger->info("parent");
+            // $logger->info($parentPath);
+            if(!$this->isGranted('student')){
+                $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
+                
+                //Search for Directory in Table
+                $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+                $directory=$directoryClass->findByPath($directoryPath);
+                if($directory){
+                    $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
+                    return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
+                }
+            
+                //Get Parent, create directory, set parent
+            
+                $parent=$directoryClass->findOneBy(array('path' => $parentPath));
+                if (!$parent) {
+                    $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
+                    return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
+                
+                }
+                // $user = $this->getUser();
+                // $role = $user->getRole();
+                // $roleClass = $this->getDoctrine()->getRepository(Role::class);
+                // $Admin = $roleClass->findOneByName('admin');
+                try{
+                    $directory  = new Directory($directoryName,$this->getUser(),$directoryPath);
+                
+                    $directory->setParent($parent);
+                    foreach($parent->getUsers() as $user)
+                        $directory->addUser($user);
+                    foreach($parent->getRoles() as $role)
+                        $directory->addRole($role);
+                    $entityManager = $this->getDoctrine()->getManager();
+                    $entityManager->persist($directory);
+                    $entityManager->flush();
+                    $this->addFlash('success', $translator->trans('folder.add.success'));
+                }
+                catch (IOExceptionInterface $e) {
+                    $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
+                }
+            
                 return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
             }
-
-            //Get Parent, create directory, set parent
-
-            $parent=$directoryClass->findOneBy(array('path' => $parentPath));
-            if (!$parent) {
-                $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
-                return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
-
-            }
-            // $user = $this->getUser();
-            // $role = $user->getRole();
-            // $roleClass = $this->getDoctrine()->getRepository(Role::class);
-            // $Admin = $roleClass->findOneByName('admin');
-            try{
-                $directory  = new Directory($directoryName,$this->getUser(),$directoryPath);
-
-                $directory->setParent($parent);
-                foreach($parent->getUsers() as $user)
-                    $directory->addUser($user);
-                foreach($parent->getRoles() as $role)
-                    $directory->addRole($role);
-                $entityManager = $this->getDoctrine()->getManager();
-                $entityManager->persist($directory);
-                $entityManager->flush();
-                $this->addFlash('success', $translator->trans('folder.add.success'));
-            }
-            catch (IOExceptionInterface $e) {
-                $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
+            else{
+                $Message = "You don't have permission to Upload";
+                $this->addFlash('danger', $Message);
             }
 
-            return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
         }
         $parameters['form']       = $form->createView();
         $parameters['formRename'] = $formRename->createView();
         $parameters['formMove']   = $formMove->createView();
+		$parameters['formLink']   = $formLink->createView();
 
         //-----------find all netid----------------//
         $userArray = $this->getDoctrine()->getRepository(User::class)->findall();
@@ -574,6 +603,32 @@ class FileManagerController extends Controller
             ->getForm();
     }
 
+	/**
+     * @return mixed
+     */
+    protected function createLinkForm()
+    {
+        return $this->createFormBuilder()
+            ->add('title', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('url', TextType::class, [
+                'constraints' => [
+                    new NotBlank(),
+                ],
+                'label'       => false,
+            ])->add('send', SubmitType::class, [
+                'attr'  => [
+                    'class' => 'btn btn-primary',
+                ],
+                'label' => 'button.addLink.action',
+            ])
+            ->getForm();
+    }
+
+
     /**
      * @return mixed
      */
@@ -611,90 +666,97 @@ class FileManagerController extends Controller
      */
     public function uploadFileAction(Request $request, LoggerInterface $logger)
     {
-        //only accept httpRequest
-        $translator = $this->get('translator');
-        if (!$request->isXmlHttpRequest()) {
-            throw new MethodNotAllowedException();
-        }
-
-        //create File Manager
-        $em = $this->getDoctrine()->getManager();
-        $queryParameters = $request->query->all();
-        $fileManager = $this->newFileManager($queryParameters);
-
-        //TODO: Check that parent exist to prevent crashing. Maybe front-end.
-        $parentPath = $fileManager->getQueryParameters()['route'];
-        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $parent=$directoryClass->findOneBy(array('path' => $parentPath));
-        if (!$parent) {
-            $this->addFlash('danger', "Parent not found");
-            return new Response(Response::HTTP_NOT_FOUND);
-
-        }
-        $uploadedFiles = $request->files->get('files');
-        $response = [];
-        foreach ($uploadedFiles as $uploadedFile){
-            $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
-            // $logger->info("FilePath");
-            // $logger->info($filePath);
-
-            $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
-            $file=$fileClass->findByPath($filePath);
-            // $logger->error($fileManager->getRegex());
-            
-            $extensionCheck = !preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName());
-            $sizeCheck = $uploadedFile->getClientSize() > $fileManager->getConfiguration()['upload']['max_file_size'];
-            //check if file with same name already exixt
-
-            if($file){
-                $this->addFlash('danger', "Can't add file, File already exist: ".$uploadedFile->getClientOriginalName());
-                return new Response("Can't add file, File already exist: ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            }else if($extensionCheck){
-                $this->addFlash('danger', "File must have an extension, no special character and not name not too long: ".$uploadedFile->getClientOriginalName());
-                return new Response("File must have an extension, no special character or name longer than 64 character:  ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
-
-            }else if($sizeCheck){
-                //check for file extension. If no, don't upload.
-                $this->addFlash('danger', "File must be smaller than 40 MB: ".$uploadedFile->getClientSize());
-                return new Response("File size must be smaller than 40 MB: ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
+        if(!$this->isGranted('student')){
+            //only accept httpRequest
+            $translator = $this->get('translator');
+            if (!$request->isXmlHttpRequest()) {
+                throw new MethodNotAllowedException();
             }
 
-            //create a file object with its hash. Moving file to its folder fires during prePersist.
+            //create File Manager
+            $em = $this->getDoctrine()->getManager();
+            $queryParameters = $request->query->all();
+            $fileManager = $this->newFileManager($queryParameters);
+
+            //TODO: Check that parent exist to prevent crashing. Maybe front-end.
+            $parentPath = $fileManager->getQueryParameters()['route'];
+            $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+            $parent=$directoryClass->findOneBy(array('path' => $parentPath));
+            if (!$parent) {
+                $this->addFlash('danger', "Parent not found");
+                return new Response(Response::HTTP_NOT_FOUND);
+
+            }
+            $uploadedFiles = $request->files->get('files');
+            $response = [];
+            foreach ($uploadedFiles as $uploadedFile){
+                $filePath=$parentPath . DIRECTORY_SEPARATOR . $uploadedFile->getClientOriginalName();
+                // $logger->info("FilePath");
+                // $logger->info($filePath);
+
+                $fileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
+                $file=$fileClass->findByPath($filePath);
+                // $logger->error($fileManager->getRegex());
+
+                $extensionCheck = !preg_match($fileManager->getRegex(),$uploadedFile->getClientOriginalName());
+                $sizeCheck = $uploadedFile->getClientSize() > $fileManager->getConfiguration()['upload']['max_file_size'];
+                //check if file with same name already exixt
+
+                if($file){
+                    $this->addFlash('danger', "Can't add file, File already exist: ".$uploadedFile->getClientOriginalName());
+                    return new Response("Can't add file, File already exist: ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+
+                }else if($extensionCheck){
+                    $this->addFlash('danger', "File must have an extension, no special character and not name not too long: ".$uploadedFile->getClientOriginalName());
+                    return new Response("File must have an extension, no special character or name longer than 64 character:  ".$uploadedFile->getClientOriginalName(),Response::HTTP_INTERNAL_SERVER_ERROR);
+
+                }else if($sizeCheck){
+                    //check for file extension. If no, don't upload.
+                    $this->addFlash('danger', "File must be smaller than 40 MB: ".$uploadedFile->getClientSize());
+                    return new Response("File size must be smaller than 40 MB: ".$uploadedFile->getClientSize(),Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+
+                //create a file object with its hash. Moving file to its folder fires during prePersist.
+                try{
+                    $fileData = new FileData($uploadedFile, $this->getUser(),$filePath);
+                    $file = CSMCFile::fromUploadData($fileData, $em);
+                    $file->setParent($parent);
+                    $em->persist($file);
+                }
+                catch (IOExceptionInterface $e) {
+                    $this->addFlash('danger', "can't add file-".$uploadedFile->getClientOriginalName());
+                    return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
+                }
+
+                $response[] = [
+                    'files'=>[
+                        [
+                        'originalName'=> $uploadedFile->getClientOriginalName(),
+                        'fileExtension' => $uploadedFile->getClientOriginalExtension(),
+                        'size'=> $uploadedFile->getClientSize(),
+                        'mimeType'=> $uploadedFile->getClientMimeType()
+                        ],
+                    ]
+                ];
+            }
+
             try{
-                $fileData = new FileData($uploadedFile, $this->getUser(),$filePath);
-                $file = CSMCFile::fromUploadData($fileData, $em);
-                $file->setParent($parent);
-                $em->persist($file);
+                $em->flush();
             }
+
             catch (IOExceptionInterface $e) {
-                $this->addFlash('danger', "can't add file-".$uploadedFile->getClientOriginalName());
+                $this->addFlash('danger', "Error while flushing to server");
                 return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
             }
 
-            $response[] = [
-                'files'=>[
-                    [
-                    'originalName'=> $uploadedFile->getClientOriginalName(),
-                    'fileExtension' => $uploadedFile->getClientOriginalExtension(),
-                    'size'=> $uploadedFile->getClientSize(),
-                    'mimeType'=> $uploadedFile->getClientMimeType()
-                    ],
-                ]
-            ];
+            //should respond with name of file
+            return new JsonResponse($response,200);
         }
-
-        try{
-            $em->flush();
+        else
+        {
+            $Message = "You don't have permission to Upload";
+            $this->addFlash('danger', $Message);
         }
-
-        catch (IOExceptionInterface $e) {
-            $this->addFlash('danger', "Error while flushing to server");
-            return new Response(Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-
-        //should respond with name of file
-        return new JsonResponse($response,200);
     }
 
     protected function dispatch($eventName, array $arguments = [])
@@ -720,6 +782,7 @@ class FileManagerController extends Controller
     {
         $directoriesList = null;
         $logger->info("RetrieveDirectory");
+
         $logger->info($parent->getpath());
 
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
@@ -755,7 +818,9 @@ class FileManagerController extends Controller
         //$parent=$directoryClass->findOneBy(array('path' => $parentPath));
         $directories = $directoryClass->findByParent($parent);
 
-        //List for tree
+        usort($directories,  function (VirtualFile $first,VirtualFile $second) {
+            return strcmp(strtolower($first->getName()), strtolower($second->getName()));
+        });
 
 
         foreach ($directories as $directory) {
@@ -766,6 +831,7 @@ class FileManagerController extends Controller
 
 
             if($this->getViewAccess($directory)){
+
                 $directoriesList[] = [
                     'text'     => $directory->getName(),
                     // 'id'     =>   $directory->getId(),
@@ -778,6 +844,7 @@ class FileManagerController extends Controller
                     ], 'state' => [
                         'selected' => $fileManager->getCurrentRoute() === $fileName,
                         'opened'   => false,
+
                     ],
                 ];
             }
@@ -827,10 +894,15 @@ class FileManagerController extends Controller
     {
         //Find parent from id and children from parent
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $FileClass=$this->getDoctrine()->getRepository(CSMCFile::class);
-        $parent=$directoryClass->findByPath($path);
+        $parent = $directoryClass->findByPath($path);
+
+		$FileClass = $this->getDoctrine()->getRepository(CSMCFile::class);
         $FileList = $FileClass->findByParent($parent);
-        return $FileList;
+
+		$LinkClass = $this->getDoctrine()->getRepository(CSMCLink::class);
+		$LinkList = $LinkClass->findByParent($parent);
+
+        return array_merge($FileList, $LinkList);
     }
 
     /**
@@ -872,8 +944,10 @@ class FileManagerController extends Controller
         $userClass = $this->getDoctrine()->getRepository(User::class);
         $roleClass = $this->getDoctrine()->getRepository(Role::class);
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+
         $UserName = $this->getParameter('file_manager')['superUser'];
         $admin = $userClass->findOneBy(array('username' => $UserName));
+
         $Instructor = $roleClass->findOneByName('instructor');
         $Mentor = $roleClass->findOneByName('mentor');
         $Admin = $roleClass->findOneByName('admin');
@@ -881,15 +955,16 @@ class FileManagerController extends Controller
         $Developer = $roleClass->findOneByName('developer');
 
         try{
-            // Create root folder it's Not there
+            // Create root folder if it's not there
             $root=$directoryClass->findOneBy(array('path' => '/root'));
             if(!$root){
-                $root  = new Directory('root',$admin,'/root');
+                $root  = new Directory('root',$admin,'/root');        
+
                 $entityManager->persist($root);
                 $entityManager->flush();
             }
 
-            //check for instructor role if not there create section directory
+            // check for instructor role if not there create section directory
             if (in_array("instructor", $roles)){
 
                 $instructorFolderPath = '/root/Instructors';
@@ -919,10 +994,10 @@ class FileManagerController extends Controller
                             $entityManager->flush();
                 }
 
-
                 //Find all sections related to Instructor and create directories for them
                 $Sections = $user->getSections();
                 foreach($Sections as $section){
+
                         $seasonName=$section->getSemester()->getSeason(). '_' . $section->getSemester()->getYear();
                         $seasonPath= $nameFolderPath . '/' .  $seasonName;
                         $logger->info("Season");

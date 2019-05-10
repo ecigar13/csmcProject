@@ -48,7 +48,7 @@ class Role extends \Symfony\Component\Security\Core\Role\Role implements \Serial
     /**
      * @ORM\ManyToMany(targetEntity="App\Entity\File\VirtualFile",  mappedBy="roles")
      */
-    private $vitualFiles;
+    private $virtualFiles;
 
     /**
      * Constructor
@@ -56,7 +56,7 @@ class Role extends \Symfony\Component\Security\Core\Role\Role implements \Serial
     public function __construct(string $name) {
         $this->name = $name;
         $this->users = new \Doctrine\Common\Collections\ArrayCollection();
-        $this->vitualFiles = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->virtualFiles = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     /**
