@@ -43,7 +43,7 @@
                         onClick="window.location.reload()">
                     <span class="fas fa-sync"></span>
                 </button>
-
+             {% if is_granted('instructor') or is_granted('mentor') or is_granted('admin') or is_granted('developer') %}
                 <span class="btn btn-success btn-sm fileinput-button btn-action">
                     <span class="far fa-file"></span>
                     <span>{{ 'Upload files'|trans }}</span>
@@ -111,11 +111,14 @@
                     <span>{{ 'Delete selected files'|trans }}</span>
                 </a>
                 {# new code share to individual button start#}
-                <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="share_button btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareIndividualFolder">
-                    <span class="fa fa-share"></span>
-                    <span>{{ 'Share Current Folder'|trans }}</span>
-                </button>
+                 {% if is_granted('admin') or is_granted('developer') %}
+                    <button type="button" style="background-color:#0ae8de;border-color:#0ae8de;background-image:linear-gradient(to bottom,#10ded5 0,#07f5ea 100%)" class="share_button btn btn-primary btn-sm btn-action" data-toggle="modal" data-target="#shareIndividualFolder">
+                        <span class="fa fa-share"></span>
+                        <span>{{ 'Share Current Folder'|trans }}</span>
+                    </button>
+                 {% endif %}
                 {# new code share to role button end#}
+                {% endif %}
             {% endblock %}
             {% block display %}
                 <div class="btn-group pull-right">

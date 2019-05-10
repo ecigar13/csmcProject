@@ -343,6 +343,7 @@ class FileManagerController extends Controller
                     }
                     else{
                         $this->addFlash('warning', "You don't have permission to rename files");
+
                     }
                 }
                 //TODO: update children.
@@ -434,6 +435,7 @@ class FileManagerController extends Controller
 
                     } else {
                         $this->addFlash('warning', $translator->trans('file.renamed.nochanged'));
+
                     }
                 }
                 //TODO: update children.
@@ -922,7 +924,6 @@ class FileManagerController extends Controller
     {
         $directoriesList = null;
         $logger->info("RetrieveDirectory");
-
         $logger->info($parent->getpath());
 
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
