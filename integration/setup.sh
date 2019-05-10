@@ -11,6 +11,9 @@ docker-compose exec php php bin/console app:add-user yournetid developer
 #to run tests:
 docker-compose exec php php ./phpunit symfony
 
+#to run individual test
+docker-compose exec php php bin/phpunit tests/Controller/FileManagerControllerTest.php
+
 #Note to self: run sudo docker-compose build on Linux. Make sure to start docker service.
 #Change the entire folder to chmod 755.
 
