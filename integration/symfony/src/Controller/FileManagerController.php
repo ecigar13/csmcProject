@@ -265,6 +265,11 @@ class FileManagerController extends Controller
         $parameters['formMove']   = $formMove->createView();
 		$parameters['formLink']   = $formLink->createView();
 
+        //-----------find all netid----------------//
+        $userArray = $this->getDoctrine()->getRepository(User::class)->findall();
+        $roleArray = $this->getDoctrine()->getRepository(Role::class)->findall();
+        $parameters['userArray']   = $userArray;
+        $parameters['roleArray']   = $roleArray;
         return $this->render('fileManager/manager.html.twig', $parameters);
     }
     /**
@@ -765,28 +770,6 @@ class FileManagerController extends Controller
         $this->get('event_dispatcher')->dispatch($eventName, $event);
     }
 
-    //David's function. Might not need anymore because using service.
-    // private function createHash($file, $entityManager) {
-    //     $file_path = '../public' . $file->url;
-    //     $file_path = utf8_encode($file_path);
-    //     $hash = sha1_file($file_path);
-    //     $size = filesize($file_path);
-    //     $extension = $this->guessExtension($file);
-    //     $fileHash = $entityManager->getRepository(FileHash::class)
-    //         ->findOneByPath($hash . '.' . $extension);
-    //     if ($fileHash == null) {
-    //         $fileHash = new FileHash($hash, $extension, $size);
-    //     }
-
-    //     return $fileHash;
-    // }
-
-    // public function guessExtension($file)
-    // {
-    //     $guesser = ExtensionGuesser::getInstance();
-    //     return $guesser->guess($file->type);
-    // }
-
     /**
      * @param $path
      * @param string $parent
@@ -1107,35 +1090,109 @@ class FileManagerController extends Controller
         return null;
     }
 
-	/**
-     * Creates + adds new links to the system
+    /**
+     * @Route("/fms/share", name="fms_share")
      *
+     * TODO: check if the person who initiated is admin or the owner.
+     * TODO: it is possible to change extension too.
      *
-     * @param $queryParameters
-	 * @param $postParameters
+     * @param Request $request
      *
-     * @return null
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     *
+     * @throws \Exception
      */
-	protected function checkForNewLinks(array $queryParameters, array $postParameters) {
-		
-		if(array_key_exists("route", $queryParameters) and array_key_exists("linkTitle", $postParameters) and array_key_exists("linkURL", $postParameters) ) {
+    public function shareFileActiopn(Request $request)
+    {
+        $share_users = $request->request->get('users');
+        $share_roles = $request->request->get('roles');
+        $type = $request->request->get('type');
+        $folder_id = $request->request->get('folder_id');
+        $status = true;
+        $translator = $this->get('translator');
+        $em = $this->getDoctrine()->getManager();
+        $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+        $userClass = $this->getDoctrine()->getRepository(User::class);
+        $roleClass = $this->getDoctrine()->getRepository(Role::class);
+        $folder = $directoryClass->findOneBy(array('id' => $folder_id));
 
-		// Insert other checks as necessary before this block
-		// Create + Add link - Start
-			$directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-			$linkParent = $directoryClass->findOneByPath($queryParameters["route"]);
-			$rootParent = $directoryClass->findOneByPath("/root");
+        if(!empty($share_users) || !empty($share_roles)){
+            if($parent->getPath() != 'root'){
+                try{
+                    // $folder =  $directoryClass->findOneById($folder_id);
+                    $folder->clearUsers();
+                    foreach($share_users as $id){
+                        $user = $userClass->findOneById($id);
+                        $folder->addUser($user);
+                    }
+                }
+                catch(IOExceptionInterface $e){
+                    $status=false;
+                    $this->addFlash('danger', 'Not able to process request');
+                }
+                //run the function that shares by role ids
+                try{
+                    // $folder =  $directoryClass->findOneById($folder_id);
+                    $folder->clearRoles();
+                    foreach($share_roles as $id){
+                        $role = $roleClass->findOneById($id);
+                        $folder->addRole($role);
+                    }
+                }
+                catch(IOExceptionInterface $e){
+                    $status=false;
+                    $this->addFlash('danger', 'Not able to process request');
+                }
+                $status=true;
+                $em->persist($folder);
+                $em->flush();
+            }
+        }
+        else{
+            $status = false;
+            $this->addFlash('danger', 'Did not provide any input to share with.');
+        }
 
-			if($linkParent and $linkParent !== $rootParent) {
-				$newLink= new CSMCLink($postParameters["linkTitle"], $this->getUser(), $postParameters["linkURL"], $queryParameters["route"]);
-				$newLink->setParent($linkParent);
-				$entityManager = $this->getDoctrine()->getManager();
-				$entityManager->persist($newLink);
-				$entityManager->flush();
-			}	
-		// Create + Add link - End
-		
-		}
-	}
+        // $em->flush();
 
+        return new JsonResponse([
+            'users' => $share_users,
+            'roles' => $share_roles,
+            'success' => $status,
+            'folder_path' => $folder->getPath()
+        ]);
+    }
+
+    /**
+     * @Route("/fms/shared")
+     * 
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     *
+     * @throws \Exception
+     */
+    public function sharedUsersAndRoles(Request $request)
+    {
+        $queryParameters = $request->query->all();
+        $shared_users=[];
+        $shared_roles=[];
+        if(!empty($queryParameters['existing'])){
+            if(!empty($queryParameters['folder_id'])){
+                $folder_id = $queryParameters['folder_id'];
+                $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+                $folder = $directoryClass->findOneBy(array('id' => $folder_id));
+                foreach($folder->getUsers() as $user){
+                    array_push($shared_users, $user->getId());
+                }
+                foreach($folder->getRoles() as $role){
+                    array_push($shared_roles, $role->getId());
+                }
+            }
+        }
+        return new JsonResponse([
+            'users' => $shared_users,
+            'roles' => $shared_roles,
+        ]);
+    }
 }
