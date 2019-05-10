@@ -151,6 +151,17 @@ class VirtualFile {
         return $this->roles->toArray();;
     }
 
+    public function clearUsers()
+    {
+        $this->getUsers()->clear();
+    }
+
+    public function clearRoles()
+    {
+        $this->getRoles()->clear();
+    }
+
+    
     public function getChildren()
     {
         return $this->children->toArray();;

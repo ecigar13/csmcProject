@@ -1036,29 +1036,61 @@ class FileManagerController extends Controller
         $translator = $this->get('translator');
         $em = $this->getDoctrine()->getManager();
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
-        $parent = $directoryClass->findOneBy(array('id' => $folder_id));
+        $userClass = $this->getDoctrine()->getRepository(User::class);
+        $roleClass = $this->getDoctrine()->getRepository(Role::class);
+        $folder = $directoryClass->findOneBy(array('id' => $folder_id));
 
         if(!empty($share_ids)){
             if($parent->getPath() != 'root'){
                 if($type == 'user'){
-                    //run the function that shares by user ids
+                    try{
+                        // $folder =  $directoryClass->findOneById($folder_id);
+                        $folder->clearUsers();
+                        foreach($share_ids as $id){
+                            $user = $userClass->findOneById($id);
+                            $folder->addUser($user);
+                        }
+                        $em->persist($folder);
+                        $em->flush();
+                        $status=true;
+                    }
+                    catch(IOExceptionInterface $e){
+                        $status=false;
+                        $this->addFlash('danger', 'Not able to process request');
+                    }
                 }
                 if($type == 'role'){
                     //run the function that shares by role ids
+                    try{
+                        // $folder =  $directoryClass->findOneById($folder_id);
+                        $folder->clearRoles();
+                        foreach($share_ids as $id){
+                            $role = $roleClass->findOneById($id);
+                            $folder->addRole($role);
+                        }
+                        $em->persist($folder);
+                        $em->flush();
+                        $status=true;
+                    }
+                    catch(IOExceptionInterface $e){
+                        $status=false;
+                        $this->addFlash('danger', 'Not able to process request');
+                    }
+
                 }
             }
         }
         else{
             $status = false;
-            $this->addFlash('danger', 'Did not provide any users to share with.');
+            $this->addFlash('danger', 'Did not provide any input to share with.');
         }
 
-        $em->flush();
+        // $em->flush();
 
         return new JsonResponse([
             'data' => $share_ids,
             'success' => $status,
-            'folder_path' => $parent->getPath()
+            'folder_path' => $folder->getPath()
         ]);
     }
 
