@@ -62,7 +62,7 @@ class FileManagerController extends Controller
 
 		dump($queryParameters);
 		dump($postParameters);
-		
+
 		$this->checkForNewLinks($queryParameters, $postParameters);
 
         $translator      = $this->get('translator');
@@ -89,10 +89,10 @@ class FileManagerController extends Controller
         $finderFiles = $this->retrieveFiles($fileManager, $fileManager->getCurrentRoute());
 
         $regex = $fileManager->getRegex();
-	
+
         $orderBy   = $fileManager->getQueryParameter('orderby');
         $orderDESC = CSMCOrderExtension::DESC === $fileManager->getQueryParameter('order');
-        
+
 		switch ($orderBy) {
             case 'name':
                 usort($finderFiles,  function (VirtualFile $first,VirtualFile $second) {
@@ -192,7 +192,7 @@ class FileManagerController extends Controller
         $form->handleRequest($request);
         /* @var Form $formRename */
         $formRename = $this->createRenameForm();
-        
+
 		/* @var Form $formRenameLink */
         $formRenameLink = $this->createRenameFormLink();
 
@@ -217,7 +217,7 @@ class FileManagerController extends Controller
             // $logger->info($parentPath);
             if(!$this->isGranted('student')){
                 $directoryPath =  $parentPath . DIRECTORY_SEPARATOR . $data['name'];
-                
+
                 //Search for Directory in Table
                 $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
                 $directory=$directoryClass->findByPath($directoryPath);
@@ -225,14 +225,14 @@ class FileManagerController extends Controller
                     $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
                     return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
                 }
-            
+
                 //Get Parent, create directory, set parent
-            
+
                 $parent=$directoryClass->findOneBy(array('path' => $parentPath));
                 if (!$parent) {
                     $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
                     return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
-                
+
                 }
                 // $user = $this->getUser();
                 // $role = $user->getRole();
@@ -240,7 +240,7 @@ class FileManagerController extends Controller
                 // $Admin = $roleClass->findOneByName('admin');
                 try{
                     $directory  = new Directory($directoryName,$this->getUser(),$directoryPath);
-                
+
                     $directory->setParent($parent);
                     foreach($parent->getUsers() as $user)
                         $directory->addUser($user);
@@ -254,7 +254,7 @@ class FileManagerController extends Controller
                 catch (IOExceptionInterface $e) {
                     $this->addFlash('danger', $translator->trans('folder.add.danger', ['%message%' => $data['name']]));
                 }
-            
+
                 return $this->redirectToRoute('file_management', $fileManager->getQueryParameters());
             }
             else{
@@ -276,7 +276,7 @@ class FileManagerController extends Controller
         $parameters['roleArray']   = $roleArray;
         return $this->render('fileManager/manager.html.twig', $parameters);
     }
-    
+
 	/**
      * @Route("/fms/rename/", name="file_management_rename")
      *
@@ -476,7 +476,7 @@ class FileManagerController extends Controller
         $translator = $this->get('translator');
         $queryParameters = $request->query->all();
         $em = $this->getDoctrine()->getManager();
-        
+
 
             if(!empty($file_id)){
                 $file = $this->getDoctrine()
@@ -1088,7 +1088,7 @@ class FileManagerController extends Controller
             // Create root folder if it's not there
             $root=$directoryClass->findOneBy(array('path' => '/root'));
             if(!$root){
-                $root  = new Directory('root',$admin,'/root');        
+                $root  = new Directory('root',$admin,'/root');
 
                 $entityManager->persist($root);
                 $entityManager->flush();
@@ -1230,7 +1230,7 @@ class FileManagerController extends Controller
      * @return null
      */
 	protected function checkForNewLinks(array $queryParameters, array $postParameters) {
-		
+
 		if(array_key_exists("route", $queryParameters) and array_key_exists("linkTitle", $postParameters) and array_key_exists("linkURL", $postParameters) ) {
 
 		// Insert other checks as necessary before this block
@@ -1245,9 +1245,9 @@ class FileManagerController extends Controller
 				$entityManager = $this->getDoctrine()->getManager();
 				$entityManager->persist($newLink);
 				$entityManager->flush();
-			}	
+			}
 		// Create + Add link - End
-		
+
 		}
 	}
 
@@ -1314,7 +1314,7 @@ class FileManagerController extends Controller
                             $this->addFlash('danger', 'Not able to process request');
                         }
                 }
-                
+
             }
         }
         else{
@@ -1334,7 +1334,7 @@ class FileManagerController extends Controller
 
     /**
      * @Route("/fms/shared")
-     * 
+     *
      * @param Request $request
      *
      * @return \Symfony\Component\HttpFoundation\JsonResponse
