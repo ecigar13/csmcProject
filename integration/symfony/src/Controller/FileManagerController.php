@@ -1023,13 +1023,14 @@ class FileManagerController extends Controller
      *
      * @param Request $request
      *
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
      *
      * @throws \Exception
      */
     public function shareFileActiopn(Request $request)
     {
-        $share_ids = $request->request->get('ids');
+        $share_users = $request->request->get('users');
+        $share_roles = $request->request->get('roles');
         $type = $request->request->get('type');
         $folder_id = $request->request->get('folder_id');
         $status = true;
@@ -1037,15 +1038,10 @@ class FileManagerController extends Controller
         $em = $this->getDoctrine()->getManager();
         $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
         $parent = $directoryClass->findOneBy(array('id' => $folder_id));
-
-        if(!empty($share_ids)){
+        if(!empty($share_users) || !empty($share_roles) ){
             if($parent->getPath() != 'root'){
-                if($type == 'user'){
-                    //run the function that shares by user ids
-                }
-                if($type == 'role'){
-                    //run the function that shares by role ids
-                }
+                //run the function that shares by user ids
+                //iterate over the ids, if user with given id exists, share with them
             }
         }
         else{
@@ -1056,11 +1052,43 @@ class FileManagerController extends Controller
         $em->flush();
 
         return new JsonResponse([
-            'data' => $share_ids,
+            'users' => $share_users,
+            'roles' => $share_roles,
             'success' => $status,
             'folder_path' => $parent->getPath()
         ]);
     }
 
-
+    /**
+     * @Route("/fms/shared")
+     * 
+     * @param Request $request
+     *
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     *
+     * @throws \Exception
+     */
+    public function sharedUsersAndRoles(Request $request)
+    {
+        $queryParameters = $request->query->all();
+        $shared_users=[];
+        $shared_roles=[];
+        if(!empty($queryParameters['existing'])){
+            if(!empty($queryParameters['folder_id'])){
+                $folder_id = $queryParameters['folder_id'];
+                $directoryClass = $this->getDoctrine()->getRepository(Directory::class);
+                $folder = $directoryClass->findOneBy(array('id' => $folder_id));
+                foreach($folder->getUsers() as $user){
+                    array_push($shared_users, $user->getId());
+                }
+                foreach($folder->getRoles() as $role){
+                    array_push($shared_roles, $role->getId());
+                }
+            }
+        }
+        return new JsonResponse([
+            'users' => $shared_users,
+            'roles' => $shared_roles,
+        ]);
+    }
 }

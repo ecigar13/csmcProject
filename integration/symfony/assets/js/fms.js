@@ -18,15 +18,19 @@ var _fms = function(){
         share: {
             type_select: $('.type_select button'),
             table: $('.share_table'),
+            modal_button: $('.share_button'),
+            modal: $('#shareIndividualFolder'),
             submit: $('#shareIndividualFolder button.share')
         }
     }
     var data = {
         share: {
-            ids: [],
+            users: [],
+            roles: [],
             folder_id: false,
             type: false,
-        }
+            existing: false,
+        },
     }
 
     var init = function(){
@@ -38,6 +42,7 @@ var _fms = function(){
         ui.move.button.on('click',moveFile);
         ui.share.submit.on('click', shareFile)
         ui.share.type_select.on('click', switchShareType)
+        ui.share.modal_button.on('click', getSharedUsersAndRoles)
     }
 
     var moveFile = function(){
@@ -51,11 +56,11 @@ var _fms = function(){
     }
 
     var shareFile = function(){
-        console.log(data.share.ids)
+        console.log(data.share)
         data.share.folder_id = $('.jstree-clicked').attr('id');
-        if(data.share.ids.length <= 0){
+        if((data.share.type == 'user' && data.share.users.length <= 0) || (data.share.type == 'role' && data.share.roles.length <= 0)){
             alert("Please select users to share this file with");
-            return;
+            return; 
         }
         $.ajax({
             url: '/fms/share',
@@ -63,6 +68,8 @@ var _fms = function(){
             data: data.share,
             success: function(data){
                 console.log(data);
+                ui.share.modal.modal('hide');
+                location.reload();
             },
             error: function(error){
                 console.log(error);
@@ -102,6 +109,23 @@ var _fms = function(){
         return tree_array;
     }
 
+    var getSharedUsersAndRoles = function(){
+        var folder_id = $('.jstree-clicked').attr('id');
+        $.ajax({
+            url: `/fms/shared?existing=true&folder_id=${folder_id}`,
+            method: 'GET',
+            success: function(result){
+                console.log(result);
+                data.share.users = data.share.users.concat(result.users);
+                data.share.roles = data.share.roles.concat(result.roles);
+                markSelected();
+            },
+            error: function(error){
+                console.log(error);
+            }
+        })
+    }
+
     var switchShareType = function(event, default_type = false){
         var type;
         if(default_type)
@@ -110,27 +134,55 @@ var _fms = function(){
             type = $(this).data('type');
         $('.dataTables_wrapper').hide()
         $(`table.${type}`).closest('.dataTables_wrapper').show();
-        ui.share.table.find('tr').removeClass('selected');
         ui.share.type_select.removeClass('selected');
         $(this).addClass('selected');
         data.share.type = type;
-        data.share.ids = [];
+        markSelected();
+        console.log(data);
+    }
+
+    var markSelected = function(){
+        $('.share_table tbody tr').each(function(ndx, val){
+            var id = $(val).data('id');
+            var ndx = -1;
+            if(data.share.type == 'user')
+                ndx = data.share.users.indexOf(id);
+            if(data.share.type == 'role')
+                ndx = data.share.roles.indexOf(id);
+            if(ndx != -1){
+                $(val).addClass('selected');
+            }
+        });
     }
 
     var createShareTable = function(){
-        ui.share.table.DataTable();
+        ui.share.table.DataTable({
+            "drawCallback": markSelected
+        });
         ui.share.table.on('click', 'tbody tr', function () {
             var id = $(this).data('id');
-            var ndx = data.share.ids.indexOf(id);
+            var ndx = -1;
+            if(data.share.type == 'user')
+                ndx = data.share.users.indexOf(id);
+            if(data.share.type == 'role')
+                ndx = data.share.roles.indexOf(id);
             if($(this).hasClass('selected')){
                 $(this).removeClass('selected');
-                if(ndx != -1)
-                    data.share.ids.splice(ndx, 1);
+                if(ndx != -1){
+                    if(data.share.type == 'user')
+                        data.share.users.splice(ndx, 1);
+                    if(data.share.type == 'role')
+                        data.share.roles.splice(ndx, 1);
+                }
             }
             else{
                 $(this).addClass('selected');
-                if(ndx == -1)
-                    data.share.ids.push(id);
+                if(ndx == -1){
+                    if(data.share.type == 'user')
+                        data.share.users.push(id);
+                    if(data.share.type == 'role')
+                        data.share.roles.push(id);
+                }
             }
             console.log(data.share);
         });
