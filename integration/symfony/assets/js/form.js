@@ -330,7 +330,6 @@ $(document).ready(function () {
                 counter = 0;
             }
         });
-        multipleUploads(data.files.length);
     }).on('fileuploadfail', function (e, data) {
         counter = 0;
         $.each(data.files, function (index, file) {
@@ -345,12 +344,9 @@ $(document).ready(function () {
 
     lazy();
 
-    var counter = 0;
-    function multipleUploads(total){
-        counter = counter + 1;
-        if(counter == total){
-            location.reload();
-        }
-    }
+    /**Reload page when all uploads finished. */
+    $(this).ajaxStop(function(){
+        location.reload();
+    });
 
 });
